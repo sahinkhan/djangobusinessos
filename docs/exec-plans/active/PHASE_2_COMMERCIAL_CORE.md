@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: PREPARED — IMPLEMENTATION NOT STARTED
+Status: IN PROGRESS — standalone Procurement implemented; independent review pending
 
 Base architecture commit before this plan: `361d832713dcd2325363b4059a4f3b6cac7d3715`
 
@@ -260,6 +260,32 @@ Phase 2 minimum models:
 - landed cost
 - Inventory balance mutation inside Procurement
 - tax/pricelist engine
+
+## Standalone implementation record
+
+Procurement was implemented on `phase2-procurement` from the approved `origin/main`
+base. The branch provides company-scoped Purchase Orders and immutable posted Purchase
+Receipts, including draft editing, locked lifecycle transitions, partial and cumulative
+receipt validation, exact-request idempotency, derived received/remaining selectors,
+deployment module gating, and responsive operational UI.
+
+The implementation intentionally has no dependency on Sales, Inventory, Billing, or
+Accounting and creates no stock movement or other Inventory state. PostgreSQL concurrency
+coverage exercises confirmation, line-position allocation, and over-receipt serialization;
+rollback and idempotency behavior are also covered. Fresh PostgreSQL bootstrap, module-local
+test discovery, and desktop/mobile UI were verified during implementation.
+
+Final implementation evidence: 84 tests passed on PostgreSQL/Python 3.13.15, the 23
+module-local Procurement tests were discovered and passed on PostgreSQL, and the SQLite
+suite passed 80 tests with four expected PostgreSQL-only skips. Ruff, Django system checks,
+migration drift, and reproducible Tailwind compilation passed. Representative 1280x720 and
+390x844 browser QA covered create, line entry, confirmation, partial receipt, receipt history,
+module navigation, exact quantity/unit-cost presentation, and local table scrolling without
+document-level mobile overflow.
+
+Status: IMPLEMENTED — AWAITING INDEPENDENT PROCUREMENT ARCHITECTURE REVIEW. This branch-local
+record is not standalone acceptance, does not open optional integrations, and does not mark
+Phase 2 complete.
 
 ---
 

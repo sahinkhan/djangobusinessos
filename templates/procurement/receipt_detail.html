@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}{{ receipt.number }} · BusinessOS{% endblock %}
+{% block breadcrumbs %}{% url 'procurement:order_detail' receipt.purchase_order.id as order_url %}{% include "components/breadcrumbs.html" with parent_label=receipt.purchase_order.number parent_url=order_url current=receipt.number %}{% endblock %}
+{% block page_header %}<div class="min-w-0 break-all">{% include "components/page_heading.html" with heading=receipt.number description="Posted Purchase Receipt" %}</div>{% endblock %}
+{% block content %}
+<div class="grid min-w-0 gap-5 lg:grid-cols-3">
+  <section class="card"><p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Receipt</p><dl class="mt-4 space-y-3 text-sm"><div><dt class="text-slate-500">Purchase Order</dt><dd><a class="font-semibold text-indigo-700" href="{% url 'procurement:order_detail' receipt.purchase_order.id %}">{{ receipt.purchase_order.number }}</a></dd></div><div><dt class="text-slate-500">Receipt date</dt><dd>{{ receipt.receipt_date }}</dd></div><div><dt class="text-slate-500">Posted at</dt><dd>{{ receipt.posted_at }}</dd></div><div><dt class="text-slate-500">Idempotency key</dt><dd class="break-all">{{ receipt.idempotency_key }}</dd></div></dl></section>
+  <section class="card min-w-0 lg:col-span-2"><h2 class="font-semibold">Received lines</h2><div class="mt-4 overflow-x-auto"><table class="data-table"><thead><tr><th>Item</th><th>Quantity received</th></tr></thead><tbody>{% for line in receipt.lines.all %}<tr><td><strong>{{ line.purchase_order_line.name_snapshot }}</strong><p class="text-xs text-slate-500">{{ line.purchase_order_line.sku_snapshot }}</p></td><td>{{ line.quantity_received|floatformat:-4 }}</td></tr>{% endfor %}</tbody></table></div></section>
+</div>
+<p class="alert mt-5">This posted receipt is immutable and has no direct Inventory effect.</p>
+{% endblock %}
