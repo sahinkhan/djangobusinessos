@@ -2,7 +2,7 @@
 
 ## Status
 
-Active
+Technical PASS — publication candidate pending hosted CI and formal contract freeze
 
 ## Objective
 
@@ -282,11 +282,71 @@ After acceptance, freeze Phase 0 shared contracts enough to begin Phase 1 Party/
 
 ## Outcome
 
-To be filled by the implementing Codex session with:
+### Commit / PR
 
-- commit/PR reference
-- delivered items
-- deviations/ADRs
-- commands/tests run
-- known limitations
-- next recommended task
+The verified implementation is published from the `phase0-foundation` branch against the existing `origin/main` architecture history. Git history and the Phase 0 pull request are the source of truth for immutable commit and review identifiers.
+
+### Delivered
+
+- Django 5.2 project with split base, development, production, and test settings.
+- PostgreSQL-first runtime configuration, Python 3.13 Docker image, and Compose development stack with a PostgreSQL health check.
+- Case-insensitive, canonical email-identity custom `User` model with UUID primary key, database enforcement, and Django permissions/admin integration.
+- UUID-based `Company`, `Branch`, and `Warehouse` models, including company-scoped codes, base currency, optional warehouse branch, active state, timestamps, and cross-company validation.
+- Minimal `Country`, `Currency`, `Language`, and `UnitOfMeasure` reference models plus an idempotent starter-data command.
+- Explicit user-to-company, user-to-branch, and user-to-warehouse access grants and a selector that does not expose ungranted companies. Core Django admin is restricted to deployment superusers.
+- Immutable, framework-neutral `BusinessContext`, a reusable non-HTTP validation policy, and a Django request/session adapter.
+- Small validated semantic-version module manifest contract, database registry, registration service, and a manifest-only convention example.
+- Shared responsive template shell with a compiled local Tailwind 3.4 stylesheet, login, sidebar, header, breadcrumbs, page heading, messages, cards, tables, form styles, modal root, pagination, and empty-state components.
+- Pytest/pytest-django discovery for both top-level and module-local tests, Ruff configuration, migrations, admin registrations, setup documentation, pinned dependency files, frontend lockfile, and CI workflow.
+
+### Important decisions
+
+- Normal runtime settings are PostgreSQL-only. The dedicated test settings use in-memory SQLite for fast isolated local tests; the same suite was also run successfully against PostgreSQL in Compose.
+- Access is represented by explicit grant records rather than a global current-company field. Superusers may access active organizational scope without grant rows; all other users require company access and any selected branch/warehouse grant.
+- Django admin is deployment-wide and superuser-only. Future company-scoped administration must use application views that apply `BusinessContext` rather than model-wide admin permissions.
+- Branch and Warehouse company ownership is immutable. Warehouse branch changes remain allowed only within the same company, and an inactive branch makes its linked warehouse invalid context without silently changing warehouse state.
+- Email is stored trimmed/lowercase, authenticated case-insensitively, and protected by both Django's unique username requirement and a database `LOWER(email)` constraint.
+- Scope integrity is checked independently from permission bypasses. The reusable `validate_business_context` policy serves HTTP and non-HTTP callers.
+- Module discovery/loading is intentionally absent. Manifest registration preserves enablement unless the caller changes it explicitly.
+- Tailwind 3.4 is built into a committed local stylesheet from pinned npm dependencies; HTMX and Alpine remain version-pinned CDN scripts.
+
+### Deviations / ADRs
+
+No baseline deviation was required. `docs/decisions/0001-foundation-security-contracts.md` records the Phase 0 administration, identity, ownership, context, and registry contracts exposed by audit remediation. `docs/architecture/DEPENDENCY_MAP.md` now defines every arrow as `consumer -> dependency` and explicitly permits Sales/Procurement to call Inventory services without reverse imports.
+
+### Verification
+
+Run in the Python 3.13.15 Compose web service:
+
+- `pytest` — 32 passed against PostgreSQL, including audit regressions and module-local discovery.
+- `ruff check .` — passed.
+- `python manage.py check` — passed with no issues.
+- `python manage.py makemigrations --check` — no changes detected.
+- `python manage.py check --deploy` with temporary production environment values — passed with no issues.
+- Clean PostgreSQL bootstrap — all first-party and Django migrations, including case-insensitive email enforcement, applied successfully to a uniquely named empty disposable database.
+- `python manage.py seed_reference_data` — 8 starter records created successfully; the command is idempotent.
+- HTTP smoke check — `/login/` returned 200 after startup.
+- Visual browser verification — login and authenticated shell passed at 1280×720 and 390×844; correct computed colors, no horizontal overflow, persistent desktop navigation, and functional mobile navigation were confirmed.
+- `npm ci` and `npm run build:css` — passed using the frontend lockfile.
+
+### Audit remediation
+
+- Closed P1 admin isolation by making the entire routed core admin site active-superuser-only; regression tests prove a staff user with view/change model permissions cannot edit another company.
+- Closed P1 ownership integrity by making Branch and Warehouse company ownership immutable and retaining same-company Warehouse/Branch validation.
+- Closed P2 identity inconsistencies across manager, model, admin forms, authentication, migration, and database uniqueness.
+- Closed P2 required-context and superuser scope defects, and added one reusable non-request validation policy.
+- Closed P2 Tailwind incompatibility with a compiled Tailwind 3.4 asset and desktop/mobile browser verification.
+- Closed P2 test discovery by collecting top-level and `businessos/` tests and proving module-local discovery.
+- Closed the dependency-map ambiguity and reconciled Inventory/Accounting service-call examples with explicit allowed import direction.
+- Closed code-normalization form failures, SemVer prerelease/build validation gaps, and implicit module disabling.
+
+### Remaining Phase 0 concerns
+
+- Hosted CI against the published candidate and the formal architecture contract-freeze decision are still required before Phase 1 begins.
+- Production launch remains blocked on a chosen production process manager/hosting topology, HTTPS and secrets delivery evidence, backup/recovery, monitoring, and login-attempt limiting or an explicitly verified edge control.
+- Company/user locale preferences and translation conventions should be decided before broad UI development; country-specific tax/payroll behavior remains correctly deferred to localization phases.
+- A project license requires an owner decision and was not invented by this implementation session.
+
+### Next recommended task
+
+Confirm hosted CI, review the published Phase 0 candidate, and record the core-contract freeze. Do not begin Party/Catalog implementation until that gate is accepted.

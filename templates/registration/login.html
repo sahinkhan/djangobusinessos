@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block title %}Sign in · BusinessOS{% endblock %}
+
+{% block unauthenticated_content %}
+<main class="flex min-h-screen items-center justify-center bg-slate-950 px-4 py-12">
+  <div class="w-full max-w-md">
+    <div class="mb-8 text-center text-white">
+      <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-indigo-500 text-lg font-black shadow-lg">B</span>
+      <h1 class="mt-5 text-2xl font-bold">Welcome to BusinessOS</h1>
+      <p class="mt-2 text-sm text-slate-400">Sign in to your business workspace</p>
+    </div>
+    <div class="rounded-2xl bg-white p-7 shadow-2xl">
+      {% if form.non_field_errors %}<div class="alert alert-error mb-5">{{ form.non_field_errors }}</div>{% endif %}
+      <form method="post" class="space-y-5">
+        {% csrf_token %}
+        <div>
+          <label for="{{ form.username.id_for_label }}" class="form-label">Email address</label>
+          {{ form.username }}
+          {% if form.username.errors %}<p class="form-error">{{ form.username.errors|striptags }}</p>{% endif %}
+        </div>
+        <div>
+          <label for="{{ form.password.id_for_label }}" class="form-label">Password</label>
+          {{ form.password }}
+          {% if form.password.errors %}<p class="form-error">{{ form.password.errors|striptags }}</p>{% endif %}
+        </div>
+        {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+        <button type="submit" class="btn-primary w-full justify-center">Sign in</button>
+      </form>
+    </div>
+  </div>
+</main>
+{% endblock %}

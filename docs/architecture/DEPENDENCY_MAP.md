@@ -4,32 +4,35 @@
 
 Keep module dependencies one-directional and predictable so Codex agents can work in parallel without creating circular coupling.
 
+## Import-direction notation
+
+Every arrow in this document uses one meaning:
+
+```text
+consumer -> dependency
+```
+
+`sales -> catalog` means Sales may import Catalog's public contracts or call its services. It never means that Catalog imports Sales, nor does it merely describe business-data flow.
+
 ## Initial dependency graph
 
 ```text
-identity   organization   reference   access
-    \          |             |         /
-     \_________|_____________|________/
-                 |
-               party
-                 |
-               catalog
-        _________|____________
-       |         |            |
-     sales   procurement   inventory
-       |         |            |
-       |_________|____________|
-                 |
-               billing
-                 |
-             accounting
+organization -> common, reference
+access -> common, identity, organization
 
-hr -------------------------------> vertical modules
+party -> identity, organization, reference, access
+catalog -> party, reference
+inventory -> catalog, organization, reference, access
+sales -> party, catalog, inventory, organization, reference, access
+procurement -> party, catalog, inventory, organization, reference, access
+accounting -> party, organization, reference, access
+billing -> party, sales, procurement, accounting, organization, reference, access
+hr -> party, organization, reference, access
 
-catalog + sales + inventory + billing ---> ecommerce
-party + hr + billing + accounting ------> school
-party + hr + billing + inventory -------> hospital
-party + hr + billing + inventory -------> hotel
+ecommerce -> catalog, sales, inventory, billing
+school -> party, hr, billing, accounting
+hospital -> party, hr, billing, inventory
+hotel -> party, hr, billing, inventory
 ```
 
 This graph is intentionally conservative. A module may use fewer dependencies than shown.
@@ -38,10 +41,12 @@ This graph is intentionally conservative. A module may use fewer dependencies th
 
 Core apps may depend on lower-level shared utilities but must not import business modules.
 
-Allowed direction:
+Examples of allowed imports:
 
 ```text
-common/reference -> organization/access -> business modules
+organization -> common/reference
+access -> common/identity/organization
+business modules -> core
 ```
 
 Not allowed:
@@ -64,13 +69,13 @@ Owns reusable product/service/category concepts. May depend on reference data an
 
 ### Sales
 
-May depend on Party, Catalog, Organization, Reference and Access.
+May depend on Party, Catalog, Inventory, Organization, Reference and Access. Any Inventory interaction must use Inventory's public service contract; Sales must not write stock rows directly.
 
 It must not own stock balances or accounting ledgers.
 
 ### Procurement
 
-May depend on Party, Catalog, Organization, Reference and Access.
+May depend on Party, Catalog, Inventory, Organization, Reference and Access. Any receipt interaction must use Inventory's public service contract; Procurement must not write stock rows directly.
 
 It must not own stock balances or accounting ledgers.
 
@@ -82,7 +87,7 @@ It owns stock movement/ledger behavior.
 
 ### Billing
 
-Owns customer/supplier billing and payment orchestration. It may depend on Party, Reference, Organization and relevant commercial documents through stable identifiers/service contracts. Avoid making Billing the owner of general ledger accounting.
+Owns customer/supplier billing and payment orchestration. It may depend on Party, Reference, Organization, Accounting, and relevant Sales/Procurement documents through stable identifiers or public service contracts. Billing is not the owner of general ledger accounting.
 
 ### Accounting
 
@@ -115,9 +120,12 @@ When an owning module exposes an established service, call that service instead 
 Example:
 
 ```text
-Sales confirm -> Inventory service to issue/reserve stock
-Billing post -> Accounting service to create ledger posting
+Sales service -> Inventory service to issue/reserve stock
+Procurement service -> Inventory service to receive stock
+Billing service -> Accounting service to create ledger posting
 ```
+
+These examples follow the same `consumer -> dependency` import direction defined above. Inventory never imports Sales or Procurement, and Accounting never imports Billing.
 
 Early implementation may be synchronous/in-process. An event bus can be introduced later when there is a real need.
 

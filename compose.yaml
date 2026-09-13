@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-businessos}
+      POSTGRES_USER: ${POSTGRES_USER:-businessos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-businessos}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  web:
+    build:
+      context: .
+      args:
+        INSTALL_DEV: "true"
+    command: sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    environment:
+      DJANGO_SETTINGS_MODULE: config.settings.development
+      DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-unsafe-development-only-key}
+      DJANGO_DEBUG: "true"
+      DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,0.0.0.0
+      POSTGRES_DB: ${POSTGRES_DB:-businessos}
+      POSTGRES_USER: ${POSTGRES_USER:-businessos}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-businessos}
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:

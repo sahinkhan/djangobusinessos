@@ -1,65 +1,80 @@
-# Django BusinessOS
+# BusinessOS
 
-BusinessOS is a modular business management platform that starts as a simple Django modular monolith and is designed to grow into a broader ERP/industry ecosystem without forcing premature platform complexity.
+BusinessOS is a modular Django business application. Phase 0 provides the small, explicit core needed to begin business-module development without coupling domain services to Django requests.
 
-## Current status
+## Requirements
 
-Architecture foundation is defined. Phase 0 implementation has not started yet.
+- Python 3.13+
+- PostgreSQL 17 (or Docker Desktop)
 
-Read before coding:
+## Start with Docker
 
-- `AGENTS.md`
-- `docs/architecture/BASELINE.md`
-- `docs/architecture/MODULE_BOUNDARIES.md`
-- `docs/architecture/DEPENDENCY_MAP.md`
-- `docs/ROADMAP.md`
-- `docs/exec-plans/active/PHASE_0_FOUNDATION.md`
+```bash
+cp .env.example .env
+docker compose up --build
+```
 
-## Initial product direction
+The application is available at <http://localhost:8000> and PostgreSQL data is retained in the `postgres_data` volume.
 
-The first product is intentionally simple:
+Create an administrator in another terminal:
 
-- Django 5.2 LTS / Python 3.13
-- PostgreSQL
-- multi-company / branch / warehouse foundation
-- modular business apps
-- Django templates + Tailwind + HTMX + Alpine.js
-- client-specific extensions outside standard modules
-- business logic separated from Django request/presentation code
+```bash
+docker compose exec web python manage.py createsuperuser
+```
 
-Initial business areas after foundation:
+Optionally load the small idempotent starter set of countries, currencies, languages, and units:
 
-- Party / Contacts
-- Catalog / Products
-- Sales
-- Procurement
-- Inventory
-- Billing
-- Accounting
-- HR
-- Ecommerce
-- School
-- Hospital/Clinic
-- Hotel
+```bash
+docker compose exec web python manage.py seed_reference_data
+```
 
-## Long-term direction
+Then sign in at <http://localhost:8000/login/>. Organization and access records can initially be managed through <http://localhost:8000/admin/>.
 
-The architecture preserves a path toward:
+The Django admin is deliberately restricted to active superusers because it is a deployment-wide maintenance surface, not a company-scoped operational interface. Staff users with model permissions cannot enter it.
 
-- workflow/rules/scheduling
-- metadata/Studio/dynamic UI
-- documents/notifications/search/reporting/integrations
-- enterprise horizontal modules
-- industry verticals
-- country localizations
-- developer platform/marketplace
-- self-hosted enterprise operations
-- BusinessOS Cloud control plane
-- LTS/compatibility/certification/partner ecosystem
-- optional custom Python runtime if future evidence justifies replacing parts of Django
+## Local development
 
-## Guiding rule
+Create a PostgreSQL database and export the variables shown in `.env.example`, then:
 
-> Build capabilities late; reserve boundaries early.
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
+pip install -r requirements/development.lock
+python manage.py migrate
+python manage.py seed_reference_data
+python manage.py createsuperuser
+python manage.py runserver
+```
 
-BusinessOS prioritizes fast module delivery today without creating unnecessary rewrites tomorrow.
+When shared template utility classes change, rebuild the committed Tailwind stylesheet:
+
+```bash
+npm ci
+npm run build:css
+```
+
+Normal development and production settings use PostgreSQL. Test settings use an isolated in-memory SQLite database so unit tests do not depend on a running service.
+
+## Quality checks
+
+```bash
+pytest
+ruff check .
+python manage.py check
+python manage.py makemigrations --check
+```
+
+## Architecture at a glance
+
+- `businessos/core/identity` — email-based Django user
+- `businessos/core/reference` — small global reference tables
+- `businessos/core/organization` — company, branch, and warehouse scope
+- `businessos/core/access` — explicit per-user organization grants and request adapter
+- `businessos/core/modules` — manifest validation and enabled-module registry
+- `businessos/core/common` — UUID/timestamp models and framework-neutral `BusinessContext`
+- `businessos/modules` — standard business modules, beginning in Phase 1
+- `businessos/extensions` — deployment-specific extensions
+
+Read `AGENTS.md` and the documents under `docs/architecture/` before changing core contracts or adding modules.
+
+Foundation security and ownership semantics are recorded in `docs/decisions/0001-foundation-security-contracts.md`.

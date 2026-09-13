@@ -1,0 +1,9 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="flex items-center justify-between border-t border-slate-200 bg-white px-4 py-3" aria-label="Pagination">
+  <p class="text-sm text-slate-500">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</p>
+  <div class="flex gap-2">
+    {% if page_obj.has_previous %}<a class="btn-secondary" href="?page={{ page_obj.previous_page_number }}">Previous</a>{% endif %}
+    {% if page_obj.has_next %}<a class="btn-secondary" href="?page={{ page_obj.next_page_number }}">Next</a>{% endif %}
+  </div>
+</nav>
+{% endif %}

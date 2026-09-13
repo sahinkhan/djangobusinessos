@@ -124,6 +124,8 @@ Any record whose meaning is company-specific must have explicit company scope. B
 
 Do not use global mutable "current company" as the sole security mechanism. Authorization/query filtering must be based on allowed scope.
 
+The concrete Phase 0 identity, administration, organizational-ownership, and context-validation contracts are recorded in `docs/decisions/0001-foundation-security-contracts.md`.
+
 ## Inventory invariant
 
 Inventory source of truth is a stock movement/ledger model. Product stock is never the authoritative mutable source.
