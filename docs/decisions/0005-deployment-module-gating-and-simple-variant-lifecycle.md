@@ -1,6 +1,6 @@
 # ADR 0005 — Deployment Module Gating and Simple Variant Lifecycle
 
-Status: Proposed — implemented for Phase 1 remediation review
+Status: Accepted
 
 Date: 2026-09-13
 
