@@ -26,6 +26,8 @@ INSTALLED_APPS = [
     "businessos.core.organization",
     "businessos.core.access",
     "businessos.core.modules",
+    "businessos.modules.party",
+    "businessos.modules.catalog",
 ]
 
 MIDDLEWARE = [

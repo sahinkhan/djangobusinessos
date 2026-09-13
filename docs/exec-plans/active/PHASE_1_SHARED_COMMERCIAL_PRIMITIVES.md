@@ -1,6 +1,6 @@
 # Phase 1 — Shared Commercial Primitives
 
-Status: READY AFTER PHASE 0 MERGE
+Status: IMPLEMENTED — AWAITING ARCHITECTURE REVIEW
 
 ## Goal
 
@@ -371,3 +371,62 @@ Phase 1 is complete only when:
 The main purpose of Phase 1 is not feature depth. It is to freeze the first reusable business contracts that many later modules will depend on.
 
 `Product` is catalog identity; `ProductVariant` is transactional SKU identity. Establish this contract now so Sales, Procurement, Inventory, POS and Ecommerce do not require a later variant retrofit.
+
+## Implementation outcome
+
+### Delivered
+
+- Company-owned Party, ContactMethod, and Address records with person/organization identity, customer/supplier roles, email/phone contacts, structured addresses, service APIs, scoped selectors, and operational screens.
+- Company-owned Product, ProductVariant, ProductCategory, Attribute, AttributeValue, and VariantAttributeValue records with service APIs, scoped selectors, manifests, migrations, and operational screens.
+- Explicit company selection for the existing HTTP-to-BusinessContext adapter so normal UI workflows do not rely on implicit global scope.
+- Search/filter lists, Party and Product create/edit/detail screens, category and attribute/value management, and explicit variable-variant management.
+
+### Product and variant decisions
+
+- `Product` owns conceptual identity, type, structure, category, default UoM, descriptions, sell/purchase flags, activity, and company scope. It has no SKU or stock fields.
+- `ProductVariant` owns the company-scoped SKU, Product relationship, default marker, activity, and timestamps. `(company, sku)` is unique and SKU values are stored uppercase.
+- Product structure is immutable after creation. A simple Product is created atomically with exactly one default ProductVariant; its UI exposes only the SKU and does not expose variant management.
+- A variable Product is created atomically with one or more caller-supplied variants. Additional variants and attribute-value assignments are explicit; no combinations are generated.
+- PostgreSQL enforces at most one default variant per Product. Model/service validation also prevents additional or non-default variants on a simple Product.
+- VariantAttributeValue stores the explicit Attribute alongside AttributeValue so PostgreSQL can enforce at most one value for each `(variant, attribute)` pair. Services validate that all composed records share one company.
+- Service Products follow the same default-variant contract and do not import or require Inventory.
+
+### Party decisions
+
+- Party uses one person/organization identity with reusable customer and supplier flags rather than separate Customer/Supplier tables.
+- Party, ContactMethod, and Address carry explicit company scope. Company/owner reassignment is rejected through model save paths.
+- Email contacts are normalized to lowercase and validated. At most one primary contact of each kind and one default address per Party are database-enforced.
+
+### Service and selector boundaries
+
+- All company-scoped state-changing functions accept framework-neutral BusinessContext and validate existing organization grants before resolving or writing records.
+- Cross-company relationship identifiers are rejected in service paths. Reusable reads validate BusinessContext and filter explicitly by company.
+- Party and Catalog manifests validate and register through the existing module registry convention. Catalog has no Party, Inventory, Sales, Procurement, Billing, or vertical dependency.
+- Core contains no reverse imports into Party or Catalog. The only core change is the small company-scope HTTP form/view that adapts session selection to the existing BusinessContext contract.
+
+### Migrations
+
+- `party.0001_initial` creates Party, ContactMethod, Address, their company indexes, and primary/default uniqueness constraints; `party.0002_register_manifest` registers the disabled-by-default Party manifest without overwriting future enablement.
+- `catalog.0001_initial` creates Product, ProductVariant, ProductCategory, Attribute, AttributeValue, VariantAttributeValue, company indexes, SKU/default-variant constraints, and assignment-integrity constraints; `catalog.0002_register_manifest` registers the disabled-by-default Catalog manifest without overwriting future enablement.
+- A fresh empty PostgreSQL database successfully applied the complete Phase 0 and Phase 1 migration history and was removed after verification.
+
+### Verification
+
+- `pytest` — 51 passed on Python 3.13/PostgreSQL, including module-local Party and Catalog tests.
+- `ruff check .` — passed.
+- `python manage.py check` — passed with no issues.
+- `python manage.py makemigrations --check` — no changes detected.
+- `npm ci` — passed with no vulnerabilities; `npm run build:css` reproduced the committed Tailwind asset.
+- Docker Compose rebuilt and started with healthy PostgreSQL and the web service available on port 8000.
+- Desktop 1280×720 and mobile 390×844 browser checks passed for Party, Catalog, simple Product, variable Product, responsive layout, and mobile navigation.
+- Service and UI tests prove simple-product default-variant creation, service-product independence, explicit multiple variants, SKU uniqueness, attribute integrity, company isolation, and absence of authoritative stock fields.
+
+### Remaining concerns and deliberate limits
+
+- The mandatory child-existence rule cannot be represented as a normal portable Django database constraint. Product creation/update is therefore an atomic service contract, reinforced by Product/ProductVariant model validation and database constraints for the enforceable uniqueness portions. Bulk ORM updates or raw SQL must not bypass these contracts.
+- Product structure transition is intentionally absent; simple-to-variable conversion requires a future explicit service and migration policy rather than direct field editing.
+- Variant combinations, advanced configurators, pricing, stock, barcode infrastructure, media, tax, workflows, events, and Phase 2 modules remain deliberately absent.
+
+### Next task
+
+Review and freeze the published Party and Catalog contracts. Do not begin Phase 2 until architecture review accepts Phase 1.

@@ -1,0 +1,6 @@
+{% extends "base.html" %}
+
+{% block title %}Categories · BusinessOS{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with current="Categories" %}{% endblock %}
+{% block page_header %}{% include "components/page_heading.html" with heading="Product categories" description="A deliberately small company-scoped hierarchy." %}{% endblock %}
+{% block content %}<div class="grid gap-5 lg:grid-cols-2"><form method="post" class="card space-y-4">{% csrf_token %}<h2 class="font-semibold">Create category</h2>{% for error in form.non_field_errors %}<p class="alert alert-error">{{ error }}</p>{% endfor %}{% for field in form %}<div><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}</div>{% endfor %}<button class="btn-primary">Create</button></form><section class="card"><h2 class="font-semibold">Categories</h2><div class="mt-4 divide-y divide-slate-100">{% for category in categories %}<div class="py-3 text-sm"><strong>{{ category.name }}</strong>{% if category.parent %}<span class="text-slate-500"> · under {{ category.parent.name }}</span>{% endif %}</div>{% empty %}<p class="text-sm text-slate-500">No categories yet.</p>{% endfor %}</div></section></div>{% endblock %}

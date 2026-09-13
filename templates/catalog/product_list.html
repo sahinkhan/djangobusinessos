@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block title %}Catalog · BusinessOS{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with current="Catalog" %}{% endblock %}
+{% block page_header %}
+<div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+  {% include "components/page_heading.html" with heading="Catalog" description="Products are catalog identities; variants are transactional SKU identities." %}
+  <a class="btn-primary" href="{% url 'catalog:product_create' %}">Create product</a>
+</div>
+{% endblock %}
+{% block content %}
+<div class="mb-5 flex flex-wrap gap-3"><a class="btn-secondary" href="{% url 'catalog:categories' %}">Categories</a><a class="btn-secondary" href="{% url 'catalog:attributes' %}">Attributes</a></div>
+<form method="get" class="mb-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto]" role="search">
+  <input name="q" value="{{ search }}" placeholder="Search product or SKU" aria-label="Search catalog">
+  <select name="type" aria-label="Product type"><option value="">All types</option>{% for value,label in product_types %}<option value="{{ value }}"{% if value == selected_type %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
+  <button class="btn-secondary" type="submit">Filter</button>
+</form>
+<section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div class="overflow-x-auto"><table class="data-table">
+  <thead><tr><th>Product</th><th>Type</th><th>Structure</th><th>SKU identity</th></tr></thead>
+  <tbody>{% for product in products %}<tr><td><a class="font-semibold text-indigo-700" href="{% url 'catalog:product_detail' product.id %}">{{ product.name }}</a></td><td>{{ product.get_product_type_display }}</td><td>{{ product.get_structure_display }}</td><td>{% if product.structure == "simple" %}{{ product.variants.first.sku }}{% else %}{{ product.variants.count }} variants{% endif %}</td></tr>{% empty %}<tr><td colspan="4">No products match this company scope.</td></tr>{% endfor %}</tbody>
+</table></div></section>
+{% endblock %}

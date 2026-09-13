@@ -4,6 +4,7 @@
     <p class="truncate text-sm font-medium text-slate-500">Business operations workspace</p>
   </div>
   <div class="flex items-center gap-3">
+    <a class="hidden text-sm font-semibold text-indigo-700 hover:text-indigo-900 sm:block" href="{% url 'select_company' %}">Company</a>
     <span class="hidden text-sm text-slate-600 sm:block">{{ user.email }}</span>
     <span class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 font-semibold text-indigo-700">{{ user.email|first|upper }}</span>
     <form method="post" action="{% url 'logout' %}">

@@ -19,7 +19,7 @@ def test_authenticated_user_sees_application_shell(client):
     response = client.get(reverse("home"))
 
     assert response.status_code == 200
-    assert b"Foundation ready" in response.content
+    assert b"Commercial workspace" in response.content
     assert b"BusinessOS" in response.content
     assert b"css/tailwind.css" in response.content
     assert b"tailwindcss@2.2.19" not in response.content

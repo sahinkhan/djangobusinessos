@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}{{ heading }} · BusinessOS{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with current=heading %}{% endblock %}
+{% block page_header %}{% include "components/page_heading.html" with heading=heading description="This record inherits and validates the selected party's company scope." %}{% endblock %}
+{% block content %}
+<form method="post" class="card max-w-2xl space-y-5">
+  {% csrf_token %}
+  {% for error in form.non_field_errors %}<p class="alert alert-error">{{ error }}</p>{% endfor %}
+  {% for field in form %}
+    <div><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}</div>
+  {% endfor %}
+  <button class="btn-primary" type="submit">Save</button>
+</form>
+{% endblock %}
