@@ -5,6 +5,7 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 
 from businessos.core.access.context import business_context_from_request
+from businessos.core.modules.decorators import module_required
 
 from .forms import AddressForm, ContactMethodForm, PartyForm
 from .models import Address, ContactMethod, Party
@@ -30,6 +31,7 @@ def _add_service_error(form, error):
 
 
 @login_required
+@module_required("party")
 def party_list(request):
     context = business_context_from_request(request)
     search = request.GET.get("q", "")
@@ -41,6 +43,7 @@ def party_list(request):
 
 
 @login_required
+@module_required("party")
 def party_create(request):
     context = business_context_from_request(request)
     form = PartyForm(request.POST or None, company_id=context.company_id)
@@ -56,6 +59,7 @@ def party_create(request):
 
 
 @login_required
+@module_required("party")
 def party_edit(request, party_id):
     context = business_context_from_request(request)
     try:
@@ -83,6 +87,7 @@ def party_edit(request, party_id):
 
 
 @login_required
+@module_required("party")
 def party_detail_view(request, party_id):
     context = business_context_from_request(request)
     try:
@@ -93,6 +98,7 @@ def party_detail_view(request, party_id):
 
 
 @login_required
+@module_required("party")
 def contact_create(request, party_id):
     context = business_context_from_request(request)
     form = ContactMethodForm(request.POST or None, company_id=context.company_id)
@@ -108,6 +114,7 @@ def contact_create(request, party_id):
 
 
 @login_required
+@module_required("party")
 def contact_edit(request, party_id, contact_id):
     context = business_context_from_request(request)
     try:
@@ -138,6 +145,7 @@ def contact_edit(request, party_id, contact_id):
 
 
 @login_required
+@module_required("party")
 def address_create(request, party_id):
     context = business_context_from_request(request)
     form = AddressForm(request.POST or None, company_id=context.company_id)
@@ -155,6 +163,7 @@ def address_create(request, party_id):
 
 
 @login_required
+@module_required("party")
 def address_edit(request, party_id, address_id):
     context = business_context_from_request(request)
     try:

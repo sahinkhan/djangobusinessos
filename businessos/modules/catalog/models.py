@@ -165,6 +165,10 @@ class ProductVariant(ActiveUUIDTimestampedModel):
                 raise ValidationError("A simple Product can have only one ProductVariant.")
             if not self.is_default:
                 raise ValidationError({"is_default": "A simple Product variant must be default."})
+            if self.is_active != self.product.is_active:
+                raise ValidationError(
+                    {"is_active": "A simple Product variant must match its Product activity."}
+                )
 
     def save(self, *args, **kwargs):
         self.full_clean()

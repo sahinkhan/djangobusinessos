@@ -3,18 +3,57 @@ from django.urls import reverse
 
 from businessos.core.access.context import SESSION_COMPANY_KEY
 from businessos.core.access.models import UserCompanyAccess
+from businessos.core.modules.models import BusinessModule
+from businessos.core.modules.services import register_manifest
 from businessos.core.organization.models import Company
+from businessos.modules.catalog.manifest import MODULE as CATALOG_MANIFEST
 from businessos.modules.catalog.models import Product, ProductCategory
+from businessos.modules.party.manifest import MODULE as PARTY_MANIFEST
 from businessos.modules.party.models import Party
 
 
 @pytest.fixture
-def scoped_client(client, operator, company):
+def enabled_phase1_modules(db):
+    register_manifest(PARTY_MANIFEST, enabled=True)
+    register_manifest(CATALOG_MANIFEST, enabled=True)
+
+
+@pytest.fixture
+def scoped_client(client, operator, company, enabled_phase1_modules):
     client.force_login(operator)
     session = client.session
     session[SESSION_COMPANY_KEY] = str(company.id)
     session.save()
     return client
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("code", "url_name", "navigation_url"),
+    [
+        ("party", "party:list", "/parties/"),
+        ("catalog", "catalog:product_list", "/catalog/products/"),
+    ],
+)
+def test_module_state_controls_navigation_and_direct_http_access(
+    scoped_client, code, url_name, navigation_url
+):
+    module = BusinessModule.objects.get(code=code)
+    module.is_enabled = False
+    module.save()
+
+    disabled_home = scoped_client.get(reverse("home"))
+    assert navigation_url.encode() not in disabled_home.content
+    assert scoped_client.get(reverse(url_name)).status_code == 404
+
+    module.delete()
+    assert scoped_client.get(reverse(url_name)).status_code == 404
+
+    manifest = PARTY_MANIFEST if code == "party" else CATALOG_MANIFEST
+    register_manifest(manifest, enabled=True)
+    enabled_home = scoped_client.get(reverse("home"))
+    assert navigation_url.encode() in enabled_home.content
+    assert scoped_client.get(reverse(url_name)).status_code == 200
 
 
 @pytest.mark.django_db

@@ -5,6 +5,7 @@ from django.http import Http404
 from django.shortcuts import redirect, render
 
 from businessos.core.access.context import business_context_from_request
+from businessos.core.modules.decorators import module_required
 
 from .forms import (
     AttributeForm,
@@ -54,6 +55,7 @@ def _product_service_data(cleaned_data):
 
 
 @login_required
+@module_required("catalog")
 def product_list(request):
     context = business_context_from_request(request)
     search = request.GET.get("q", "")
@@ -73,6 +75,7 @@ def product_list(request):
 
 
 @login_required
+@module_required("catalog")
 def product_create(request):
     context = business_context_from_request(request)
     form = ProductCreateForm(request.POST or None, company_id=context.company_id)
@@ -98,6 +101,7 @@ def product_create(request):
 
 
 @login_required
+@module_required("catalog")
 def product_edit(request, product_id):
     context = business_context_from_request(request)
     try:
@@ -136,6 +140,7 @@ def product_edit(request, product_id):
 
 
 @login_required
+@module_required("catalog")
 def product_detail_view(request, product_id):
     context = business_context_from_request(request)
     try:
@@ -146,6 +151,7 @@ def product_detail_view(request, product_id):
 
 
 @login_required
+@module_required("catalog")
 def variant_create(request, product_id):
     context = business_context_from_request(request)
     form = VariantForm(request.POST or None, company_id=context.company_id)
@@ -161,6 +167,7 @@ def variant_create(request, product_id):
 
 
 @login_required
+@module_required("catalog")
 def variant_edit(request, product_id, variant_id):
     context = business_context_from_request(request)
     try:
@@ -190,6 +197,7 @@ def variant_edit(request, product_id, variant_id):
 
 
 @login_required
+@module_required("catalog")
 def variant_attributes(request, product_id, variant_id):
     context = business_context_from_request(request)
     try:
@@ -224,6 +232,7 @@ def variant_attributes(request, product_id, variant_id):
 
 
 @login_required
+@module_required("catalog")
 def category_list(request):
     context = business_context_from_request(request)
     form = CategoryForm(request.POST or None, company_id=context.company_id)
@@ -246,6 +255,7 @@ def category_list(request):
 
 
 @login_required
+@module_required("catalog")
 def attribute_list(request):
     context = business_context_from_request(request)
     form = AttributeForm(request.POST or None, company_id=context.company_id)
@@ -265,6 +275,7 @@ def attribute_list(request):
 
 
 @login_required
+@module_required("catalog")
 def attribute_value_create(request, attribute_id):
     context = business_context_from_request(request)
     try:

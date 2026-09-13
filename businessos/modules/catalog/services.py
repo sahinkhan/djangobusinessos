@@ -245,6 +245,10 @@ def update_product_variant(
         )
     except ProductVariant.DoesNotExist as exc:
         raise PermissionDenied("The variant is outside the selected company.") from exc
+    if variant.product.structure == Product.Structure.SIMPLE:
+        raise ValidationError(
+            "Simple Product variants must be managed through the Product service."
+        )
     variant.sku = sku
     variant.is_default = is_default
     variant.is_active = is_active

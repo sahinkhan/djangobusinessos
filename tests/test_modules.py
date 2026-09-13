@@ -1,6 +1,13 @@
 import pytest
 
 from businessos.core.modules.manifest import ModuleManifest, validate_manifest
+from businessos.core.modules.models import BusinessModule
+from businessos.core.modules.selectors import (
+    ModuleUnavailable,
+    enabled_module_codes,
+    is_module_enabled,
+    require_module_enabled,
+)
 from businessos.core.modules.services import register_manifest
 
 
@@ -43,3 +50,27 @@ def test_register_manifest_is_idempotent_and_keeps_enabled_state_explicit():
 
     third = register_manifest({**value, "version": "0.1.2"})
     assert third.is_enabled
+
+
+@pytest.mark.django_db
+def test_module_state_treats_missing_and_disabled_rows_as_disabled():
+    BusinessModule.objects.filter(code="party").delete()
+
+    assert is_module_enabled("party") is False
+    assert "party" not in enabled_module_codes()
+    with pytest.raises(ModuleUnavailable, match="not enabled"):
+        require_module_enabled("party")
+
+    register_manifest(
+        {"code": "party", "name": "Party", "version": "0.1.0", "depends": []},
+        enabled=False,
+    )
+    assert is_module_enabled("party") is False
+
+    register_manifest(
+        {"code": "party", "name": "Party", "version": "0.1.0", "depends": []},
+        enabled=True,
+    )
+    require_module_enabled("party")
+    assert is_module_enabled("party") is True
+    assert "party" in enabled_module_codes()

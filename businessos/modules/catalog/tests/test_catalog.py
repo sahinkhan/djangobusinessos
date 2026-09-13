@@ -100,6 +100,33 @@ def test_simple_product_rejects_additional_or_non_default_variant(business_conte
     variant.refresh_from_db()
     assert variant.sku == "SIMPLE-EDITED"
 
+    with pytest.raises(ValidationError, match="managed through the Product service"):
+        update_product_variant(
+            business_context,
+            variant_id=variant.id,
+            sku="BYPASS-1",
+            is_default=True,
+            is_active=True,
+        )
+
+
+@pytest.mark.django_db
+def test_simple_variant_model_rejects_activity_that_disagrees_with_product(
+    business_context, uom
+):
+    product = create_simple_product(
+        business_context,
+        name="Lifecycle",
+        sku="LIFECYCLE-1",
+        product_type=Product.Type.CONSUMABLE,
+        default_uom_id=uom.id,
+    )
+    variant = product.variants.get()
+    variant.is_active = False
+
+    with pytest.raises(ValidationError, match="match its Product activity"):
+        variant.save()
+
 
 @pytest.mark.django_db
 def test_simple_product_activation_synchronizes_default_variant_without_sku(
@@ -111,14 +138,22 @@ def test_simple_product_activation_synchronizes_default_variant_without_sku(
         sku="SEASONAL-1",
         product_type=Product.Type.SERVICE,
         default_uom_id=uom.id,
-        is_active=False,
     )
     variant = product.variants.get()
+    assert product.is_active is True
+    assert variant.is_active is True
+
+    update_product(business_context, product_id=product.id, is_active=False)
+    product.refresh_from_db()
+    variant.refresh_from_db()
+    assert product.is_active is False
     assert variant.is_active is False
 
     update_product(business_context, product_id=product.id, is_active=True)
 
+    product.refresh_from_db()
     variant.refresh_from_db()
+    assert product.is_active is True
     assert variant.is_active is True
     assert active_variants(business_context).get(id=variant.id) == variant
 

@@ -1,6 +1,6 @@
 # Phase 1 — Shared Commercial Primitives
 
-Status: COMPLETE — INDEPENDENTLY ACCEPTED AND CONTRACTS FROZEN
+Status: FOLLOW-UP REMEDIATION IMPLEMENTED — AWAITING ARCHITECTURE REVIEW
 
 ## Goal
 
@@ -448,6 +448,16 @@ The main purpose of Phase 1 is not feature depth. It is to freeze the first reus
 - Hosted CI run 12 succeeded for the audited commit: <https://github.com/sahinkhan/djangobusinessos/actions/runs/34761729830>.
 - ADR 0004 records the formal Party and Catalog contract freeze. This is architecture acceptance, not production-launch approval.
 
+### Follow-up architecture remediation
+
+- `BusinessModule.is_enabled` now controls deployment-level user-facing navigation and request-time HTTP availability. Missing and disabled registry rows are unavailable; enabled rows expose the installed module. This does not dynamically load code, Django applications, URLs, migrations, licenses, or plugins.
+- A reusable module-state selector API, request-time view decorator, and small template context processor implement the contract without import-time database queries or middleware.
+- Simple Product SKU/activity lifecycle is owned exclusively by Product-level services. The generic variant update service rejects simple variants, and model validation prevents normal saves whose activity contradicts the Product. Variable variant editing remains supported.
+- `python manage.py seed_phase1_demo` explicitly creates or reuses a deterministic DEMO company, a non-login service actor and company grant, two representative parties, simple/service/variable products, Color/Size values, and three assigned T-shirt variants. It also enables Party and Catalog for the requested demo deployment.
+- Demo seeding is transactional and idempotent. Fresh PostgreSQL verification reported `16 created` on the first run and `0 created, 16 already existed` on the second; final Party/Product/Variant/Attribute/Value/Assignment counts were `2/3/5/2/4/6`.
+- Local SQLite verification passed 60 tests with one expected PostgreSQL-only skip. PostgreSQL verification passed all 61 tests. Ruff, Django checks, migration drift, fresh migration bootstrap, Docker startup, desktop/mobile navigation, and live enabled/disabled HTTP behavior passed.
+- No schema migration was required. ADR 0005 records the two clarified contracts for architecture review.
+
 ### Next task
 
-Phase 1 is closed. Wait for an explicit approved Phase 2 execution plan and instruction; do not begin Phase 2 automatically.
+Review the follow-up Phase 1 remediation and ADR 0005. Do not begin Phase 2 until this remediation is accepted and an explicit Phase 2 execution plan is approved.
