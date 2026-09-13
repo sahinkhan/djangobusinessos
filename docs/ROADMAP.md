@@ -62,7 +62,10 @@ Exit gate: PASSED. Sales/Procurement/Inventory can consume stable Party/Catalog 
 
 ## Phase 2 — Commercial Core
 
-Status: Prepared — implementation not started. Contracts are defined by ADR 0006 and `docs/exec-plans/active/PHASE_2_COMMERCIAL_CORE.md`.
+Status: In progress. Standalone Inventory is implemented on `phase2-inventory` and awaits
+independent review; the other standalone modules and integrations are tracked separately.
+Contracts remain defined by ADR 0006 and
+`docs/exec-plans/active/PHASE_2_COMMERCIAL_CORE.md`.
 
 Standalone modules are parallelizable after the Phase 1 contract freeze. Optional cross-module integrations are implemented only after the standalone module contracts pass review.
 

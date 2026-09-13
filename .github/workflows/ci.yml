@@ -22,7 +22,7 @@ jobs:
           --health-timeout 5s
           --health-retries 10
     env:
-      DJANGO_SETTINGS_MODULE: config.settings.development
+      DJANGO_SETTINGS_MODULE: config.settings.ci
       DJANGO_SECRET_KEY: ci-only-secret
       DJANGO_ALLOWED_HOSTS: localhost
       POSTGRES_DB: businessos

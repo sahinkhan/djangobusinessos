@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: PREPARED — IMPLEMENTATION NOT STARTED
+Status: IN PROGRESS — STANDALONE INVENTORY IMPLEMENTED, INDEPENDENT REVIEW PENDING
 
 Base architecture commit before this plan: `361d832713dcd2325363b4059a4f3b6cac7d3715`
 
@@ -264,6 +264,31 @@ Phase 2 minimum models:
 ---
 
 # Batch 2C — Inventory
+
+Implementation outcome: implemented on `phase2-inventory` from approved base
+`febe5b45941c6956fd98006c04abded16a9ff998`; independent review is pending. This is
+not an acceptance or closure record.
+
+The implementation uses `ProductVariant` and the existing organization `Warehouse`,
+stores UoM and description snapshots on lines, derives balances only from posted
+movement lines, and permits negative derived balances. Posting revalidates active
+company-scoped variants and warehouses, enforces the movement route, and rejects a
+current Product UoM that conflicts with the draft snapshot or posted history. No UoM
+conversion, mutable stock balance, or cross-module integration was introduced.
+
+Implementation verification recorded before independent review:
+
+- SQLite suite: 82 passed with 5 PostgreSQL-only concurrency cases skipped;
+- PostgreSQL suite: 87 passed without teardown warnings, including concurrent
+  posting and line update/delete versus posting;
+- Ruff, Django checks, migration drift, fresh PostgreSQL bootstrap, Docker startup,
+  and repeatable Tailwind compilation passed;
+- representative receipt, issue, transfer, movement list/detail, and warehouse balance
+  screens were visually checked at desktop and 390 x 844 mobile viewports; wide ledger
+  tables scroll inside their card without page-level horizontal overflow.
+
+Hosted CI and independent architecture review remain pending. No acceptance ADR is
+created by this implementation record.
 
 ## Ownership
 
