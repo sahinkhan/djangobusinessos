@@ -15,5 +15,6 @@ urlpatterns = [
     path("scope/company/", select_company, name="select_company"),
     path("parties/", include("businessos.modules.party.urls")),
     path("catalog/", include("businessos.modules.catalog.urls")),
+    path("sales/", include("businessos.modules.sales.urls")),
     path("", home, name="home"),
 ]

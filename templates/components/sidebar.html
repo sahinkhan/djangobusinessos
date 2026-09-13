@@ -21,9 +21,14 @@
         <span aria-hidden="true">◇</span><span>Catalog</span>
       </a>
     {% endif %}
+    {% if "sales" in enabled_module_codes %}
+      <a href="{% url 'sales:order_list' %}" class="nav-item{% if request.resolver_match.namespace == 'sales' %} nav-item-active{% endif %}">
+        <span aria-hidden="true">▤</span><span>Sales</span>
+      </a>
+    {% endif %}
     <div class="mt-6 rounded-xl border border-slate-700 bg-slate-900 p-4 text-xs leading-5 text-slate-400">
       Party and variant-first Catalog are the shared commercial primitives.
     </div>
   </nav>
-  <div class="border-t border-slate-800 p-4 text-xs text-slate-500">BusinessOS · Phase 1</div>
+  <div class="border-t border-slate-800 p-4 text-xs text-slate-500">BusinessOS · Commercial core</div>
 </aside>

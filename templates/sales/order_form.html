@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block title %}{{ heading }} · BusinessOS{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with parent_label="Sales Orders" parent_url="/sales/orders/" current=heading %}{% endblock %}
+{% block page_header %}{% include "components/page_heading.html" with heading=heading description="Create the draft header, then add concrete ProductVariant lines." %}{% endblock %}
+{% block content %}
+<form method="post" class="card max-w-4xl space-y-5">
+  {% csrf_token %}
+  {% include "components/company_form_scope.html" %}
+  {% for error in form.non_field_errors %}<p class="alert alert-error">{{ error }}</p>{% endfor %}
+  <div class="grid gap-5 sm:grid-cols-2">
+    {% for field in form.visible_fields %}<div{% if field.name == "notes" %} class="sm:col-span-2"{% endif %}><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}</div>{% endfor %}
+  </div>
+  <div class="flex gap-3"><button class="btn-primary" type="submit">Save draft</button><a class="btn-secondary" href="{% url 'sales:order_list' %}">Cancel</a></div>
+</form>
+{% endblock %}
