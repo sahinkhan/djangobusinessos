@@ -285,7 +285,7 @@ def test_concurrent_attribute_replacements_finish_as_one_complete_submission(
                 business_context, variant_id=variant.id, attribute_value_ids=values
             )
         finally:
-            close_old_connections()
+            connection.close()
 
     submissions = ([black.id], [large.id])
     with ThreadPoolExecutor(max_workers=2) as executor:
