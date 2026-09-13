@@ -62,8 +62,8 @@ Exit gate: PASSED. Sales/Procurement/Inventory can consume stable Party/Catalog 
 
 ## Phase 2 — Commercial Core
 
-Status: In progress. Standalone Procurement is implemented on `phase2-procurement` and awaits
-independent architecture review. This is not Procurement acceptance or Phase 2 completion;
+Status: In progress. Standalone Procurement is accepted and closed at
+`09ee59db53ee1f6f90faa1f31170e50098a0a9ec` by ADR 0008. This is not full Phase 2 completion;
 the other standalone batches and all optional integrations remain separately gated. Contracts
 are defined by ADR 0006 and `docs/exec-plans/active/PHASE_2_COMMERCIAL_CORE.md`.
 

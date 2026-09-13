@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — standalone Procurement implemented; independent review pending
+Status: IN PROGRESS — standalone Procurement accepted and closed; remaining gates pending
 
 Base architecture commit before this plan: `361d832713dcd2325363b4059a4f3b6cac7d3715`
 
@@ -296,9 +296,9 @@ migration drift, and reproducible Tailwind compilation passed. Representative 12
 module navigation, exact quantity/unit-cost presentation, and local table scrolling without
 document-level mobile overflow.
 
-Status: IMPLEMENTED — AWAITING INDEPENDENT PROCUREMENT ARCHITECTURE REVIEW. This branch-local
-record is not standalone acceptance, does not open optional integrations, and does not mark
-Phase 2 complete.
+Status: ACCEPTED / CLOSED at `09ee59db53ee1f6f90faa1f31170e50098a0a9ec` by ADR 0008.
+This standalone acceptance does not open optional integrations by itself and does not mark Phase 2
+complete.
 
 ---
 
