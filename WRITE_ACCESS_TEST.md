@@ -1,1 +1,0 @@
-BusinessOS write access test.
