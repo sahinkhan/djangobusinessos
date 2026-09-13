@@ -63,7 +63,9 @@ A concept has one authoritative owning module.
 Examples:
 
 - customer/supplier/person/organization identity -> Party
-- product/service/category -> Catalog
+- product/service/category identity -> Catalog
+- concrete sellable/purchasable SKU identity -> Catalog `ProductVariant`
+- product attributes/attribute values -> Catalog
 - sales order lifecycle -> Sales
 - purchase order lifecycle -> Procurement
 - stock movement -> Inventory
@@ -73,9 +75,41 @@ Examples:
 
 Other modules reference the owning concept; they do not create competing copies.
 
+## Catalog item identity rule
+
+`Product` is conceptual/catalog identity.
+
+`ProductVariant` is the concrete sellable/purchasable item identity.
+
+Every sellable/purchasable Product has at least one ProductVariant:
+
+```text
+Simple Product
+-> one default ProductVariant
+
+Variable Product
+-> one or more ProductVariants differentiated by attribute values
+```
+
+Downstream transactional modules should use ProductVariant as their concrete item reference where they need a sellable/purchasable SKU.
+
+Expected future examples:
+
+```text
+SalesOrderLine -> ProductVariant
+PurchaseOrderLine -> ProductVariant
+StockMovement -> ProductVariant
+POSLine -> ProductVariant
+EcommerceCartLine -> ProductVariant
+```
+
+Catalog still does not own stock, warehouse balances, transactional pricing, sales/purchase workflow or accounting.
+
+See `docs/decisions/0003-catalog-variant-contract.md`.
+
 ## Integration rule
 
-Early BusinessOS may use direct Python service calls between allowed dependencies. Do not introduce an event bus just to decouple code cosmetically.
+Early BusinessOS may use direct Python service calls between allowed hard dependencies and explicit optional integrations. Do not introduce an event bus just to decouple code cosmetically.
 
 When repeated cross-module integration becomes difficult, extract explicit contracts/events later.
 
@@ -99,6 +133,8 @@ Standard modules expose intentional extension seams only as repeated needs emerg
 
 Normal ERP screens use Django templates + HTMX/Alpine where useful. React is reserved for UI that genuinely benefits from complex client-side state, such as a future workflow designer, Studio, page builder or advanced spreadsheet-like interface.
 
+For Catalog, simple-product UI should hide unnecessary variant complexity even though the internal transactional identity is a default ProductVariant.
+
 ## Reporting rule
 
 Operational reports may initially use Django ORM/SQL/selectors. Do not force transactional models to serve every future analytics need. Read models, materialized views or a warehouse can be introduced later.
@@ -110,7 +146,8 @@ Company scope is explicit on company-owned business records. A module must not e
 ## Avoid these anti-patterns
 
 - client-name conditionals in standard modules
-- duplicate Customer/Product/Payment concepts in vertical modules
+- duplicate Customer/Product/ProductVariant/Payment concepts in vertical modules
+- different downstream item-reference logic for simple vs variable products
 - business logic in views
 - circular imports between business apps
 - authoritative mutable `product.stock`
