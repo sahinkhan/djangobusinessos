@@ -17,6 +17,7 @@ Before implementation, read:
 - `docs/architecture/MODULE_BOUNDARIES.md`
 - `docs/architecture/DEPENDENCY_MAP.md`
 - `docs/decisions/0002-hard-dependencies-and-optional-integrations.md`
+- `docs/decisions/0003-catalog-variant-contract.md`
 - `docs/ROADMAP.md`
 
 ## Deliverables
@@ -53,55 +54,154 @@ Party must not depend on Sales, Procurement, Inventory, Billing, Accounting, HR,
 
 Create `businessos/modules/catalog/`.
 
-Catalog owns reusable sellable/purchasable item/service identity.
+Catalog owns reusable product/service/category identity and the concrete sellable/purchasable SKU identity.
+
+The variant contract is mandatory in Phase 1. Follow ADR 0003.
 
 Minimum models/capabilities:
 
-- Product
-  - UUID id
-  - company scope if product ownership is company-specific; document the chosen rule
-  - code/SKU
-  - name
-  - product type at minimum: stockable / consumable / service (or equivalent minimal design)
-  - default UoM
-  - active status
-- ProductCategory
-  - minimal hierarchy if genuinely useful
+#### Product
+
+- UUID id
+- company scope if product ownership is company-specific; document the chosen rule
+- name
+- category
+- product type at minimum: stockable / consumable / service (or equivalent minimal design)
+- default UoM
+- active status
 - basic sales/purchase description/flags only when required to unblock later modules
 
-Catalog must NOT own:
+`Product` is the conceptual/catalog identity. Do not make Product the transactional SKU identity.
+
+#### ProductVariant
+
+- UUID id
+- Product foreign key
+- SKU/code
+- `is_default`
+- active status
+- created/updated timestamps
+- minimal fields required for stable downstream identification only
+
+`ProductVariant` is the concrete sellable/purchasable identity used later by Sales, Procurement, Inventory, POS and Ecommerce.
+
+Every sellable/purchasable Product must have at least one ProductVariant.
+
+A Product must have at most one default variant.
+
+For a simple Product, services must create/maintain exactly one default variant unless the Product is intentionally transitioned to a variable-product state according to explicit service rules.
+
+The UI may hide variant complexity for simple Products.
+
+#### ProductCategory
+
+- minimal hierarchy if genuinely useful
+- company/global scope rule must be explicit
+
+#### Attribute
+
+Minimum reusable product option definition, for example:
+
+```text
+Color
+Size
+```
+
+Do not create a generic metadata engine.
+
+#### AttributeValue
+
+Belongs to an Attribute, for example:
+
+```text
+Color -> Black
+Color -> White
+Size -> M
+Size -> L
+```
+
+#### VariantAttributeValue
+
+Associates a concrete ProductVariant with AttributeValue records.
+
+Enforce enough constraints to prevent duplicate/contradictory assignments for the same variant/attribute.
+
+### 3. Variant invariants
+
+The following are Phase 1 architecture invariants and require tests:
+
+1. every sellable/purchasable Product has at least one ProductVariant;
+2. a Product has at most one default ProductVariant;
+3. simple product creation produces one default ProductVariant automatically through the business service path;
+4. a simple Product can exist without attribute assignments;
+5. variable Products can have multiple variants with attribute-value assignments;
+6. SKU uniqueness scope is explicit and documented;
+7. downstream contracts should be designed around ProductVariant as the transactional item identity;
+8. service Products also receive a default ProductVariant and must work without Inventory;
+9. Catalog does not introduce stock quantities or warehouse balances.
+
+Do not rely only on UI/form behavior for these invariants. Enforce them appropriately at service/model/database levels according to what PostgreSQL/Django can safely guarantee.
+
+### 4. Catalog must NOT own
 
 - authoritative stock quantity
 - warehouse balances
 - sales order pricing engine
-- purchasing workflow
+- purchase workflow
 - accounting balances
-- ecommerce-only duplicated product records
+- ecommerce-only duplicate Product/Variant records
+- advanced pricelists/promotions
 
-Do not implement variants/attributes, pricelists, promotions, tax engine, BOM, manufacturing, complex UoM conversions, barcode platform, media library or product bundles in Phase 1 unless required to preserve a correct minimal contract.
+Phase 1 intentionally does NOT implement:
 
-### 3. Framework-neutral services
+- automatic combinatorial variant generator
+- advanced product configurator
+- pricelist/variant pricing engine
+- promotions/campaign pricing
+- tax engine
+- BOM/manufacturing
+- complex UoM conversions
+- barcode platform
+- media library
+- product bundles/kits
+
+### 5. Framework-neutral services
 
 State-changing use cases belong in services.
 
 Provide only useful services, for example:
 
+Party:
+
 - create/update party
 - add/update party contact/address
-- create/update product/category
+
+Catalog:
+
+- create/update category
+- create simple Product with default ProductVariant
+- create/update ProductVariant
+- create/update Attribute/AttributeValue
+- assign variant attribute values
+- transition/manage simple vs variable representation only if required by the implemented UI/workflow
+
+Do not put variant lifecycle rules directly in Django views/forms/admin.
 
 Business services must accept `BusinessContext` where organization scope/authorization is relevant and must not accept Django `HttpRequest`.
 
-### 4. Selectors/read APIs
+### 6. Selectors/read APIs
 
 Create selectors for reusable/non-trivial reads needed by later modules, such as:
 
 - active customers/suppliers accessible in company scope
 - active products/categories accessible in company scope
+- active ProductVariants accessible in company scope
+- default variant resolution for a Product
+- variant lookup by SKU according to documented uniqueness scope
 
 Keep selectors simple and explicit.
 
-### 5. Authorization/data scope
+### 7. Authorization/data scope
 
 All company-owned Party/Catalog data must be scoped explicitly.
 
@@ -109,7 +209,9 @@ Use the existing `BusinessContext` and organizational access policies rather tha
 
 Prevent cross-company reads/writes in service paths and test this explicitly.
 
-### 6. Module manifests
+Product/Variant/Category/Attribute scope rules must not allow cross-company composition accidentally.
+
+### 8. Module manifests
 
 Party and Catalog must provide valid manifests.
 
@@ -124,36 +226,48 @@ If Catalog genuinely requires Party for a concrete Phase 1 rule, document the de
 
 Register module manifests using the existing registry convention.
 
-### 7. UI
+### 9. UI
 
-Create polished reusable screens using existing BusinessOS UI patterns:
+Create polished reusable screens using existing BusinessOS UI patterns.
 
 Party:
+
 - party list
 - create/edit
 - detail
 - search/filter minimum
 
 Catalog:
+
 - product list
 - create/edit
 - detail
 - category management minimum
+- simple-product UX that does not expose unnecessary variant complexity
+- variable-product variant management
+- attribute/value management sufficient to create real variants
 - search/filter minimum
 
-Do not create a metadata-driven UI engine.
+Do not create a metadata-driven UI engine or advanced variant matrix/configurator.
 
-### 8. Demo/seed data
+### 10. Demo/seed data
 
 Add idempotent demo/reference setup only where useful for local development.
 
+Include at least representative examples of:
+
+- one simple product with one default variant
+- one variable product with multiple variants/attribute values
+- one service product with a default variant and no Inventory dependency
+
 Do not couple production startup to demo data.
 
-### 9. Tests
+### 11. Tests
 
 Minimum architectural test coverage:
 
 Party:
+
 - person and organization creation
 - customer/supplier role representation
 - company scope enforcement
@@ -161,13 +275,20 @@ Party:
 - contact/address validation
 
 Catalog:
+
 - product/category creation
-- SKU/code uniqueness rule according to documented scope
-- service products work without Inventory
+- simple Product automatically gets exactly one default ProductVariant through service path
+- service Product gets default ProductVariant and works without Inventory
+- variable Product supports multiple variants
+- attribute/value assignment works
+- duplicate/contradictory variant attribute assignment is rejected
+- no Product has more than one default variant
+- SKU/code uniqueness follows documented scope
+- company scope enforcement for Product/Variant/Category/Attribute data
 - no authoritative stock field/source of truth is introduced
-- company scope enforcement
 
 Shared:
+
 - manifests validate/register correctly
 - services accept BusinessContext rather than HttpRequest
 - no reverse imports into core or unrelated modules
@@ -193,6 +314,10 @@ Do NOT implement:
 - generic repository/unit-of-work/command-bus abstractions
 - dynamic plugin installer
 - client-specific extensions
+- automatic variant combination generation
+- advanced variant configurator
+- pricelist/promotion/tax engine
+- stock quantities
 
 ## Quality gates
 
@@ -211,6 +336,8 @@ Also verify:
 - module-local tests are discovered
 - representative desktop/mobile UI smoke test
 - no cross-company leakage in tested service/selectors
+- simple and variable Product flows both work through the service layer
+- downstream item identity is ProductVariant-ready
 
 ## Publication workflow
 
@@ -230,12 +357,17 @@ Phase 1 is complete only when:
 
 1. Party and Catalog are stable enough for Sales/Procurement/Inventory to consume without redesign;
 2. company-scope behavior is explicit and tested;
-3. service products are supported without requiring Inventory;
-4. Catalog does not own stock or transaction pricing workflow;
-5. no speculative platform framework was introduced;
-6. tests/checks pass;
-7. implementation is published for architecture review.
+3. every sellable/purchasable Product has a ProductVariant identity;
+4. simple Products use one default ProductVariant without unnecessary UI complexity;
+5. variable Products can use attributes/values without an advanced configurator;
+6. service Products work without requiring Inventory;
+7. Catalog does not own stock or transaction pricing workflow;
+8. no speculative platform framework was introduced;
+9. tests/checks pass;
+10. implementation is published for architecture review.
 
 ## Architect intent
 
-The main purpose of Phase 1 is not feature depth. It is to freeze the first reusable business contracts that many later modules will depend on. Keep the models small, explicit and easy to evolve.
+The main purpose of Phase 1 is not feature depth. It is to freeze the first reusable business contracts that many later modules will depend on.
+
+`Product` is catalog identity; `ProductVariant` is transactional SKU identity. Establish this contract now so Sales, Procurement, Inventory, POS and Ecommerce do not require a later variant retrofit.
