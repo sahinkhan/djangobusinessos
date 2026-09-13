@@ -38,7 +38,6 @@ class SalesOrderLineForm(CompanyBoundForm):
     description = forms.CharField(
         required=False, widget=forms.Textarea(attrs={"rows": 3})
     )
-    position = forms.IntegerField(min_value=1, required=False)
 
     def __init__(self, *args, company_id, **kwargs):
         super().__init__(*args, company_id=company_id, **kwargs)

@@ -54,6 +54,10 @@ class SalesOrder(UUIDTimestampedModel):
             raise ValidationError("Sales Order ownership cannot be reassigned after creation.")
         if original and original["number"] != self.number:
             raise ValidationError({"number": "Sales Order number cannot be changed."})
+        if original and original["status"] != self.status:
+            raise ValidationError(
+                {"status": "Sales Order status may only change through lifecycle services."}
+            )
         if not self.number:
             raise ValidationError({"number": "Order number is required."})
         if self._state.adding and self.status != self.Status.DRAFT:
@@ -80,15 +84,6 @@ class SalesOrder(UUIDTimestampedModel):
                     raise ValidationError(
                         "Confirmed or cancelled Sales Orders are immutable."
                     )
-            if original["status"] == self.Status.CONFIRMED and self.status not in {
-                self.Status.CONFIRMED,
-                self.Status.CANCELLED,
-            }:
-                raise ValidationError("A confirmed Sales Order may only be cancelled.")
-            if original["status"] == self.Status.CANCELLED and self.status != self.Status.CANCELLED:
-                raise ValidationError("A cancelled Sales Order is immutable.")
-            if original["status"] == self.Status.DRAFT and self.status == self.Status.CANCELLED:
-                raise ValidationError("A draft Sales Order cannot be cancelled.")
         if self.status == self.Status.DRAFT and self.confirmed_at is not None:
             raise ValidationError(
                 {"confirmed_at": "A draft order cannot have a confirmation time."}
@@ -173,7 +168,7 @@ class SalesOrderLine(UUIDTimestampedModel):
             ).first()
         if original and any(
             original[field] != getattr(self, field)
-            for field in ("company_id", "sales_order_id", "product_variant_id")
+            for field in ("company_id", "sales_order_id")
         ):
             raise ValidationError("Sales Order Line ownership cannot be reassigned.")
         if self.sales_order_id and self.company_id:

@@ -174,7 +174,6 @@ def line_edit(request, order_id, line_id):
             "quantity": line.quantity,
             "unit_price": line.unit_price,
             "description": line.description_snapshot,
-            "position": line.position,
         },
     )
     if request.method == "POST" and form.is_valid():

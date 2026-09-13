@@ -66,6 +66,22 @@ def _order_number() -> str:
     return f"SO-{uuid4().hex.upper()}"
 
 
+def _persist_lifecycle_transition(
+    order: SalesOrder, *, status: str, confirmed_at=None
+) -> SalesOrder:
+    """Persist a transition after its public lifecycle service has locked and validated it."""
+    changed_at = timezone.now()
+    updates = {"status": status, "updated_at": changed_at}
+    if confirmed_at is not None:
+        updates["confirmed_at"] = confirmed_at
+    SalesOrder.objects.filter(pk=order.pk).update(**updates)
+    order.status = status
+    order.updated_at = changed_at
+    if confirmed_at is not None:
+        order.confirmed_at = confirmed_at
+    return order
+
+
 @transaction.atomic
 def create_sales_order(
     context: BusinessContext,
@@ -116,14 +132,12 @@ def add_sales_order_line(
     quantity,
     unit_price,
     description: str | None = None,
-    position: int | None = None,
 ) -> SalesOrderLine:
     validate_business_context(context)
     order = _locked_order(context, order_id)
     _require_draft(order)
     variant = _variant(context, product_variant_id)
-    if position is None:
-        position = (order.lines.aggregate(value=Max("position"))["value"] or 0) + 1
+    position = (order.lines.aggregate(value=Max("position"))["value"] or 0) + 1
     line = SalesOrderLine(
         company_id=context.company_id,
         sales_order=order,
@@ -150,7 +164,6 @@ def update_sales_order_line(
     quantity,
     unit_price,
     description: str,
-    position: int | None,
 ) -> SalesOrderLine:
     validate_business_context(context)
     try:
@@ -168,8 +181,6 @@ def update_sales_order_line(
     line.description_snapshot = description
     line.quantity = quantity
     line.unit_price = unit_price
-    if position is not None:
-        line.position = position
     line.save()
     return line
 
@@ -203,10 +214,12 @@ def confirm_sales_order(context: BusinessContext, *, order_id) -> SalesOrder:
     for line in lines:
         _variant(context, line.product_variant_id)
         line.full_clean()
-    order.status = SalesOrder.Status.CONFIRMED
-    order.confirmed_at = timezone.now()
-    order.save()
-    return order
+    confirmed_at = timezone.now()
+    return _persist_lifecycle_transition(
+        order,
+        status=SalesOrder.Status.CONFIRMED,
+        confirmed_at=confirmed_at,
+    )
 
 
 @transaction.atomic
@@ -217,6 +230,4 @@ def cancel_sales_order(context: BusinessContext, *, order_id) -> SalesOrder:
         return order
     if order.status != SalesOrder.Status.CONFIRMED:
         raise ValidationError("Only a confirmed Sales Order may be cancelled.")
-    order.status = SalesOrder.Status.CANCELLED
-    order.save()
-    return order
+    return _persist_lifecycle_transition(order, status=SalesOrder.Status.CANCELLED)

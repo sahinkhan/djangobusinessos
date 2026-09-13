@@ -111,7 +111,7 @@ def test_create_order_and_line_snapshot_concrete_variant(
 
 @pytest.mark.django_db
 def test_draft_order_header_and_lines_can_be_updated_and_removed(
-    business_context, draft_order, variant, customer, currency
+    business_context, draft_order, variant, customer, currency, uom
 ):
     line = add_sales_order_line(
         business_context,
@@ -128,21 +128,31 @@ def test_draft_order_header_and_lines_can_be_updated_and_removed(
         currency_id=currency.id,
         notes="Updated",
     )
+    replacement = create_simple_product(
+        business_context,
+        name="Replacement service",
+        sku="REPLACE-001",
+        product_type=Product.Type.SERVICE,
+        default_uom_id=uom.id,
+        sales_description="Replacement description",
+    ).variants.get()
     update_sales_order_line(
         business_context,
         line_id=line.id,
-        product_variant_id=variant.id,
+        product_variant_id=replacement.id,
         quantity=3,
         unit_price=12,
         description="Updated snapshot",
-        position=2,
     )
     line.refresh_from_db()
     draft_order.refresh_from_db()
     assert draft_order.notes == "Updated"
+    assert line.product_variant == replacement
+    assert line.sku_snapshot == "REPLACE-001"
+    assert line.name_snapshot == "Replacement service"
     assert line.quantity == 3
     assert line.description_snapshot == "Updated snapshot"
-    assert line.position == 2
+    assert line.position == 1
 
     draft_order.number = "SO-CHANGED"
     with pytest.raises(ValidationError, match="number cannot be changed"):
@@ -226,10 +236,81 @@ def test_confirmation_revalidates_customer_and_variant(
     )
     update_product(business_context, product_id=variant.product_id, is_sellable=False)
 
+    draft_order.status = SalesOrder.Status.CONFIRMED
+    with pytest.raises(ValidationError, match="only change through lifecycle services"):
+        draft_order.save()
+    draft_order.refresh_from_db()
+    assert draft_order.status == SalesOrder.Status.DRAFT
+
     with pytest.raises(PermissionDenied, match="active sellable"):
         confirm_sales_order(business_context, order_id=draft_order.id)
     draft_order.refresh_from_db()
     assert draft_order.status == SalesOrder.Status.DRAFT
+
+
+@pytest.mark.django_db
+def test_normal_model_save_cannot_bypass_lifecycle_services(
+    business_context, draft_order, variant
+):
+    add_sales_order_line(
+        business_context,
+        order_id=draft_order.id,
+        product_variant_id=variant.id,
+        quantity=1,
+        unit_price=10,
+    )
+
+    draft_order.status = SalesOrder.Status.CONFIRMED
+    with pytest.raises(ValidationError, match="only change through lifecycle services"):
+        draft_order.save()
+    draft_order.refresh_from_db()
+    assert draft_order.status == SalesOrder.Status.DRAFT
+
+    confirmed = confirm_sales_order(business_context, order_id=draft_order.id)
+    assert confirmed.status == SalesOrder.Status.CONFIRMED
+
+    confirmed.status = SalesOrder.Status.CANCELLED
+    with pytest.raises(ValidationError, match="only change through lifecycle services"):
+        confirmed.save()
+    confirmed.refresh_from_db()
+    assert confirmed.status == SalesOrder.Status.CONFIRMED
+
+    cancelled = cancel_sales_order(business_context, order_id=draft_order.id)
+    assert cancelled.status == SalesOrder.Status.CANCELLED
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_line_additions_receive_unique_internal_positions(
+    business_context, draft_order, variant
+):
+    if connection.vendor != "postgresql":
+        pytest.skip("Sales line-position row-lock contract requires PostgreSQL.")
+    start = Barrier(2)
+
+    def add_line():
+        close_old_connections()
+        try:
+            start.wait(timeout=5)
+            return add_sales_order_line(
+                business_context,
+                order_id=draft_order.id,
+                product_variant_id=variant.id,
+                quantity=1,
+                unit_price=10,
+            ).position
+        finally:
+            close_old_connections()
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(add_line), executor.submit(add_line)]
+        positions = [future.result(timeout=10) for future in futures]
+
+    assert sorted(positions) == [1, 2]
+    assert list(
+        SalesOrderLine.objects.filter(sales_order=draft_order)
+        .order_by("position")
+        .values_list("position", flat=True)
+    ) == [1, 2]
 
 
 @pytest.mark.django_db
@@ -255,7 +336,6 @@ def test_confirmed_order_and_lines_are_immutable_through_service_and_model(
             quantity=2,
             unit_price=10,
             description="No",
-            position=1,
         )
     with pytest.raises(ValidationError, match="Only draft"):
         remove_sales_order_line(business_context, line_id=line.id)

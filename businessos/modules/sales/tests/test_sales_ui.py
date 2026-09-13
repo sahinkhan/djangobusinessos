@@ -74,6 +74,7 @@ def test_customer_to_order_to_confirm_ui_flow(
             "quantity": "2",
             "unit_price": "75.50",
             "description": "Delivery milestone",
+            "position": "99",
             "scope_company_id": str(company.id),
         },
     )
@@ -84,6 +85,7 @@ def test_customer_to_order_to_confirm_ui_flow(
 
     assert create_response.status_code == 302
     assert line_response.status_code == 302
+    assert order.lines.get().position == 1
     assert confirm_response.status_code == 200
     assert order.status == SalesOrder.Status.CONFIRMED
     assert b"UI Customer" in confirm_response.content
