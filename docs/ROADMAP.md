@@ -62,9 +62,10 @@ Exit gate: PASSED. Sales/Procurement/Inventory can consume stable Party/Catalog 
 
 ## Phase 2 — Commercial Core
 
-Status: In progress — standalone Sales is implemented on `phase2-sales` and awaits
-independent remediation re-review. Other standalone Phase 2 modules and optional integrations
-remain outside this branch. Contracts are defined by ADR 0006 and
+Status: In progress — standalone Sales is accepted on `phase2-sales` at
+`a79cb95d031bb38719bcdccfb5b14670cc76cd17`, including representative desktop/mobile visual QA;
+the closure decision is recorded in ADR 0007. Other standalone Phase 2 modules and optional
+integrations remain pending. Contracts are defined by ADR 0006 and
 `docs/exec-plans/active/PHASE_2_COMMERCIAL_CORE.md`.
 
 Standalone modules are parallelizable after the Phase 1 contract freeze. Optional cross-module integrations are implemented only after the standalone module contracts pass review.

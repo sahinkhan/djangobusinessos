@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — STANDALONE SALES IMPLEMENTED; REMEDIATION RE-REVIEW PENDING
+Status: IN PROGRESS — STANDALONE SALES ACCEPTED; OTHER BATCHES PENDING
 
 Base architecture commit before this plan: `361d832713dcd2325363b4059a4f3b6cac7d3715`
 
@@ -28,6 +28,7 @@ Before any Phase 2 implementation, read and obey:
 - `docs/decisions/0004-phase-1-party-catalog-contract-freeze.md`
 - `docs/decisions/0005-deployment-module-gating-and-simple-variant-lifecycle.md`
 - `docs/decisions/0006-phase-2-commercial-core-contracts.md`
+- `docs/decisions/0007-standalone-sales-acceptance.md`
 - this execution plan
 
 Do not silently change these architecture contracts.
@@ -72,13 +73,23 @@ Do not run independent agents against the same branch/worktree concurrently.
 
 ## Implementation record
 
-The standalone Sales implementation lives on `phase2-sales`. It remains outside `main` and the
-future `phase2-commercial-core` integration branch until independent audit acceptance. Sales
-confirmation revalidates the active customer, active currency, and every active/sellable
-ProductVariant while holding the order row lock. Draft line mutations share that order-lock
-protocol. Monetary totals are derived from lines and displayed using the Currency
-`decimal_places` value with `ROUND_HALF_UP`; unit prices display the model's full four-decimal
-precision. No Inventory, Billing, or Accounting writes occur.
+Standalone Sales is accepted at implementation commit
+`a79cb95d031bb38719bcdccfb5b14670cc76cd17`; see ADR 0007. It remains on
+`phase2-sales`, outside `main` and the future `phase2-commercial-core` integration branch, until
+the planned integration gate. Sales confirmation revalidates the active customer, active
+currency, and every active/sellable ProductVariant while holding the order row lock. Draft line
+mutations share that order-lock protocol. Monetary totals are derived from lines and displayed
+using the Currency `decimal_places` value with `ROUND_HALF_UP`; unit prices display the model's
+full four-decimal precision. No Inventory, Billing, or Accounting writes occur.
+
+The independent technical and architecture review passed at
+`7e5f5b407415d3b5b32188c94c4e9b4d7dd7a555`. Completion QA on 2026-09-14 exercised the
+representative customer -> draft -> service ProductVariant line -> confirm flow at 1280x720 and
+390x844. It verified desktop and mobile list/form/detail layouts, mobile navigation, full
+four-decimal unit-price display (`USD 0.0049`), currency total display (`USD 0.49`), and confirmed
+content immutability. QA exposed narrow-screen page overflow from the long generated order number
+and order-lines grid; `a79cb95d031bb38719bcdccfb5b14670cc76cd17` contains and regression-tests
+that layout. Hosted CI run 25 passed on that exact commit.
 
 ## Ownership
 
