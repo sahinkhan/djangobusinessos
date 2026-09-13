@@ -43,10 +43,17 @@ Deliver:
 
 - Party / Contacts
 - Catalog / Products / Categories
-- reusable document numbering basics
+- ProductVariant as the concrete sellable/purchasable SKU identity
+- minimal Attributes / Attribute Values for real variable products
+- simple products represented internally by one default ProductVariant
+- reusable document numbering basics only if Phase 1 flows require them
 - shared form/list/detail UI patterns
 
-Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contracts.
+Catalog remains free of stock balances, transactional pricing engines, Sales/Procurement workflow and Accounting.
+
+Do not build an advanced variant configurator, automatic combination generator, pricelists/promotions, Inventory quantities or ecommerce-specific product copies in this phase.
+
+Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contracts, and both simple and variable products resolve to stable ProductVariant identities without redesign.
 
 ---
 
@@ -70,6 +77,8 @@ Golden flows:
 - Invoice/Payment basics
 - Journal Entry + Trial Balance basics
 
+Concrete transactional item references use Catalog ProductVariant where an item/SKU is required.
+
 Accounting and Inventory require transactional tests and duplicate-posting protection where relevant.
 
 ---
@@ -81,7 +90,7 @@ Deliver:
 - HR basics: Employee, Department, Attendance, Leave
 - Ecommerce composition using Catalog + Sales + Inventory + Billing
 
-Do not create duplicate ecommerce product/order/stock sources of truth.
+Do not create duplicate ecommerce product/variant/order/stock sources of truth.
 
 ---
 
