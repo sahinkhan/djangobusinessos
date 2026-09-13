@@ -5,7 +5,7 @@ from threading import Barrier
 
 import pytest
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import close_old_connections, connection
+from django.db import close_old_connections, connection, connections
 
 from businessos.core.access.models import UserCompanyAccess
 from businessos.core.common.context import BusinessContext
@@ -285,7 +285,7 @@ def test_concurrent_attribute_replacements_finish_as_one_complete_submission(
                 business_context, variant_id=variant.id, attribute_value_ids=values
             )
         finally:
-            close_old_connections()
+            connections.close_all()
 
     submissions = ([black.id], [large.id])
     with ThreadPoolExecutor(max_workers=2) as executor:
@@ -321,7 +321,7 @@ def test_database_and_model_allow_at_most_one_default_variant(business_context, 
 
 @pytest.mark.django_db
 def test_sku_is_unique_per_company_and_reusable_in_another_company(
-    business_context, operator, currency, uom
+    business_context, operator, company, currency, uom
 ):
     create_simple_product(
         business_context,
@@ -339,7 +339,13 @@ def test_sku_is_unique_per_company_and_reusable_in_another_company(
             default_uom_id=uom.id,
         )
 
-    other_company = Company.objects.create(code="OTHER", name="Other", base_currency=currency)
+    other_company = Company.objects.create(
+        code="OTHER",
+        name="Other",
+        base_currency=currency,
+        country=company.country,
+        default_language=company.default_language,
+    )
     other_context = BusinessContext(actor_id=operator.id, company_id=other_company.id)
     UserCompanyAccess.objects.create(user=operator, company=other_company)
     other_product = create_simple_product(
@@ -354,7 +360,7 @@ def test_sku_is_unique_per_company_and_reusable_in_another_company(
 
 @pytest.mark.django_db
 def test_catalog_relationships_and_selectors_are_company_scoped(
-    business_context, operator, currency, uom
+    business_context, operator, company, currency, uom
 ):
     category = create_category(business_context, name="Company One")
     product = create_simple_product(
@@ -365,7 +371,13 @@ def test_catalog_relationships_and_selectors_are_company_scoped(
         product_type=Product.Type.STOCKABLE,
         default_uom_id=uom.id,
     )
-    other_company = Company.objects.create(code="OTHER", name="Other", base_currency=currency)
+    other_company = Company.objects.create(
+        code="OTHER",
+        name="Other",
+        base_currency=currency,
+        country=company.country,
+        default_language=company.default_language,
+    )
     other_context = BusinessContext(actor_id=operator.id, company_id=other_company.id)
 
     assert list(products_for_company(business_context)) == [product]

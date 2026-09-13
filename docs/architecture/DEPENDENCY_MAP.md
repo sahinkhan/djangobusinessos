@@ -22,7 +22,9 @@ consumer -> dependency
 
 ```text
 organization -> common, reference
-access -> common, identity, organization
+audit -> common, identity, organization
+access -> common, identity, organization, audit
+module registry -> access
 
 party -> identity, organization, reference, access
 catalog -> reference, organization, access
@@ -47,6 +49,10 @@ Inventory, Accounting and other capabilities may be composed with these modules 
 ## Core dependencies
 
 Core apps may depend on lower-level shared utilities but must not import business modules.
+
+Core Foundation v1 keeps audit below access: access services may append audit records, while audit
+does not import access. The module registry depends on the Access permission identity only to
+register manifest declarations deterministically.
 
 Examples of allowed imports:
 

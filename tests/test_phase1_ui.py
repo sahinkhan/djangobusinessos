@@ -188,7 +188,11 @@ def test_stale_form_cannot_write_after_company_scope_switch(
     opened_response = scoped_client.get(reverse("party:create"))
     opened_company_id = opened_response.context["form"].initial["scope_company_id"]
     other_company = Company.objects.create(
-        code="OTHER", name="Other Company", base_currency=currency
+        code="OTHER",
+        name="Other Company",
+        base_currency=currency,
+        country=company.country,
+        default_language=company.default_language,
     )
     UserCompanyAccess.objects.create(user=operator, company=other_company)
     session = scoped_client.session

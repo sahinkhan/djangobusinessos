@@ -37,6 +37,26 @@ Exit gate: foundation tests/checks pass and shared contracts are frozen enough f
 
 ---
 
+## Phase 0H — Core Foundation v1 Hardening
+
+Status: Implemented on `foundation-v1-hardening` — independent audit pending. Not frozen or merged.
+
+Deliver:
+
+- minimal company-scoped BusinessOS RBAC with deny-by-default authorization
+- deterministic module permission declarations and registration
+- append-only Core audit records for security-sensitive actions
+- explicit company/branch/warehouse grant and revoke services
+- Company country, default language, IANA timezone and shared business-time helpers
+- immutable Company base currency through normal mutation paths
+- immutable Country/Currency/Language/UoM and permission identity codes
+- a documented boundary between Django technical permissions and BusinessOS authorization
+
+Exit gate: independent Core audit must pass before the Core Foundation v1 contract is frozen or any
+canonical history/migration normalization starts.
+
+---
+
 ## Phase 1 — Shared Commercial Primitives
 
 Status: Complete — FINAL PASS. Party/Catalog contracts are frozen by ADR 0004 and ADR 0005; accepted Phase 1 head was merged to `main` at `361d832713dcd2325363b4059a4f3b6cac7d3715`.
@@ -62,7 +82,11 @@ Exit gate: PASSED. Sales/Procurement/Inventory can consume stable Party/Catalog 
 
 ## Phase 2 — Commercial Core
 
-Status: Prepared — implementation not started. Contracts are defined by ADR 0006 and `docs/exec-plans/active/PHASE_2_COMMERCIAL_CORE.md`.
+Status: Development paused for Core Foundation v1 hardening. The accepted standalone Sales and
+Procurement references and Inventory remediation reference remain on their dedicated branches.
+Billing, Accounting and integrations must not start until the approved foundation reconstruction
+sequence reaches them. Contracts remain defined by ADR 0006 and
+`docs/exec-plans/active/PHASE_2_COMMERCIAL_CORE.md`.
 
 Standalone modules are parallelizable after the Phase 1 contract freeze. Optional cross-module integrations are implemented only after the standalone module contracts pass review.
 

@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from businessos.core.access.models import UserCompanyAccess
 from businessos.core.common.context import BusinessContext
 from businessos.core.organization.models import Company
-from businessos.core.reference.models import Country, Currency, UnitOfMeasure
+from businessos.core.reference.models import Country, Currency, Language, UnitOfMeasure
 
 
 @pytest.fixture
@@ -13,13 +13,24 @@ def currency(db):
 
 
 @pytest.fixture
-def company(currency):
-    return Company.objects.create(code="ACME", name="Acme Corporation", base_currency=currency)
+def country(db):
+    return Country.objects.create(code="US", name="United States")
 
 
 @pytest.fixture
-def country(db):
-    return Country.objects.create(code="US", name="United States")
+def language(db):
+    return Language.objects.create(code="EN", name="English")
+
+
+@pytest.fixture
+def company(currency, country, language):
+    return Company.objects.create(
+        code="ACME",
+        name="Acme Corporation",
+        base_currency=currency,
+        country=country,
+        default_language=language,
+    )
 
 
 @pytest.fixture

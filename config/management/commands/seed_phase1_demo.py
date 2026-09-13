@@ -6,7 +6,7 @@ from businessos.core.access.models import UserCompanyAccess
 from businessos.core.common.context import BusinessContext
 from businessos.core.modules.services import register_manifest
 from businessos.core.organization.models import Company
-from businessos.core.reference.models import Currency, UnitOfMeasure
+from businessos.core.reference.models import Country, Currency, Language, UnitOfMeasure
 from businessos.modules.catalog.manifest import MODULE as CATALOG_MANIFEST
 from businessos.modules.catalog.models import Attribute, AttributeValue, Product, ProductVariant
 from businessos.modules.catalog.services import (
@@ -152,6 +152,8 @@ class Command(BaseCommand):
             "USD",
             {"name": "US Dollar", "symbol": "$", "decimal_places": 2},
         )
+        country = self._reference(Country, "US", {"name": "United States"})
+        language = self._reference(Language, "EN", {"name": "English"})
         uom = self._reference(
             UnitOfMeasure,
             "EA",
@@ -165,7 +167,11 @@ class Command(BaseCommand):
                     "is created automatically."
                 )
             company = Company.objects.create(
-                code="DEMO", name="BusinessOS Demo Company", base_currency=currency
+                code="DEMO",
+                name="BusinessOS Demo Company",
+                base_currency=currency,
+                country=country,
+                default_language=language,
             )
             company_created = True
         else:

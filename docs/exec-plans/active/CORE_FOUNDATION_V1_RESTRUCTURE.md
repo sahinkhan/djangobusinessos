@@ -2,7 +2,40 @@
 
 ## Status
 
-Active execution plan.
+Gate 1 implemented on `foundation-v1-hardening`; independent Gate 2 audit pending.
+
+Implemented outcome:
+
+- Core Access now owns company-scoped minimal RBAC and explicit organizational grant/revoke services.
+- module manifests support deterministic, non-destructive permission registration;
+- Core Audit records immutable security-action evidence;
+- Company now owns country, default language and validated IANA timezone, while base currency is
+  immutable through normal model/service mutation;
+- Reference and permission codes are immutable identities;
+- shared company-local datetime/date helpers establish the business-time contract;
+- ADR 0009 records the candidate Core Foundation v1 boundary.
+
+No Phase 2 branch was merged, no canonical history was rewritten, and no excluded infrastructure
+or capability was introduced. Gate 2, Gate 3 and Phase 2 adoption remain unstarted.
+
+Gate 1 implementation verification on 2026-09-14:
+
+- PostgreSQL 17 / Python 3.13: 86 tests passed without teardown warnings;
+- SQLite: 85 tests passed, with the existing PostgreSQL-only Catalog row-lock test skipped;
+- Ruff, Django system checks and migration-drift checks passed;
+- a zero-state PostgreSQL migration/bootstrap and Docker application startup passed;
+- a pre-hardening Company row migrated successfully to explicit `ZZ` / `UND` / `UTC` values;
+- module-local test discovery passed;
+- the existing Phase 1 demo bootstrap remained idempotent;
+- Tailwind output reproduced exactly; no UI files changed.
+
+Known limitations at this gate:
+
+- existing companies receive explicit unknown jurisdiction/language references and require operator
+  correction before those values drive business behavior;
+- direct raw SQL remains outside normal model/service immutability guarantees;
+- Party/Catalog and accepted Phase 2 modules have not yet adopted fine-grained RBAC permissions;
+- Core v1 is not frozen until independent Gate 2 review passes.
 
 This plan is intentionally pre-release. Do not rewrite canonical history until the Core Foundation v1 implementation has passed independent review.
 

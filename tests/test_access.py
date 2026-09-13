@@ -27,7 +27,13 @@ def user(db):
 @pytest.mark.django_db
 def test_company_selector_returns_only_explicitly_allowed_companies(user, company):
     other_currency = Currency.objects.create(code="EUR", name="Euro", symbol="€")
-    Company.objects.create(code="OTHER", name="Other", base_currency=other_currency)
+    Company.objects.create(
+        code="OTHER",
+        name="Other",
+        base_currency=other_currency,
+        country=company.country,
+        default_language=company.default_language,
+    )
     UserCompanyAccess.objects.create(user=user, company=company)
 
     assert list(companies_for_user(user)) == [company]
@@ -65,7 +71,13 @@ def test_context_adapter_builds_immutable_validated_context(user, company, branc
 
 @pytest.mark.django_db
 def test_context_adapter_rejects_cross_company_branch(user, company, currency):
-    other = Company.objects.create(code="OTHER", name="Other", base_currency=currency)
+    other = Company.objects.create(
+        code="OTHER",
+        name="Other",
+        base_currency=currency,
+        country=company.country,
+        default_language=company.default_language,
+    )
     other_branch = Branch.objects.create(company=other, code="HQ", name="Other HQ")
     UserCompanyAccess.objects.create(user=user, company=company)
     request = SimpleNamespace(

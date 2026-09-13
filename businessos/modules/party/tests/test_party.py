@@ -99,9 +99,15 @@ def test_contact_and_address_validation(business_context, country):
 
 @pytest.mark.django_db
 def test_party_services_and_selectors_reject_cross_company_scope(
-    business_context, operator, currency
+    business_context, operator, company, currency
 ):
-    other_company = Company.objects.create(code="OTHER", name="Other", base_currency=currency)
+    other_company = Company.objects.create(
+        code="OTHER",
+        name="Other",
+        base_currency=currency,
+        country=company.country,
+        default_language=company.default_language,
+    )
     other_context = BusinessContext(actor_id=operator.id, company_id=other_company.id)
     other_party = Party.objects.create(
         company=other_company,
@@ -125,11 +131,17 @@ def test_party_services_and_selectors_reject_cross_company_scope(
 
 
 @pytest.mark.django_db
-def test_party_company_ownership_is_immutable(business_context, currency):
+def test_party_company_ownership_is_immutable(business_context, company, currency):
     party = create_party(
         business_context, party_type=Party.Type.PERSON, display_name="Scoped Person"
     )
-    other_company = Company.objects.create(code="OTHER", name="Other", base_currency=currency)
+    other_company = Company.objects.create(
+        code="OTHER",
+        name="Other",
+        base_currency=currency,
+        country=company.country,
+        default_language=company.default_language,
+    )
     party.company = other_company
 
     with pytest.raises(ValidationError, match="ownership cannot be reassigned"):

@@ -4,7 +4,13 @@ from django.core.exceptions import PermissionDenied
 from businessos.core.common.context import BusinessContext
 from businessos.core.organization.models import Branch, Company, Warehouse
 
-from .models import UserBranchAccess, UserCompanyAccess, UserWarehouseAccess
+from .models import (
+    UserBranchAccess,
+    UserCompanyAccess,
+    UserRoleAssignment,
+    UserWarehouseAccess,
+)
+from .permissions import validate_permission_code
 
 
 def validate_business_context(context: BusinessContext) -> BusinessContext:
@@ -49,4 +55,26 @@ def validate_business_context(context: BusinessContext) -> BusinessContext:
         ).exists():
             raise PermissionDenied("You do not have access to this warehouse.")
 
+    return context
+
+
+def has_permission(context: BusinessContext, permission_code: str) -> bool:
+    """Return an explicit BusinessOS authorization decision; default is deny."""
+    validate_business_context(context)
+    validate_permission_code(permission_code)
+    user = get_user_model().objects.get(id=context.actor_id)
+    if user.is_superuser:
+        return True
+    return UserRoleAssignment.objects.filter(
+        user_id=context.actor_id,
+        company_id=context.company_id,
+        role__is_active=True,
+        role__permission_links__permission__code=permission_code,
+        role__permission_links__permission__is_active=True,
+    ).exists()
+
+
+def require_permission(context: BusinessContext, permission_code: str) -> BusinessContext:
+    if not has_permission(context, permission_code):
+        raise PermissionDenied(f"Business permission required: {permission_code}.")
     return context
