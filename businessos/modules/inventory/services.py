@@ -1,9 +1,11 @@
 from decimal import Decimal, InvalidOperation
+from uuid import uuid4
 
 from django.core.exceptions import ValidationError
 from django.db import IntegrityError, transaction
 from django.utils import timezone
 
+from businessos.core.access.policies import validate_business_context
 from businessos.core.common.context import BusinessContext
 from businessos.core.organization.models import Warehouse
 from businessos.modules.catalog.models import Product, ProductVariant
@@ -49,6 +51,10 @@ def _variant(context: BusinessContext, variant_id):
         raise ValidationError({"product_variant": "An active product variant is required."})
     if variant.product.product_type == Product.Type.SERVICE:
         raise ValidationError({"product_variant": "Service products cannot carry stock."})
+    if not variant.product.default_uom.is_active:
+        raise ValidationError(
+            {"product_variant": "The product's current default unit of measure must be active."}
+        )
     return variant
 
 
@@ -79,7 +85,6 @@ def _validate_route(movement_type, source, destination):
 def create_stock_movement(
     context: BusinessContext,
     *,
-    number,
     movement_type,
     effective_at,
     reference="",
@@ -89,44 +94,48 @@ def create_stock_movement(
     source_type=None,
     source_id=None,
 ):
+    validate_business_context(context)
     key = idempotency_key.strip() if idempotency_key else None
     source_module, source_type, source_id = _source(source_module, source_type, source_id)
-    movement = StockMovement(
-        company_id=context.company_id,
-        number=number,
-        movement_type=movement_type,
-        effective_at=effective_at,
-        reference=reference,
-        notes=notes,
-        idempotency_key=key,
-        source_module=source_module,
-        source_type=source_type,
-        source_id=source_id,
-    )
-    movement.full_clean(validate_unique=False, validate_constraints=False)
-    try:
-        with transaction.atomic():
-            movement.save()
-    except IntegrityError as exc:
-        if (
-            key
-            and StockMovement.objects.filter(
-                company_id=context.company_id, idempotency_key=key
-            ).exists()
-        ):
-            raise ValidationError(
-                {"idempotency_key": "This idempotency key is already in use."}
-            ) from exc
-        if StockMovement.objects.filter(
-            company_id=context.company_id, number=movement.number
-        ).exists():
-            raise ValidationError({"number": "This movement number is already in use."}) from exc
-        raise
-    return movement
+    for _attempt in range(3):
+        movement = StockMovement(
+            company_id=context.company_id,
+            number=f"SM-{uuid4().hex.upper()}",
+            movement_type=movement_type,
+            effective_at=effective_at,
+            reference=reference,
+            notes=notes,
+            idempotency_key=key,
+            source_module=source_module,
+            source_type=source_type,
+            source_id=source_id,
+        )
+        movement.full_clean(validate_unique=False, validate_constraints=False)
+        try:
+            with transaction.atomic():
+                movement.save()
+        except IntegrityError as exc:
+            if (
+                key
+                and StockMovement.objects.filter(
+                    company_id=context.company_id, idempotency_key=key
+                ).exists()
+            ):
+                raise ValidationError(
+                    {"idempotency_key": "This idempotency key is already in use."}
+                ) from exc
+            if StockMovement.objects.filter(
+                company_id=context.company_id, number=movement.number
+            ).exists():
+                continue
+            raise
+        return movement
+    raise ValidationError("A unique stock movement number could not be generated.")
 
 
 @transaction.atomic
 def update_stock_movement(context: BusinessContext, *, movement_id, **changes):
+    validate_business_context(context)
     try:
         movement = StockMovement.objects.select_for_update().get(
             id=movement_id, company_id=context.company_id
@@ -135,7 +144,7 @@ def update_stock_movement(context: BusinessContext, *, movement_id, **changes):
         raise ValidationError("Stock movement was not found in the active company.") from exc
     if movement.status != StockMovement.Status.DRAFT:
         raise ValidationError("Posted stock movements are immutable.")
-    allowed = {"number", "movement_type", "effective_at", "reference", "notes"}
+    allowed = {"movement_type", "effective_at", "reference", "notes"}
     if set(changes) - allowed:
         raise ValidationError("Only draft movement details can be updated.")
     if "movement_type" in changes and changes["movement_type"] != movement.movement_type:
@@ -174,6 +183,7 @@ def _line_values(
 
 @transaction.atomic
 def add_stock_movement_line(context: BusinessContext, *, movement_id, **data):
+    validate_business_context(context)
     try:
         movement = StockMovement.objects.select_for_update().get(
             id=movement_id, company_id=context.company_id
@@ -191,6 +201,7 @@ def add_stock_movement_line(context: BusinessContext, *, movement_id, **data):
 
 @transaction.atomic
 def update_stock_movement_line(context: BusinessContext, *, movement_id, line_id, **data):
+    validate_business_context(context)
     try:
         movement = StockMovement.objects.select_for_update().get(
             id=movement_id, company_id=context.company_id
@@ -213,6 +224,7 @@ def update_stock_movement_line(context: BusinessContext, *, movement_id, line_id
 
 @transaction.atomic
 def remove_stock_movement_line(context: BusinessContext, *, movement_id, line_id):
+    validate_business_context(context)
     try:
         movement = StockMovement.objects.select_for_update().get(
             id=movement_id, company_id=context.company_id
@@ -232,6 +244,7 @@ def remove_stock_movement_line(context: BusinessContext, *, movement_id, line_id
 
 @transaction.atomic
 def post_stock_movement(context: BusinessContext, *, movement_id):
+    validate_business_context(context)
     try:
         movement = StockMovement.objects.select_for_update().get(
             id=movement_id, company_id=context.company_id

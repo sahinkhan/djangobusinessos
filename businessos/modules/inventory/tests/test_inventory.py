@@ -1,16 +1,20 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import timedelta
 from decimal import Decimal
+from importlib import import_module
 from threading import Barrier, Event
 from uuid import uuid4
 
 import pytest
-from django.core.exceptions import ValidationError
-from django.db import close_old_connections, connection, connections
+from django.apps import apps
+from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import IntegrityError, close_old_connections, connection, connections, transaction
 from django.urls import reverse
 from django.utils import timezone
 
 from businessos.core.access.context import SESSION_COMPANY_KEY
+from businessos.core.access.models import UserCompanyAccess
+from businessos.core.common.context import BusinessContext
 from businessos.core.modules.models import BusinessModule
 from businessos.core.organization.models import Company, Warehouse
 from businessos.core.reference.models import Currency, UnitOfMeasure
@@ -20,7 +24,10 @@ from businessos.modules.inventory.manifest import MODULE
 from businessos.modules.inventory.models import StockMovement, StockMovementLine
 from businessos.modules.inventory.selectors import (
     balances_for_warehouse,
+    movement_by_idempotency_key,
+    movement_detail,
     movement_history,
+    movements_for_company,
     stock_balance,
 )
 from businessos.modules.inventory.services import (
@@ -28,6 +35,7 @@ from businessos.modules.inventory.services import (
     create_stock_movement,
     post_stock_movement,
     remove_stock_movement_line,
+    update_stock_movement,
     update_stock_movement_line,
 )
 
@@ -41,7 +49,6 @@ def product(context, uom, *, sku="ITEM-1", kind=Product.Type.STOCKABLE):
 def movement(context, kind=StockMovement.Type.RECEIPT, **kwargs):
     return create_stock_movement(
         context,
-        number=kwargs.pop("number", f"SM-{uuid4().hex[:8]}"),
         movement_type=kind,
         effective_at=timezone.now(),
         **kwargs,
@@ -61,7 +68,24 @@ def add_line(context, record, variant, warehouse, *, quantity="2", other=None):
 
 @pytest.mark.django_db
 def test_manifest_has_only_approved_dependencies():
-    assert MODULE["depends"] == ["catalog", "organization", "access"]
+    assert MODULE["depends"] == ["catalog", "organization", "reference", "access"]
+
+
+@pytest.mark.django_db
+def test_manifest_registration_preserves_enablement_and_new_row_is_disabled():
+    register = import_module(
+        "businessos.modules.inventory.migrations.0002_register_manifest"
+    ).register_inventory
+    module = BusinessModule.objects.get(code="inventory")
+    module.is_enabled = True
+    module.save()
+    register(apps, None)
+    module.refresh_from_db()
+    assert module.is_enabled is True
+    assert module.dependencies == ["catalog", "organization", "reference", "access"]
+    module.delete()
+    register(apps, None)
+    assert BusinessModule.objects.get(code="inventory").is_enabled is False
 
 
 @pytest.mark.django_db
@@ -221,12 +245,78 @@ def test_idempotency_key_is_normalized_unique_and_nullable(business_context):
 @pytest.mark.django_db
 def test_different_companies_can_reuse_idempotency_key(business_context, currency, operator):
     other = Company.objects.create(code="OTHER", name="Other", base_currency=currency)
-    from businessos.core.common.context import BusinessContext
-
+    UserCompanyAccess.objects.create(user=operator, company=other)
     other_context = BusinessContext(actor_id=operator.id, company_id=other.id)
     movement(business_context, idempotency_key="shared-key")
     movement(other_context, idempotency_key="shared-key")
     assert StockMovement.objects.filter(idempotency_key="shared-key").count() == 2
+
+
+@pytest.mark.django_db
+def test_service_generates_unique_immutable_numbers(business_context):
+    first = movement(business_context)
+    second = movement(business_context)
+    assert first.number.startswith("SM-") and len(first.number) == 35
+    assert first.number != second.number
+    with pytest.raises(ValidationError):
+        update_stock_movement(business_context, movement_id=first.id, number="USER-NUMBER")
+    first.number = "USER-NUMBER"
+    with pytest.raises(ValidationError, match="number.*immutable"):
+        first.save()
+    first.refresh_from_db()
+    duplicate = StockMovement(
+        company_id=first.company_id,
+        number=first.number,
+        movement_type=StockMovement.Type.RECEIPT,
+        effective_at=timezone.now(),
+    )
+    with pytest.raises(IntegrityError), transaction.atomic():
+        duplicate.save()
+
+
+@pytest.mark.django_db
+def test_unauthorized_context_is_rejected_by_all_public_operations(currency, operator):
+    unauthorized_company = Company.objects.create(
+        code="NOACCESS", name="No access", base_currency=currency
+    )
+    context = BusinessContext(actor_id=operator.id, company_id=unauthorized_company.id)
+    identifier = uuid4()
+    calls = [
+        lambda: create_stock_movement(
+            context,
+            movement_type=StockMovement.Type.RECEIPT,
+            effective_at=timezone.now(),
+        ),
+        lambda: update_stock_movement(context, movement_id=identifier, notes="x"),
+        lambda: add_stock_movement_line(context, movement_id=identifier),
+        lambda: update_stock_movement_line(context, movement_id=identifier, line_id=identifier),
+        lambda: remove_stock_movement_line(context, movement_id=identifier, line_id=identifier),
+        lambda: post_stock_movement(context, movement_id=identifier),
+        lambda: movements_for_company(context),
+        lambda: movement_detail(context, movement_id=identifier),
+        lambda: movement_by_idempotency_key(context, idempotency_key="key"),
+        lambda: stock_balance(context, warehouse_id=identifier, product_variant_id=identifier),
+        lambda: balances_for_warehouse(context, warehouse_id=identifier),
+        lambda: movement_history(context),
+    ]
+    for call in calls:
+        with pytest.raises(PermissionDenied, match="access to this company"):
+            call()
+    assert not StockMovement.objects.filter(company=unauthorized_company).exists()
+
+
+@pytest.mark.django_db
+def test_inactive_actor_and_company_contexts_are_rejected(business_context, operator, company):
+    operator.is_active = False
+    operator.save()
+    with pytest.raises(PermissionDenied, match="actor"):
+        movements_for_company(business_context)
+    operator.is_active = True
+    operator.save()
+    company.is_active = False
+    company.save()
+    with pytest.raises(PermissionDenied, match="company"):
+        movement_history(business_context)
 
 
 @pytest.mark.django_db
@@ -268,6 +358,50 @@ def test_inactive_entities_rejected_at_posting(business_context, warehouse, uom)
     warehouse.save()
     with pytest.raises(ValidationError, match="active warehouse"):
         post_stock_movement(business_context, movement_id=record.id)
+
+
+@pytest.mark.django_db
+def test_inactive_uom_rejected_for_new_line(business_context, warehouse, uom):
+    variant = product(business_context, uom).variants.get()
+    record = movement(business_context)
+    uom.is_active = False
+    uom.save()
+    with pytest.raises(ValidationError, match="unit of measure must be active"):
+        add_line(business_context, record, variant, warehouse)
+
+
+@pytest.mark.django_db
+def test_uom_deactivated_after_draft_rejected_at_posting(business_context, warehouse, uom):
+    variant = product(business_context, uom).variants.get()
+    record = movement(business_context)
+    line = add_line(business_context, record, variant, warehouse)
+    uom.is_active = False
+    uom.save()
+    with pytest.raises(ValidationError, match="unit of measure must be active"):
+        update_stock_movement_line(
+            business_context,
+            movement_id=record.id,
+            line_id=line.id,
+            product_variant_id=variant.id,
+            quantity="3",
+            destination_warehouse_id=warehouse.id,
+        )
+    with pytest.raises(ValidationError, match="unit of measure must be active"):
+        post_stock_movement(business_context, movement_id=record.id)
+
+
+@pytest.mark.django_db
+def test_posted_history_remains_readable_after_uom_deactivation(business_context, warehouse, uom):
+    variant = product(business_context, uom).variants.get()
+    record = movement(business_context)
+    add_line(business_context, record, variant, warehouse, quantity="7")
+    post_stock_movement(business_context, movement_id=record.id)
+    uom.is_active = False
+    uom.save()
+    assert stock_balance(
+        business_context, warehouse_id=warehouse.id, product_variant_id=variant.id
+    ) == Decimal("7")
+    assert movement_detail(business_context, movement_id=record.id).lines.get().uom_id == uom.id
 
 
 @pytest.mark.django_db
@@ -318,14 +452,44 @@ def test_stale_company_form_is_rejected(client, operator, company):
         reverse("inventory:create"),
         {
             "scope_company_id": uuid4(),
-            "number": "SM-X",
             "movement_type": "receipt",
             "effective_at": (timezone.now() - timedelta(minutes=1)).strftime("%Y-%m-%dT%H:%M"),
         },
     )
     assert response.status_code == 200
     assert b"Company scope changed" in response.content
-    assert not StockMovement.objects.filter(number="SM-X").exists()
+    assert not StockMovement.objects.exists()
+
+
+@pytest.mark.django_db
+def test_movement_forms_do_not_expose_number(client, operator, company, business_context):
+    client.force_login(operator)
+    session = client.session
+    session[SESSION_COMPANY_KEY] = str(company.id)
+    session.save()
+    module = BusinessModule.objects.get(code="inventory")
+    module.is_enabled = True
+    module.save()
+    record = movement(business_context)
+    create_response = client.get(reverse("inventory:create"))
+    edit_response = client.get(reverse("inventory:edit", args=[record.id]))
+    assert b'name="number"' not in create_response.content
+    assert b'name="number"' not in edit_response.content
+    response = client.post(
+        reverse("inventory:edit", args=[record.id]),
+        {
+            "scope_company_id": company.id,
+            "number": "CALLER-CANNOT-CHANGE-THIS",
+            "movement_type": record.movement_type,
+            "effective_at": record.effective_at.strftime("%Y-%m-%dT%H:%M"),
+            "reference": "Edited safely",
+            "notes": "",
+        },
+    )
+    assert response.status_code == 302
+    record.refresh_from_db()
+    assert record.number != "CALLER-CANNOT-CHANGE-THIS"
+    assert record.reference == "Edited safely"
 
 
 @pytest.mark.django_db
@@ -382,13 +546,12 @@ def test_concurrent_idempotency_key_creates_one_movement(business_context):
         pytest.skip("Unique-key concurrency contract requires PostgreSQL.")
     gate = Barrier(2)
 
-    def create(index):
+    def create(_index):
         close_old_connections()
         try:
             gate.wait()
             return create_stock_movement(
                 business_context,
-                number=f"SM-IDEMPOTENT-{index}",
                 movement_type=StockMovement.Type.RECEIPT,
                 effective_at=timezone.now(),
                 idempotency_key="concurrent-key",
@@ -406,7 +569,7 @@ def test_concurrent_idempotency_key_creates_one_movement(business_context):
 
 
 @pytest.mark.django_db(transaction=True)
-@pytest.mark.parametrize("operation", ["update", "delete"])
+@pytest.mark.parametrize("operation", ["add", "update", "delete"])
 def test_line_change_waiting_on_post_cannot_change_posted_ledger(
     business_context, warehouse, uom, monkeypatch, operation
 ):
@@ -438,6 +601,14 @@ def test_line_change_waiting_on_post_cannot_change_posted_ledger(
     def mutate():
         close_old_connections()
         try:
+            if operation == "add":
+                return add_stock_movement_line(
+                    business_context,
+                    movement_id=record.id,
+                    product_variant_id=variant.id,
+                    quantity="9",
+                    destination_warehouse_id=warehouse.id,
+                )
             if operation == "delete":
                 return remove_stock_movement_line(
                     business_context, movement_id=record.id, line_id=line.id
@@ -459,7 +630,8 @@ def test_line_change_waiting_on_post_cannot_change_posted_ledger(
         mutation_future = pool.submit(mutate)
         release_post.set()
         posted_future.result(timeout=10)
-        with pytest.raises(ValidationError, match="immutable"):
+        expected_error = "draft movements" if operation == "add" else "immutable"
+        with pytest.raises(ValidationError, match=expected_error):
             mutation_future.result(timeout=10)
     line.refresh_from_db()
     assert line.quantity == Decimal("2")

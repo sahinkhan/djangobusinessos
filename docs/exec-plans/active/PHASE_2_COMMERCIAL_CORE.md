@@ -290,6 +290,21 @@ Implementation verification recorded before independent review:
 Hosted CI and independent architecture review remain pending. No acceptance ADR is
 created by this implementation record.
 
+Independent audit remediation on `phase2-inventory` subsequently aligned every public
+service and selector with the existing `validate_business_context` access policy,
+corrected the hard dependency list to Catalog + Organization + Reference + Access,
+moved immutable `SM-<UUID hex>` number generation wholly into the Inventory service,
+and required an active current Product UoM for new draft mutations and posting. The
+PostgreSQL parent-lock matrix now covers add, update, and delete racing with posting.
+
+Remediation verification before re-review: 96 full-suite PostgreSQL tests and 35
+Inventory-local PostgreSQL tests pass; SQLite reports 90 passed and 6 expected
+PostgreSQL-only skips. Fresh registration produces a disabled Inventory module with
+the corrected dependencies, while re-registration preserves existing enablement.
+The service-numbered create form was rechecked at desktop and 390 x 844 mobile
+viewports; no editable movement-number field is exposed.
+Independent remediation re-review and hosted exact-head CI remain pending.
+
 ## Ownership
 
 Inventory owns the stock movement ledger.

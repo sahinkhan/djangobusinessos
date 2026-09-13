@@ -10,7 +10,6 @@ from .models import StockMovement
 
 
 class MovementCreateForm(CompanyBoundForm):
-    number = forms.CharField(max_length=40)
     movement_type = forms.ChoiceField(choices=StockMovement.Type.choices)
     effective_at = forms.DateTimeField(widget=forms.DateTimeInput(attrs={"type": "datetime-local"}))
     reference = forms.CharField(max_length=160, required=False)
@@ -22,7 +21,6 @@ class MovementCreateForm(CompanyBoundForm):
 
 
 class MovementEditForm(CompanyBoundForm):
-    number = forms.CharField(max_length=40)
     movement_type = forms.ChoiceField(choices=StockMovement.Type.choices)
     effective_at = forms.DateTimeField(widget=forms.DateTimeInput(attrs={"type": "datetime-local"}))
     reference = forms.CharField(max_length=160, required=False)
@@ -43,6 +41,7 @@ class MovementLineForm(CompanyBoundForm):
             company_id=company_id,
             is_active=True,
             product__is_active=True,
+            product__default_uom__is_active=True,
             product__product_type__in=[Product.Type.STOCKABLE, Product.Type.CONSUMABLE],
         ).select_related("product")
         warehouses = Warehouse.objects.filter(company_id=company_id, is_active=True)

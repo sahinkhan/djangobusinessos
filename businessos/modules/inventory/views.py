@@ -94,7 +94,7 @@ def movement_edit(request, movement_id):
         raise Http404
     initial = {
         field: getattr(movement, field)
-        for field in ("number", "movement_type", "effective_at", "reference", "notes")
+        for field in ("movement_type", "effective_at", "reference", "notes")
     }
     form = MovementEditForm(request.POST or None, company_id=context.company_id, initial=initial)
     if request.method == "POST" and form.is_valid():

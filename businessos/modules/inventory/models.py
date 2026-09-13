@@ -88,13 +88,16 @@ class StockMovement(UUIDTimestampedModel):
                 raise ValidationError("Use the inventory posting service to change status.")
             for field in (
                 "company_id",
+                "number",
                 "idempotency_key",
                 "source_module",
                 "source_type",
                 "source_id",
             ):
                 if getattr(self, field) != getattr(persisted, field):
-                    raise ValidationError("Movement ownership and source identity are immutable.")
+                    raise ValidationError(
+                        "Movement number, ownership, and source identity are immutable."
+                    )
             if self.movement_type != persisted.movement_type and persisted.lines.exists():
                 raise ValidationError("Movement type cannot change after lines are added.")
             return super().save(*args, **kwargs)

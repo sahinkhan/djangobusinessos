@@ -8,7 +8,7 @@ def register_inventory(apps, schema_editor):
         defaults={
             "name": "Inventory",
             "version": "0.1.0",
-            "dependencies": ["catalog", "organization", "access"],
+            "dependencies": ["catalog", "organization", "reference", "access"],
         },
     )
 

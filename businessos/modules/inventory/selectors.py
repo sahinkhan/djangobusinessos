@@ -4,6 +4,7 @@ from decimal import Decimal
 from django.core.exceptions import ValidationError
 from django.db.models import Q
 
+from businessos.core.access.policies import validate_business_context
 from businessos.core.common.context import BusinessContext
 from businessos.core.organization.models import Warehouse
 from businessos.modules.catalog.models import ProductVariant
@@ -19,6 +20,7 @@ class StockBalance:
 
 
 def movements_for_company(context: BusinessContext, *, search="", movement_type="", status=""):
+    validate_business_context(context)
     queryset = StockMovement.objects.filter(company_id=context.company_id)
     if search:
         queryset = queryset.filter(Q(number__icontains=search) | Q(reference__icontains=search))
@@ -30,6 +32,7 @@ def movements_for_company(context: BusinessContext, *, search="", movement_type=
 
 
 def movement_detail(context: BusinessContext, *, movement_id):
+    validate_business_context(context)
     return (
         StockMovement.objects.filter(company_id=context.company_id)
         .prefetch_related(
@@ -43,6 +46,7 @@ def movement_detail(context: BusinessContext, *, movement_id):
 
 
 def movement_by_idempotency_key(context: BusinessContext, *, idempotency_key):
+    validate_business_context(context)
     return StockMovement.objects.get(
         company_id=context.company_id, idempotency_key=idempotency_key.strip()
     )
@@ -56,6 +60,7 @@ def _scoped_warehouse(context, warehouse_id):
 
 
 def stock_balance(context: BusinessContext, *, warehouse_id, product_variant_id):
+    validate_business_context(context)
     warehouse = _scoped_warehouse(context, warehouse_id)
     try:
         variant = ProductVariant.objects.get(id=product_variant_id, company_id=context.company_id)
@@ -76,6 +81,7 @@ def stock_balance(context: BusinessContext, *, warehouse_id, product_variant_id)
 
 
 def balances_for_warehouse(context: BusinessContext, *, warehouse_id):
+    validate_business_context(context)
     warehouse = _scoped_warehouse(context, warehouse_id)
     lines = (
         StockMovementLine.objects.filter(
@@ -96,6 +102,7 @@ def balances_for_warehouse(context: BusinessContext, *, warehouse_id):
 
 
 def movement_history(context: BusinessContext, *, warehouse_id=None, product_variant_id=None):
+    validate_business_context(context)
     queryset = StockMovement.objects.filter(
         company_id=context.company_id, status=StockMovement.Status.POSTED
     ).prefetch_related("lines__product_variant", "lines__uom")
