@@ -39,6 +39,8 @@ Exit gate: foundation tests/checks pass and shared contracts are frozen enough f
 
 ## Phase 1 — Shared Commercial Primitives
 
+Status: Complete — Party and Catalog contracts frozen by ADR 0004 at audited implementation commit `18a8cefeed30148ce7847908d7d82e7c570d79f9`.
+
 Deliver:
 
 - Party / Contacts

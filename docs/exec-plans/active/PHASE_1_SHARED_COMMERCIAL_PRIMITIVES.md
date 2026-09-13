@@ -1,6 +1,6 @@
 # Phase 1 — Shared Commercial Primitives
 
-Status: AUDIT REMEDIATED — AWAITING INDEPENDENT RE-REVIEW
+Status: COMPLETE — INDEPENDENTLY ACCEPTED AND CONTRACTS FROZEN
 
 ## Goal
 
@@ -441,6 +441,13 @@ The main purpose of Phase 1 is not feature depth. It is to freeze the first reus
 - New variant assignments consistently require active attributes and values while validation failure preserves existing historical assignments.
 - A fresh disposable PostgreSQL database applied the full migration history and was removed after verification. No schema change or migration was required by this remediation.
 
+### Independent acceptance and freeze
+
+- Independent re-review accepted all five remediated findings at commit `18a8cefeed30148ce7847908d7d82e7c570d79f9` and found no new blocking defect.
+- PostgreSQL reported 56 passed; SQLite reported 55 passed with one expected skip; Ruff, Django checks, migration drift, remote SHA alignment, and disposable-database cleanup were independently confirmed.
+- Hosted CI run 12 succeeded for the audited commit: <https://github.com/sahinkhan/djangobusinessos/actions/runs/34761729830>.
+- ADR 0004 records the formal Party and Catalog contract freeze. This is architecture acceptance, not production-launch approval.
+
 ### Next task
 
-Independently re-review the published remediation and freeze the Party and Catalog contracts if accepted. Do not begin Phase 2 until architecture review accepts Phase 1.
+Phase 1 is closed. Wait for an explicit approved Phase 2 execution plan and instruction; do not begin Phase 2 automatically.
