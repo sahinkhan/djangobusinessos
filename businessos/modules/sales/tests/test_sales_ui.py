@@ -183,6 +183,8 @@ def test_sales_ui_preserves_unit_price_and_currency_precision(
     )
     assert b"USD 0.0049" in low_price_page.content
     assert b"USD 0.49" in low_price_page.content
+    assert b"break-words text-2xl" in low_price_page.content
+    assert b"card min-w-0 lg:col-span-2" in low_price_page.content
 
     three_decimal_currency = Currency.objects.create(
         code="TDC", name="Three decimal currency", decimal_places=3
