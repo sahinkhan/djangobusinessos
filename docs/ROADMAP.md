@@ -39,7 +39,7 @@ Exit gate: foundation tests/checks pass and shared contracts are frozen enough f
 
 ## Phase 1 — Shared Commercial Primitives
 
-Status: Complete — Party and Catalog contracts frozen by ADR 0004 at audited implementation commit `18a8cefeed30148ce7847908d7d82e7c570d79f9`.
+Status: Complete — FINAL PASS. Party/Catalog contracts are frozen by ADR 0004 and ADR 0005; accepted Phase 1 head was merged to `main` at `361d832713dcd2325363b4059a4f3b6cac7d3715`.
 
 Deliver:
 
@@ -48,20 +48,23 @@ Deliver:
 - ProductVariant as the concrete sellable/purchasable SKU identity
 - minimal Attributes / Attribute Values for real variable products
 - simple products represented internally by one default ProductVariant
-- reusable document numbering basics only if Phase 1 flows require them
 - shared form/list/detail UI patterns
+- deployment-level module gating for the Phase 1 modules
+- idempotent representative Phase 1 demo seed
 
 Catalog remains free of stock balances, transactional pricing engines, Sales/Procurement workflow and Accounting.
 
 Do not build an advanced variant configurator, automatic combination generator, pricelists/promotions, Inventory quantities or ecommerce-specific product copies in this phase.
 
-Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contracts, and both simple and variable products resolve to stable ProductVariant identities without redesign.
+Exit gate: PASSED. Sales/Procurement/Inventory can consume stable Party/Catalog contracts, and both simple and variable products resolve to stable ProductVariant identities without redesign.
 
 ---
 
 ## Phase 2 — Commercial Core
 
-Parallelizable after Phase 1 contract freeze.
+Status: Prepared — implementation not started. Contracts are defined by ADR 0006 and `docs/exec-plans/active/PHASE_2_COMMERCIAL_CORE.md`.
+
+Standalone modules are parallelizable after the Phase 1 contract freeze. Optional cross-module integrations are implemented only after the standalone module contracts pass review.
 
 Deliver:
 
@@ -81,7 +84,11 @@ Golden flows:
 
 Concrete transactional item references use Catalog ProductVariant where an item/SKU is required.
 
-Accounting and Inventory require transactional tests and duplicate-posting protection where relevant.
+Inventory source of truth is the posted stock-movement ledger. Accounting source of truth is posted balanced journal-entry lines. Billing totals/outstanding are derived from invoice lines and payment allocations.
+
+Approved optional Phase 2 integrations may include Procurement Receipt -> Inventory, Sales Order -> Billing, and Billing -> Accounting. Sales confirmation does not issue stock until shipment/fulfillment or reservation semantics are explicitly defined.
+
+Accounting and Inventory require transactional tests, rollback coverage and duplicate-posting/idempotency protection where relevant.
 
 ---
 
