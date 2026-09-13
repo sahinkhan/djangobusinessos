@@ -6,9 +6,10 @@
 {% block content %}
 <form method="post" class="card max-w-3xl space-y-5">
   {% csrf_token %}
+  {% include "components/company_form_scope.html" %}
   {% for error in form.non_field_errors %}<p class="alert alert-error">{{ error }}</p>{% endfor %}
   <div class="grid gap-5 sm:grid-cols-2">
-  {% for field in form %}
+  {% for field in form.visible_fields %}
     <div{% if field.name == "legal_name" or field.name == "display_name" %} class="sm:col-span-2"{% endif %}>
       <label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>
       {{ field }}

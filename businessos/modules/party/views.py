@@ -43,7 +43,7 @@ def party_list(request):
 @login_required
 def party_create(request):
     context = business_context_from_request(request)
-    form = PartyForm(request.POST or None)
+    form = PartyForm(request.POST or None, company_id=context.company_id)
     if request.method == "POST" and form.is_valid():
         try:
             party = create_party(context, **form.cleaned_data)
@@ -70,7 +70,7 @@ def party_edit(request, party_id):
         "is_supplier": party.is_supplier,
         "is_active": party.is_active,
     }
-    form = PartyForm(request.POST or None, initial=initial)
+    form = PartyForm(request.POST or None, company_id=context.company_id, initial=initial)
     if request.method == "POST" and form.is_valid():
         try:
             update_party(context, party_id=party.id, **form.cleaned_data)
@@ -95,7 +95,7 @@ def party_detail_view(request, party_id):
 @login_required
 def contact_create(request, party_id):
     context = business_context_from_request(request)
-    form = ContactMethodForm(request.POST or None)
+    form = ContactMethodForm(request.POST or None, company_id=context.company_id)
     if request.method == "POST" and form.is_valid():
         try:
             add_contact_method(context, party_id=party_id, **form.cleaned_data)
@@ -118,6 +118,7 @@ def contact_edit(request, party_id, contact_id):
         raise Http404 from exc
     form = ContactMethodForm(
         request.POST or None,
+        company_id=context.company_id,
         initial={
             "kind": contact.kind,
             "label": contact.label,
@@ -139,7 +140,7 @@ def contact_edit(request, party_id, contact_id):
 @login_required
 def address_create(request, party_id):
     context = business_context_from_request(request)
-    form = AddressForm(request.POST or None)
+    form = AddressForm(request.POST or None, company_id=context.company_id)
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data.copy()
         data["country_id"] = data.pop("country").id
@@ -174,7 +175,7 @@ def address_edit(request, party_id, address_id):
         "is_shipping": address.is_shipping,
         "is_default": address.is_default,
     }
-    form = AddressForm(request.POST or None, initial=initial)
+    form = AddressForm(request.POST or None, company_id=context.company_id, initial=initial)
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data.copy()
         data["country_id"] = data.pop("country").id

@@ -1,8 +1,11 @@
 import inspect
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from threading import Barrier
 
 import pytest
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import close_old_connections, connection
 
 from businessos.core.access.models import UserCompanyAccess
 from businessos.core.common.context import BusinessContext
@@ -99,6 +102,28 @@ def test_simple_product_rejects_additional_or_non_default_variant(business_conte
 
 
 @pytest.mark.django_db
+def test_simple_product_activation_synchronizes_default_variant_without_sku(
+    business_context, uom
+):
+    product = create_simple_product(
+        business_context,
+        name="Seasonal service",
+        sku="SEASONAL-1",
+        product_type=Product.Type.SERVICE,
+        default_uom_id=uom.id,
+        is_active=False,
+    )
+    variant = product.variants.get()
+    assert variant.is_active is False
+
+    update_product(business_context, product_id=product.id, is_active=True)
+
+    variant.refresh_from_db()
+    assert variant.is_active is True
+    assert active_variants(business_context).get(id=variant.id) == variant
+
+
+@pytest.mark.django_db
 def test_variable_product_supports_explicit_variants_and_attributes(business_context, uom):
     product = create_variable_product(
         business_context,
@@ -165,6 +190,80 @@ def test_contradictory_attribute_values_are_rejected_without_losing_assignments(
     assert list(variant.attribute_assignments.values_list("attribute_value_id", flat=True)) == [
         black.id
     ]
+
+
+@pytest.mark.django_db
+def test_inactive_attribute_rejected_for_new_assignment_without_losing_history(
+    business_context, uom
+):
+    product = create_variable_product(
+        business_context,
+        name="Archived option product",
+        variants=[{"sku": "ARCHIVE-1"}],
+        product_type=Product.Type.STOCKABLE,
+        default_uom_id=uom.id,
+    )
+    color = create_attribute(business_context, name="Color")
+    black = create_attribute_value(business_context, attribute_id=color.id, value="Black")
+    variant = product.variants.get()
+    assign_variant_attribute_values(
+        business_context, variant_id=variant.id, attribute_value_ids=[black.id]
+    )
+    color.is_active = False
+    color.save()
+
+    with pytest.raises(PermissionDenied, match="not active"):
+        assign_variant_attribute_values(
+            business_context, variant_id=variant.id, attribute_value_ids=[black.id]
+        )
+
+    assert list(variant.attribute_assignments.values_list("attribute_value_id", flat=True)) == [
+        black.id
+    ]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_attribute_replacements_finish_as_one_complete_submission(
+    business_context, uom
+):
+    if connection.vendor != "postgresql":
+        pytest.skip("Row-lock concurrency contract requires PostgreSQL.")
+    product = create_variable_product(
+        business_context,
+        name="Concurrent option product",
+        variants=[{"sku": "CONCURRENT-1"}],
+        product_type=Product.Type.STOCKABLE,
+        default_uom_id=uom.id,
+    )
+    color = create_attribute(business_context, name="Color")
+    size = create_attribute(business_context, name="Size")
+    black = create_attribute_value(business_context, attribute_id=color.id, value="Black")
+    large = create_attribute_value(business_context, attribute_id=size.id, value="L")
+    variant = product.variants.get()
+    start = Barrier(2)
+
+    def replace(values):
+        close_old_connections()
+        try:
+            start.wait(timeout=5)
+            assign_variant_attribute_values(
+                business_context, variant_id=variant.id, attribute_value_ids=values
+            )
+        finally:
+            close_old_connections()
+
+    submissions = ([black.id], [large.id])
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(replace, values) for values in submissions]
+        for future in futures:
+            future.result(timeout=10)
+
+    final_values = set(
+        VariantAttributeValue.objects.filter(variant=variant).values_list(
+            "attribute_value_id", flat=True
+        )
+    )
+    assert final_values in [set(values) for values in submissions]
 
 
 @pytest.mark.django_db

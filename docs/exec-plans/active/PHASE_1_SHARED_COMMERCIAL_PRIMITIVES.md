@@ -1,6 +1,6 @@
 # Phase 1 — Shared Commercial Primitives
 
-Status: IMPLEMENTED — AWAITING ARCHITECTURE REVIEW
+Status: AUDIT REMEDIATED — AWAITING INDEPENDENT RE-REVIEW
 
 ## Goal
 
@@ -379,6 +379,7 @@ The main purpose of Phase 1 is not feature depth. It is to freeze the first reus
 - Company-owned Party, ContactMethod, and Address records with person/organization identity, customer/supplier roles, email/phone contacts, structured addresses, service APIs, scoped selectors, and operational screens.
 - Company-owned Product, ProductVariant, ProductCategory, Attribute, AttributeValue, and VariantAttributeValue records with service APIs, scoped selectors, manifests, migrations, and operational screens.
 - Explicit company selection for the existing HTTP-to-BusinessContext adapter so normal UI workflows do not rely on implicit global scope.
+- Every Party and Catalog state-changing form is bound to the company under which it was rendered. The target company is displayed, the submitted binding is checked against the freshly validated BusinessContext, and a stale cross-tab form is rejected rather than redirected into the newly selected company.
 - Search/filter lists, Party and Product create/edit/detail screens, category and attribute/value management, and explicit variable-variant management.
 
 ### Product and variant decisions
@@ -387,8 +388,10 @@ The main purpose of Phase 1 is not feature depth. It is to freeze the first reus
 - `ProductVariant` owns the company-scoped SKU, Product relationship, default marker, activity, and timestamps. `(company, sku)` is unique and SKU values are stored uppercase.
 - Product structure is immutable after creation. A simple Product is created atomically with exactly one default ProductVariant; its UI exposes only the SKU and does not expose variant management.
 - A variable Product is created atomically with one or more caller-supplied variants. Additional variants and attribute-value assignments are explicit; no combinations are generated.
+- Simple Product activation is a Product/default-variant lifecycle operation: changing Product activity synchronizes the sole default ProductVariant even when no SKU change is supplied.
 - PostgreSQL enforces at most one default variant per Product. Model/service validation also prevents additional or non-default variants on a simple Product.
 - VariantAttributeValue stores the explicit Attribute alongside AttributeValue so PostgreSQL can enforce at most one value for each `(variant, attribute)` pair. Services validate that all composed records share one company.
+- Variant attribute replacement takes a PostgreSQL row lock on the ProductVariant, so concurrent accepted replacements serialize and the final state is one complete submitted set. New assignments require both Attribute and AttributeValue to be active. Deactivation does not delete historical assignments; a later explicit replacement may remove them, but an inactive value cannot be newly submitted or re-applied.
 - Service Products follow the same default-variant contract and do not import or require Inventory.
 
 ### Party decisions
@@ -403,6 +406,7 @@ The main purpose of Phase 1 is not feature depth. It is to freeze the first reus
 - Cross-company relationship identifiers are rejected in service paths. Reusable reads validate BusinessContext and filter explicitly by company.
 - Party and Catalog manifests validate and register through the existing module registry convention. Catalog has no Party, Inventory, Sales, Procurement, Billing, or vertical dependency.
 - Core contains no reverse imports into Party or Catalog. The only core change is the small company-scope HTTP form/view that adapts session selection to the existing BusinessContext contract.
+- Phase 1 authorization deliberately uses validated company access as the operational Party/Catalog CRUD grant. Reader/operator/administrator separation is not claimed by this phase and must be defined and implemented before production exposure; company isolation remains mandatory now.
 
 ### Migrations
 
@@ -412,13 +416,13 @@ The main purpose of Phase 1 is not feature depth. It is to freeze the first reus
 
 ### Verification
 
-- `pytest` — 51 passed on Python 3.13/PostgreSQL, including module-local Party and Catalog tests.
+- `pytest` — 56 passed on Python 3.13/PostgreSQL, including the concurrent same-variant replacement regression and module-local Party and Catalog tests. The SQLite run passed 55 tests with the PostgreSQL row-lock test explicitly skipped.
 - `ruff check .` — passed.
 - `python manage.py check` — passed with no issues.
 - `python manage.py makemigrations --check` — no changes detected.
 - `npm ci` — passed with no vulnerabilities; `npm run build:css` reproduced the committed Tailwind asset.
 - Docker Compose rebuilt and started with healthy PostgreSQL and the web service available on port 8000.
-- Desktop 1280×720 and mobile 390×844 browser checks passed for Party, Catalog, simple Product, variable Product, responsive layout, and mobile navigation.
+- Desktop 1280×720 and mobile 390×844 browser checks passed for the remediated category form, visible target-company binding, responsive layout, and mobile navigation. Live root and child category creation succeeded. A two-tab Company A → Company B switch rejected the already-open Company A Party form with a clear scope-change error.
 - Service and UI tests prove simple-product default-variant creation, service-product independence, explicit multiple variants, SKU uniqueness, attribute integrity, company isolation, and absence of authoritative stock fields.
 
 ### Remaining concerns and deliberate limits
@@ -426,7 +430,17 @@ The main purpose of Phase 1 is not feature depth. It is to freeze the first reus
 - The mandatory child-existence rule cannot be represented as a normal portable Django database constraint. Product creation/update is therefore an atomic service contract, reinforced by Product/ProductVariant model validation and database constraints for the enforceable uniqueness portions. Bulk ORM updates or raw SQL must not bypass these contracts.
 - Product structure transition is intentionally absent; simple-to-variable conversion requires a future explicit service and migration policy rather than direct field editing.
 - Variant combinations, advanced configurators, pricing, stock, barcode infrastructure, media, tax, workflows, events, and Phase 2 modules remain deliberately absent.
+- Fine-grained reader/operator/administrator permissions are a pre-production authorization task, not an implicit capability of a company access grant.
+
+### Audit remediation
+
+- Root-category POST handling now always removes the presentation-layer `parent` object and passes the service its supported `parent_id`; HTTP regressions cover both root and child creation.
+- Reusable bound-company forms prevent a form opened in one company from writing after another browser tab changes the shared session scope.
+- Variant attribute replacement serializes on ProductVariant and a PostgreSQL concurrency test requires the final state to match one accepted submission.
+- Simple Product activity always synchronizes its only default variant, independently of SKU edits.
+- New variant assignments consistently require active attributes and values while validation failure preserves existing historical assignments.
+- A fresh disposable PostgreSQL database applied the full migration history and was removed after verification. No schema change or migration was required by this remediation.
 
 ### Next task
 
-Review and freeze the published Party and Catalog contracts. Do not begin Phase 2 until architecture review accepts Phase 1.
+Independently re-review the published remediation and freeze the Party and Catalog contracts if accepted. Do not begin Phase 2 until architecture review accepts Phase 1.

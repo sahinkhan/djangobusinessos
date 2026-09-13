@@ -1,11 +1,12 @@
 from django import forms
 
+from businessos.core.access.forms import CompanyBoundForm
 from businessos.core.reference.models import Country
 
 from .models import ContactMethod, Party
 
 
-class PartyForm(forms.Form):
+class PartyForm(CompanyBoundForm):
     party_type = forms.ChoiceField(choices=Party.Type.choices)
     display_name = forms.CharField(max_length=200)
     legal_name = forms.CharField(max_length=200, required=False)
@@ -14,14 +15,14 @@ class PartyForm(forms.Form):
     is_active = forms.BooleanField(required=False, initial=True)
 
 
-class ContactMethodForm(forms.Form):
+class ContactMethodForm(CompanyBoundForm):
     kind = forms.ChoiceField(choices=ContactMethod.Kind.choices)
     label = forms.CharField(max_length=60, required=False)
     value = forms.CharField(max_length=254)
     is_primary = forms.BooleanField(required=False)
 
 
-class AddressForm(forms.Form):
+class AddressForm(CompanyBoundForm):
     country = forms.ModelChoiceField(queryset=Country.objects.filter(is_active=True))
     label = forms.CharField(max_length=60, required=False)
     line_1 = forms.CharField(max_length=200)

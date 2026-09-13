@@ -2,7 +2,10 @@ import pytest
 from django.urls import reverse
 
 from businessos.core.access.context import SESSION_COMPANY_KEY
-from businessos.modules.catalog.models import Product
+from businessos.core.access.models import UserCompanyAccess
+from businessos.core.organization.models import Company
+from businessos.modules.catalog.models import Product, ProductCategory
+from businessos.modules.party.models import Party
 
 
 @pytest.fixture
@@ -15,7 +18,7 @@ def scoped_client(client, operator, company):
 
 
 @pytest.mark.django_db
-def test_party_workflow_renders_in_shared_ui(scoped_client):
+def test_party_workflow_renders_in_shared_ui(scoped_client, company):
     response = scoped_client.post(
         reverse("party:create"),
         {
@@ -25,6 +28,7 @@ def test_party_workflow_renders_in_shared_ui(scoped_client):
             "is_customer": "on",
             "is_supplier": "on",
             "is_active": "on",
+            "scope_company_id": str(company.id),
         },
         follow=True,
     )
@@ -49,7 +53,7 @@ def test_user_can_select_an_explicit_company_scope(client, operator, company):
 
 
 @pytest.mark.django_db
-def test_simple_product_workflow_hides_variant_management(scoped_client, uom):
+def test_simple_product_workflow_hides_variant_management(scoped_client, company, uom):
     response = scoped_client.post(
         reverse("catalog:product_create"),
         {
@@ -61,6 +65,7 @@ def test_simple_product_workflow_hides_variant_management(scoped_client, uom):
             "is_sellable": "on",
             "is_purchasable": "on",
             "is_active": "on",
+            "scope_company_id": str(company.id),
         },
         follow=True,
     )
@@ -73,7 +78,9 @@ def test_simple_product_workflow_hides_variant_management(scoped_client, uom):
 
 
 @pytest.mark.django_db
-def test_variable_product_workflow_allows_explicit_additional_variant(scoped_client, uom):
+def test_variable_product_workflow_allows_explicit_additional_variant(
+    scoped_client, company, uom
+):
     create_response = scoped_client.post(
         reverse("catalog:product_create"),
         {
@@ -85,13 +92,18 @@ def test_variable_product_workflow_allows_explicit_additional_variant(scoped_cli
             "is_sellable": "on",
             "is_purchasable": "on",
             "is_active": "on",
+            "scope_company_id": str(company.id),
         },
         follow=True,
     )
     product = Product.objects.get(name="Premium T-Shirt")
     add_response = scoped_client.post(
         reverse("catalog:variant_create", args=[product.id]),
-        {"sku": "TS-WHT-L", "is_active": "on"},
+        {
+            "sku": "TS-WHT-L",
+            "is_active": "on",
+            "scope_company_id": str(company.id),
+        },
         follow=True,
     )
 
@@ -102,3 +114,60 @@ def test_variable_product_workflow_allows_explicit_additional_variant(scoped_cli
         "TS-WHT-L",
     ]
     assert b"Assign attributes" in add_response.content
+
+
+@pytest.mark.django_db
+def test_root_and_child_category_creation_over_http(scoped_client, company):
+    root_response = scoped_client.post(
+        reverse("catalog:categories"),
+        {
+            "name": "Apparel",
+            "is_active": "on",
+            "scope_company_id": str(company.id),
+        },
+    )
+    root = ProductCategory.objects.get(name="Apparel")
+    child_response = scoped_client.post(
+        reverse("catalog:categories"),
+        {
+            "name": "Shirts",
+            "parent": str(root.id),
+            "is_active": "on",
+            "scope_company_id": str(company.id),
+        },
+    )
+
+    assert root_response.status_code == 302
+    assert child_response.status_code == 302
+    assert ProductCategory.objects.get(name="Shirts").parent == root
+
+
+@pytest.mark.django_db
+def test_stale_form_cannot_write_after_company_scope_switch(
+    scoped_client, operator, company, currency
+):
+    opened_response = scoped_client.get(reverse("party:create"))
+    opened_company_id = opened_response.context["form"].initial["scope_company_id"]
+    other_company = Company.objects.create(
+        code="OTHER", name="Other Company", base_currency=currency
+    )
+    UserCompanyAccess.objects.create(user=operator, company=other_company)
+    session = scoped_client.session
+    session[SESSION_COMPANY_KEY] = str(other_company.id)
+    session.save()
+
+    response = scoped_client.post(
+        reverse("party:create"),
+        {
+            "party_type": "organization",
+            "display_name": "Wrong-company write",
+            "is_customer": "on",
+            "is_active": "on",
+            "scope_company_id": str(opened_company_id),
+        },
+    )
+
+    assert response.status_code == 200
+    assert not Party.objects.filter(display_name="Wrong-company write").exists()
+    assert b"Company scope changed after this form was opened" in response.content
+    assert b"OTHER" in response.content

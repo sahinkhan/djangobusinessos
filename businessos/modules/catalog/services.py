@@ -195,9 +195,10 @@ def update_product(context: BusinessContext, *, product_id, **changes) -> Produc
     for field_name, value in changes.items():
         setattr(product, field_name, value)
     product.save()
-    if sku is not None:
+    if product.structure == Product.Structure.SIMPLE:
         variant = product.variants.get()
-        variant.sku = sku
+        if sku is not None:
+            variant.sku = sku
         variant.is_default = True
         variant.is_active = product.is_active
         variant.save()
@@ -238,7 +239,12 @@ def update_product_variant(
     is_active: bool,
 ) -> ProductVariant:
     validate_business_context(context)
-    variant = _in_scope(ProductVariant, context, variant_id, "variant")
+    try:
+        variant = ProductVariant.objects.select_for_update().select_related("product").get(
+            id=variant_id, company_id=context.company_id
+        )
+    except ProductVariant.DoesNotExist as exc:
+        raise PermissionDenied("The variant is outside the selected company.") from exc
     variant.sku = sku
     variant.is_default = is_default
     variant.is_active = is_active
@@ -277,17 +283,27 @@ def assign_variant_attribute_values(
     context: BusinessContext, *, variant_id, attribute_value_ids: Iterable
 ) -> ProductVariant:
     validate_business_context(context)
-    variant = _in_scope(ProductVariant, context, variant_id, "variant")
+    try:
+        variant = ProductVariant.objects.select_for_update().select_related("product").get(
+            id=variant_id, company_id=context.company_id
+        )
+    except ProductVariant.DoesNotExist as exc:
+        raise PermissionDenied("The variant is outside the selected company.") from exc
     if variant.product.structure != Product.Structure.VARIABLE:
         raise ValidationError("Simple Product variants do not use attribute assignments.")
     requested_ids = set(attribute_value_ids)
     values = list(
         AttributeValue.objects.select_related("attribute").filter(
-            id__in=requested_ids, company_id=context.company_id, is_active=True
+            id__in=requested_ids,
+            company_id=context.company_id,
+            is_active=True,
+            attribute__is_active=True,
         )
     )
     if len(values) != len(requested_ids):
-        raise PermissionDenied("One or more attribute values are outside the selected company.")
+        raise PermissionDenied(
+            "One or more attribute values are outside the selected company or are not active."
+        )
     attribute_ids = [value.attribute_id for value in values]
     if len(attribute_ids) != len(set(attribute_ids)):
         raise ValidationError("Select at most one value for each attribute.")

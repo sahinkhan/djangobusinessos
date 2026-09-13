@@ -2,7 +2,7 @@
 
 ## Status
 
-Technical PASS — publication candidate pending hosted CI and formal contract freeze
+COMPLETE — PUBLISHED, CI VERIFIED, AND CONTRACTS FROZEN
 
 ## Objective
 
@@ -342,11 +342,11 @@ Run in the Python 3.13.15 Compose web service:
 
 ### Remaining Phase 0 concerns
 
-- Hosted CI against the published candidate and the formal architecture contract-freeze decision are still required before Phase 1 begins.
+- Hosted CI passed for the published foundation/Phase 1 base, Phase 0 received technical approval, and the foundation security/module contracts were formally frozen before Phase 1 opened.
 - Production launch remains blocked on a chosen production process manager/hosting topology, HTTPS and secrets delivery evidence, backup/recovery, monitoring, and login-attempt limiting or an explicitly verified edge control.
 - Company/user locale preferences and translation conventions should be decided before broad UI development; country-specific tax/payroll behavior remains correctly deferred to localization phases.
 - A project license requires an owner decision and was not invented by this implementation session.
 
 ### Next recommended task
 
-Confirm hosted CI, review the published Phase 0 candidate, and record the core-contract freeze. Do not begin Party/Catalog implementation until that gate is accepted.
+Phase 0 is closed. Continue the independent Phase 1 Party/Catalog remediation review without reopening frozen foundation contracts unless a concrete defect requires an explicit architecture decision.

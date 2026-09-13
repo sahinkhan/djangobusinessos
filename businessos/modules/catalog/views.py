@@ -148,7 +148,7 @@ def product_detail_view(request, product_id):
 @login_required
 def variant_create(request, product_id):
     context = business_context_from_request(request)
-    form = VariantForm(request.POST or None)
+    form = VariantForm(request.POST or None, company_id=context.company_id)
     if request.method == "POST" and form.is_valid():
         try:
             create_product_variant(context, product_id=product_id, **form.cleaned_data)
@@ -171,6 +171,7 @@ def variant_edit(request, product_id, variant_id):
         raise Http404 from exc
     form = VariantForm(
         request.POST or None,
+        company_id=context.company_id,
         initial={
             "sku": variant.sku,
             "is_default": variant.is_default,
@@ -228,7 +229,8 @@ def category_list(request):
     form = CategoryForm(request.POST or None, company_id=context.company_id)
     if request.method == "POST" and form.is_valid():
         data = form.cleaned_data.copy()
-        data["parent_id"] = data.pop("parent").id if data.get("parent") else None
+        parent = data.pop("parent")
+        data["parent_id"] = parent.id if parent else None
         try:
             create_category(context, **data)
         except ValidationError as error:
@@ -246,7 +248,7 @@ def category_list(request):
 @login_required
 def attribute_list(request):
     context = business_context_from_request(request)
-    form = AttributeForm(request.POST or None)
+    form = AttributeForm(request.POST or None, company_id=context.company_id)
     if request.method == "POST" and form.is_valid():
         try:
             create_attribute(context, **form.cleaned_data)
@@ -269,7 +271,7 @@ def attribute_value_create(request, attribute_id):
         attribute = Attribute.objects.get(id=attribute_id, company_id=context.company_id)
     except Attribute.DoesNotExist as exc:
         raise Http404 from exc
-    form = AttributeValueForm(request.POST or None)
+    form = AttributeValueForm(request.POST or None, company_id=context.company_id)
     if request.method == "POST" and form.is_valid():
         try:
             create_attribute_value(context, attribute_id=attribute.id, **form.cleaned_data)

@@ -1,11 +1,12 @@
 from django import forms
 
+from businessos.core.access.forms import CompanyBoundForm
 from businessos.core.reference.models import UnitOfMeasure
 
 from .models import AttributeValue, Product, ProductCategory
 
 
-class ProductCreateForm(forms.Form):
+class ProductCreateForm(CompanyBoundForm):
     name = forms.CharField(max_length=200)
     sku = forms.CharField(max_length=64, label="Initial SKU")
     structure = forms.ChoiceField(choices=Product.Structure.choices)
@@ -19,14 +20,14 @@ class ProductCreateForm(forms.Form):
     is_active = forms.BooleanField(required=False, initial=True)
 
     def __init__(self, *args, company_id, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, company_id=company_id, **kwargs)
         self.fields["category"].queryset = ProductCategory.objects.filter(
             company_id=company_id, is_active=True
         )
         self.fields["default_uom"].queryset = UnitOfMeasure.objects.filter(is_active=True)
 
 
-class ProductEditForm(forms.Form):
+class ProductEditForm(CompanyBoundForm):
     name = forms.CharField(max_length=200)
     sku = forms.CharField(max_length=64, label="SKU", required=False)
     product_type = forms.ChoiceField(choices=Product.Type.choices)
@@ -39,7 +40,7 @@ class ProductEditForm(forms.Form):
     is_active = forms.BooleanField(required=False)
 
     def __init__(self, *args, company_id, is_simple, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, company_id=company_id, **kwargs)
         if not is_simple:
             self.fields.pop("sku")
         self.fields["category"].queryset = ProductCategory.objects.filter(
@@ -48,41 +49,41 @@ class ProductEditForm(forms.Form):
         self.fields["default_uom"].queryset = UnitOfMeasure.objects.filter(is_active=True)
 
 
-class CategoryForm(forms.Form):
+class CategoryForm(CompanyBoundForm):
     name = forms.CharField(max_length=160)
     parent = forms.ModelChoiceField(queryset=ProductCategory.objects.none(), required=False)
     is_active = forms.BooleanField(required=False, initial=True)
 
     def __init__(self, *args, company_id, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, company_id=company_id, **kwargs)
         self.fields["parent"].queryset = ProductCategory.objects.filter(
             company_id=company_id, is_active=True
         )
 
 
-class VariantForm(forms.Form):
+class VariantForm(CompanyBoundForm):
     sku = forms.CharField(max_length=64)
     is_default = forms.BooleanField(required=False)
     is_active = forms.BooleanField(required=False, initial=True)
 
 
-class AttributeForm(forms.Form):
+class AttributeForm(CompanyBoundForm):
     name = forms.CharField(max_length=120)
     is_active = forms.BooleanField(required=False, initial=True)
 
 
-class AttributeValueForm(forms.Form):
+class AttributeValueForm(CompanyBoundForm):
     value = forms.CharField(max_length=120)
     is_active = forms.BooleanField(required=False, initial=True)
 
 
-class VariantAttributeForm(forms.Form):
+class VariantAttributeForm(CompanyBoundForm):
     attribute_values = forms.ModelMultipleChoiceField(
         queryset=AttributeValue.objects.none(), required=False, widget=forms.CheckboxSelectMultiple
     )
 
     def __init__(self, *args, company_id, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, company_id=company_id, **kwargs)
         self.fields["attribute_values"].queryset = AttributeValue.objects.filter(
             company_id=company_id, is_active=True, attribute__is_active=True
         ).select_related("attribute")
