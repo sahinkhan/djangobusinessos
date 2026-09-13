@@ -57,6 +57,17 @@ def _locked_order(context: BusinessContext, order_id) -> SalesOrder:
         raise PermissionDenied("The Sales Order is outside the selected company.") from exc
 
 
+def _line_order_id(context: BusinessContext, line_id):
+    order_id = (
+        SalesOrderLine.objects.filter(id=line_id, company_id=context.company_id)
+        .values_list("sales_order_id", flat=True)
+        .first()
+    )
+    if order_id is None:
+        raise PermissionDenied("The Sales Order line is outside the selected company.")
+    return order_id
+
+
 def _require_draft(order: SalesOrder) -> None:
     if order.status != SalesOrder.Status.DRAFT:
         raise ValidationError("Only draft Sales Orders may be changed.")
@@ -166,14 +177,17 @@ def update_sales_order_line(
     description: str,
 ) -> SalesOrderLine:
     validate_business_context(context)
+    order_id = _line_order_id(context, line_id)
+    order = _locked_order(context, order_id)
+    _require_draft(order)
     try:
-        line = SalesOrderLine.objects.select_related("sales_order").get(
-            id=line_id, company_id=context.company_id
+        line = SalesOrderLine.objects.get(
+            id=line_id,
+            company_id=context.company_id,
+            sales_order_id=order.id,
         )
     except SalesOrderLine.DoesNotExist as exc:
         raise PermissionDenied("The Sales Order line is outside the selected company.") from exc
-    order = _locked_order(context, line.sales_order_id)
-    _require_draft(order)
     variant = _variant(context, product_variant_id)
     line.product_variant = variant
     line.sku_snapshot = variant.sku
@@ -208,6 +222,7 @@ def confirm_sales_order(context: BusinessContext, *, order_id) -> SalesOrder:
     if order.status == SalesOrder.Status.CANCELLED:
         raise ValidationError("A cancelled Sales Order cannot be confirmed.")
     _customer(context, order.customer_id)
+    _currency(order.currency_id)
     lines = list(order.lines.select_related("product_variant__product"))
     if not lines:
         raise ValidationError("A Sales Order requires at least one line before confirmation.")

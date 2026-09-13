@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: PREPARED — IMPLEMENTATION NOT STARTED
+Status: IN PROGRESS — STANDALONE SALES IMPLEMENTED; REMEDIATION RE-REVIEW PENDING
 
 Base architecture commit before this plan: `361d832713dcd2325363b4059a4f3b6cac7d3715`
 
@@ -69,6 +69,16 @@ Do not run independent agents against the same branch/worktree concurrently.
 ---
 
 # Batch 2A — Sales
+
+## Implementation record
+
+The standalone Sales implementation lives on `phase2-sales`. It remains outside `main` and the
+future `phase2-commercial-core` integration branch until independent audit acceptance. Sales
+confirmation revalidates the active customer, active currency, and every active/sellable
+ProductVariant while holding the order row lock. Draft line mutations share that order-lock
+protocol. Monetary totals are derived from lines and displayed using the Currency
+`decimal_places` value with `ROUND_HALF_UP`; unit prices display the model's full four-decimal
+precision. No Inventory, Billing, or Accounting writes occur.
 
 ## Ownership
 

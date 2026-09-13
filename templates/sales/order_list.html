@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load sales_format %}
 
 {% block title %}Sales Orders · BusinessOS{% endblock %}
 {% block breadcrumbs %}{% include "components/breadcrumbs.html" with current="Sales Orders" %}{% endblock %}
@@ -16,6 +17,6 @@
 </form>
 <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div class="overflow-x-auto"><table class="data-table">
   <thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Status</th><th>Total</th></tr></thead>
-  <tbody>{% for order in orders %}<tr><td><a class="font-semibold text-indigo-700" href="{% url 'sales:order_detail' order.id %}">{{ order.number }}</a></td><td>{{ order.customer.display_name }}</td><td>{{ order.order_date }}</td><td><span class="{% if order.status == 'confirmed' %}badge-success{% else %}badge-neutral{% endif %}">{{ order.get_status_display }}</span></td><td>{{ order.currency.code }} {{ order.total|floatformat:2 }}</td></tr>{% empty %}<tr><td colspan="5">No Sales Orders match this company scope.</td></tr>{% endfor %}</tbody>
+  <tbody>{% for order in orders %}<tr><td><a class="font-semibold text-indigo-700" href="{% url 'sales:order_detail' order.id %}">{{ order.number }}</a></td><td>{{ order.customer.display_name }}</td><td>{{ order.order_date }}</td><td><span class="{% if order.status == 'confirmed' %}badge-success{% else %}badge-neutral{% endif %}">{{ order.get_status_display }}</span></td><td>{{ order.currency.code }} {{ order.total|currency_amount:order.currency.decimal_places }}</td></tr>{% empty %}<tr><td colspan="5">No Sales Orders match this company scope.</td></tr>{% endfor %}</tbody>
 </table></div></section>
 {% endblock %}

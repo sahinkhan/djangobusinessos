@@ -1,7 +1,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 from decimal import Decimal
-from threading import Barrier
+from threading import Barrier, Event
 
 import pytest
 from django.contrib.auth import get_user_model
@@ -19,6 +19,7 @@ from businessos.modules.catalog.services import (
 )
 from businessos.modules.party.models import Party
 from businessos.modules.party.services import create_party
+from businessos.modules.sales import services as sales_services
 from businessos.modules.sales.manifest import MODULE
 from businessos.modules.sales.models import SalesOrder, SalesOrderLine
 from businessos.modules.sales.selectors import (
@@ -212,7 +213,7 @@ def test_concurrent_confirmation_serializes_to_one_transition(
                 business_context, order_id=draft_order.id
             ).confirmed_at
         finally:
-            close_old_connections()
+            connection.close()
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         futures = [executor.submit(confirm), executor.submit(confirm)]
@@ -299,7 +300,7 @@ def test_concurrent_line_additions_receive_unique_internal_positions(
                 unit_price=10,
             ).position
         finally:
-            close_old_connections()
+            connection.close()
 
     with ThreadPoolExecutor(max_workers=2) as executor:
         futures = [executor.submit(add_line), executor.submit(add_line)]
@@ -311,6 +312,62 @@ def test_concurrent_line_additions_receive_unique_internal_positions(
         .order_by("position")
         .values_list("position", flat=True)
     ) == [1, 2]
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_edit_does_not_recreate_a_removed_line(
+    business_context, draft_order, variant, monkeypatch
+):
+    if connection.vendor != "postgresql":
+        pytest.skip("Sales edit/remove row-lock contract requires PostgreSQL.")
+    line = add_sales_order_line(
+        business_context,
+        order_id=draft_order.id,
+        product_variant_id=variant.id,
+        quantity=1,
+        unit_price=10,
+    )
+    line_loaded = Event()
+    removal_finished = Event()
+    original_lookup = sales_services._line_order_id
+
+    def pause_after_line_lookup(context, line_id):
+        order_id = original_lookup(context, line_id)
+        line_loaded.set()
+        if not removal_finished.wait(timeout=5):
+            raise TimeoutError("Timed out waiting for coordinated line removal.")
+        return order_id
+
+    monkeypatch.setattr(sales_services, "_line_order_id", pause_after_line_lookup)
+
+    def edit_line():
+        close_old_connections()
+        try:
+            sales_services.update_sales_order_line(
+                business_context,
+                line_id=line.id,
+                product_variant_id=variant.id,
+                quantity=2,
+                unit_price=20,
+                description="Must not return",
+            )
+        except Exception as error:  # returned to the main test thread for assertion
+            return error
+        finally:
+            connection.close()
+        return None
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        future = executor.submit(edit_line)
+        assert line_loaded.wait(timeout=5)
+        try:
+            remove_sales_order_line(business_context, line_id=line.id)
+        finally:
+            removal_finished.set()
+        result = future.result(timeout=10)
+
+    assert isinstance(result, PermissionDenied)
+    assert not SalesOrderLine.objects.filter(id=line.id).exists()
 
 
 @pytest.mark.django_db
@@ -353,6 +410,27 @@ def test_confirmed_order_and_lines_are_immutable_through_service_and_model(
 
 
 @pytest.mark.django_db
+def test_stale_draft_instance_cannot_delete_confirmed_order(
+    business_context, draft_order, variant
+):
+    line = add_sales_order_line(
+        business_context,
+        order_id=draft_order.id,
+        product_variant_id=variant.id,
+        quantity=1,
+        unit_price=10,
+    )
+    stale_draft = SalesOrder.objects.get(id=draft_order.id)
+    confirm_sales_order(business_context, order_id=draft_order.id)
+
+    with pytest.raises(ValidationError, match="cannot be deleted"):
+        stale_draft.delete()
+
+    assert SalesOrder.objects.filter(id=draft_order.id).exists()
+    assert SalesOrderLine.objects.filter(id=line.id).exists()
+
+
+@pytest.mark.django_db
 def test_confirmed_order_can_be_cancelled_explicitly_and_retry_is_safe(
     business_context, draft_order, variant, customer, currency
 ):
@@ -380,6 +458,27 @@ def test_confirmed_order_can_be_cancelled_explicitly_and_retry_is_safe(
             customer_id=customer.id,
             currency_id=currency.id,
         )
+
+
+@pytest.mark.django_db
+def test_confirmation_rejects_currency_deactivated_after_draft_creation(
+    business_context, draft_order, variant, currency
+):
+    add_sales_order_line(
+        business_context,
+        order_id=draft_order.id,
+        product_variant_id=variant.id,
+        quantity=1,
+        unit_price=10,
+    )
+    currency.is_active = False
+    currency.save()
+
+    with pytest.raises(ValidationError, match="active currency"):
+        confirm_sales_order(business_context, order_id=draft_order.id)
+
+    draft_order.refresh_from_db()
+    assert draft_order.status == SalesOrder.Status.DRAFT
 
 
 @pytest.mark.django_db

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django import forms
 from django.utils import timezone
 
@@ -31,9 +33,11 @@ class SalesOrderLineForm(CompanyBoundForm):
     product_variant = forms.ModelChoiceField(
         queryset=ProductVariant.objects.none(), label="Product / SKU"
     )
-    quantity = forms.DecimalField(max_digits=18, decimal_places=4, min_value=0.0001)
+    quantity = forms.DecimalField(
+        max_digits=18, decimal_places=4, min_value=Decimal("0.0001")
+    )
     unit_price = forms.DecimalField(
-        max_digits=18, decimal_places=4, min_value=0, label="Unit price"
+        max_digits=18, decimal_places=4, min_value=Decimal("0"), label="Unit price"
     )
     description = forms.CharField(
         required=False, widget=forms.Textarea(attrs={"rows": 3})

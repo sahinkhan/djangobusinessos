@@ -1,5 +1,5 @@
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, transaction
 
 from businessos.core.common.models import UUIDTimestampedModel
 
@@ -107,9 +107,17 @@ class SalesOrder(UUIDTimestampedModel):
         super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        if self.status != self.Status.DRAFT:
-            raise ValidationError("Confirmed or cancelled Sales Orders cannot be deleted.")
-        return super().delete(*args, **kwargs)
+        with transaction.atomic():
+            persisted_status = (
+                type(self)
+                .objects.select_for_update()
+                .filter(pk=self.pk)
+                .values_list("status", flat=True)
+                .first()
+            )
+            if persisted_status not in {None, self.Status.DRAFT}:
+                raise ValidationError("Confirmed or cancelled Sales Orders cannot be deleted.")
+            return super().delete(*args, **kwargs)
 
     def __str__(self):
         return self.number

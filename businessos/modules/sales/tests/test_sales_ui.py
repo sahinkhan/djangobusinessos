@@ -1,18 +1,24 @@
 from datetime import date
+from decimal import Decimal
 
 import pytest
+from django.core.exceptions import ValidationError
 from django.urls import reverse
 
 from businessos.core.access.context import SESSION_COMPANY_KEY
 from businessos.core.access.models import UserCompanyAccess
 from businessos.core.modules.models import BusinessModule
 from businessos.core.modules.services import register_manifest
+from businessos.core.reference.models import Currency
 from businessos.modules.catalog.models import Product
 from businessos.modules.catalog.services import create_simple_product
 from businessos.modules.party.models import Party
 from businessos.modules.party.services import create_party
+from businessos.modules.sales.forms import SalesOrderLineForm
 from businessos.modules.sales.manifest import MODULE as SALES_MANIFEST
 from businessos.modules.sales.models import SalesOrder
+from businessos.modules.sales.services import add_sales_order_line, create_sales_order
+from businessos.modules.sales.templatetags.sales_format import currency_amount
 
 
 @pytest.fixture
@@ -127,3 +133,79 @@ def test_sales_form_rejects_stale_company_scope(
     assert response.status_code == 200
     assert b"Company scope changed after this form was opened" in response.content
     assert not SalesOrder.objects.exists()
+
+
+@pytest.mark.django_db
+def test_quantity_form_uses_exact_decimal_boundaries(company):
+    field = SalesOrderLineForm(company_id=company.id).fields["quantity"]
+
+    assert field.clean("0.0001") == Decimal("0.0001")
+    with pytest.raises(ValidationError):
+        field.clean("0")
+    with pytest.raises(ValidationError):
+        field.clean("0.00001")
+
+
+@pytest.mark.django_db
+def test_sales_ui_preserves_unit_price_and_currency_precision(
+    sales_client, business_context, company, currency, uom
+):
+    register_manifest(SALES_MANIFEST, enabled=True)
+    customer = create_party(
+        business_context,
+        party_type=Party.Type.ORGANIZATION,
+        display_name="Precision Customer",
+        is_customer=True,
+    )
+    variant = create_simple_product(
+        business_context,
+        name="Precision Service",
+        sku="PRECISION-1",
+        product_type=Product.Type.SERVICE,
+        default_uom_id=uom.id,
+    ).variants.get()
+    low_price_order = create_sales_order(
+        business_context,
+        customer_id=customer.id,
+        order_date=date.today(),
+        currency_id=currency.id,
+    )
+    add_sales_order_line(
+        business_context,
+        order_id=low_price_order.id,
+        product_variant_id=variant.id,
+        quantity=Decimal("100"),
+        unit_price=Decimal("0.0049"),
+    )
+
+    low_price_page = sales_client.get(
+        reverse("sales:order_detail", args=[low_price_order.id])
+    )
+    assert b"USD 0.0049" in low_price_page.content
+    assert b"USD 0.49" in low_price_page.content
+
+    three_decimal_currency = Currency.objects.create(
+        code="TDC", name="Three decimal currency", decimal_places=3
+    )
+    three_decimal_order = create_sales_order(
+        business_context,
+        customer_id=customer.id,
+        order_date=date.today(),
+        currency_id=three_decimal_currency.id,
+    )
+    add_sales_order_line(
+        business_context,
+        order_id=three_decimal_order.id,
+        product_variant_id=variant.id,
+        quantity=1,
+        unit_price=Decimal("1.234"),
+    )
+
+    detail_page = sales_client.get(
+        reverse("sales:order_detail", args=[three_decimal_order.id])
+    )
+    list_page = sales_client.get(reverse("sales:order_list"))
+    assert b"TDC 1.2340" in detail_page.content
+    assert b"TDC 1.234" in detail_page.content
+    assert b"TDC 1.234" in list_page.content
+    assert currency_amount(Decimal("1.2345"), 3) == "1.235"
