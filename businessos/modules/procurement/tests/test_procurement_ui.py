@@ -15,7 +15,17 @@ from businessos.modules.party.models import Party
 from businessos.modules.party.services import create_party
 from businessos.modules.procurement.forms import PurchaseOrderLineForm, _display_quantity
 from businessos.modules.procurement.manifest import MODULE as PROCUREMENT_MANIFEST
-from businessos.modules.procurement.models import PurchaseOrder, PurchaseReceipt
+from businessos.modules.procurement.models import (
+    PurchaseOrder,
+    PurchaseReceipt,
+    PurchaseReceiptLine,
+)
+from businessos.modules.procurement.services import (
+    add_purchase_order_line,
+    confirm_purchase_order,
+    create_purchase_order,
+    receive_purchase_order,
+)
 
 
 @pytest.fixture
@@ -144,6 +154,134 @@ def test_form_rejects_stale_company_scope(
     assert response.status_code == 200
     assert b"Company scope changed after this form was opened" in response.content
     assert not PurchaseOrder.objects.exists()
+
+
+@pytest.mark.django_db
+def test_stale_receipt_form_rejects_the_complete_submitted_payload(
+    procurement_client, business_context, company, currency, uom
+):
+    register_manifest(PROCUREMENT_MANIFEST, enabled=True)
+    supplier = create_party(
+        business_context,
+        party_type=Party.Type.ORGANIZATION,
+        display_name="Stale form supplier",
+        is_supplier=True,
+    )
+    first_variant = create_simple_product(
+        business_context,
+        name="Stale supply A",
+        sku="STALE-A",
+        product_type=Product.Type.STOCKABLE,
+        default_uom_id=uom.id,
+    ).variants.get()
+    second_variant = create_simple_product(
+        business_context,
+        name="Stale supply B",
+        sku="STALE-B",
+        product_type=Product.Type.STOCKABLE,
+        default_uom_id=uom.id,
+    ).variants.get()
+    order = create_purchase_order(
+        business_context,
+        supplier_id=supplier.id,
+        order_date=date.today(),
+        currency_id=currency.id,
+    )
+    first_line = add_purchase_order_line(
+        business_context,
+        order_id=order.id,
+        product_variant_id=first_variant.id,
+        quantity=Decimal("5"),
+        unit_cost=Decimal("1"),
+    )
+    second_line = add_purchase_order_line(
+        business_context,
+        order_id=order.id,
+        product_variant_id=second_variant.id,
+        quantity=Decimal("5"),
+        unit_cost=Decimal("1"),
+    )
+    confirm_purchase_order(business_context, order_id=order.id)
+    receipt_url = reverse("procurement:order_receive", args=[order.id])
+    opened = procurement_client.get(receipt_url)
+    assert f"line_{first_line.id}" in opened.context["form"].fields
+    assert f"line_{second_line.id}" in opened.context["form"].fields
+
+    receive_purchase_order(
+        business_context,
+        purchase_order_id=order.id,
+        receipt_date=date.today(),
+        idempotency_key="intervening-receipt",
+        lines=[
+            {"purchase_order_line_id": first_line.id, "quantity_received": "5"}
+        ],
+    )
+    response = procurement_client.post(
+        receipt_url,
+        {
+            "receipt_date": date.today().isoformat(),
+            "idempotency_key": "stale-receipt",
+            f"line_{first_line.id}": "2",
+            f"line_{second_line.id}": "2",
+            "scope_company_id": str(company.id),
+        },
+    )
+
+    assert response.status_code == 200
+    assert b"exceeds the ordered quantity" in response.content
+    assert not PurchaseReceipt.objects.filter(idempotency_key="stale-receipt").exists()
+    assert not PurchaseReceiptLine.objects.filter(purchase_order_line=second_line).exists()
+
+
+@pytest.mark.django_db
+def test_fully_received_order_http_retry_returns_the_existing_receipt(
+    procurement_client, business_context, company, currency, uom
+):
+    register_manifest(PROCUREMENT_MANIFEST, enabled=True)
+    supplier = create_party(
+        business_context,
+        party_type=Party.Type.ORGANIZATION,
+        display_name="Retry supplier",
+        is_supplier=True,
+    )
+    variant = create_simple_product(
+        business_context,
+        name="Retry supply",
+        sku="RETRY-SUPPLY",
+        product_type=Product.Type.STOCKABLE,
+        default_uom_id=uom.id,
+    ).variants.get()
+    order = create_purchase_order(
+        business_context,
+        supplier_id=supplier.id,
+        order_date=date.today(),
+        currency_id=currency.id,
+    )
+    line = add_purchase_order_line(
+        business_context,
+        order_id=order.id,
+        product_variant_id=variant.id,
+        quantity=Decimal("5"),
+        unit_cost=Decimal("1"),
+    )
+    confirm_purchase_order(business_context, order_id=order.id)
+    payload = {
+        "receipt_date": date.today().isoformat(),
+        "idempotency_key": "http-exact-retry",
+        f"line_{line.id}": "5",
+        "scope_company_id": str(company.id),
+    }
+    receipt_url = reverse("procurement:order_receive", args=[order.id])
+
+    first = procurement_client.post(receipt_url, payload)
+    receipt = PurchaseReceipt.objects.get(idempotency_key="http-exact-retry")
+    retry = procurement_client.post(receipt_url, payload)
+
+    expected_url = reverse("procurement:receipt_detail", args=[receipt.id])
+    assert first.status_code == retry.status_code == 302
+    assert first.url == retry.url == expected_url
+    assert PurchaseReceipt.objects.filter(idempotency_key="http-exact-retry").count() == 1
+    assert PurchaseReceiptLine.objects.filter(purchase_receipt=receipt).count() == 1
 
 
 @pytest.mark.django_db

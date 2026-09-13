@@ -1,3 +1,4 @@
+from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from uuid import UUID, uuid4
 
@@ -5,6 +6,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError, transaction
 from django.db.models import Max, Sum
 from django.utils import timezone
+from django.utils.dateparse import parse_date
 
 from businessos.core.access.policies import validate_business_context
 from businessos.core.common.context import BusinessContext
@@ -13,6 +15,9 @@ from businessos.modules.catalog.models import ProductVariant
 from businessos.modules.party.models import Party
 
 from .models import PurchaseOrder, PurchaseOrderLine, PurchaseReceipt, PurchaseReceiptLine
+
+_RECEIPT_QUANTITY_QUANTUM = Decimal("0.0001")
+_MAX_RECEIPT_QUANTITY = Decimal("99999999999999.9999")
 
 
 def _supplier(context: BusinessContext, supplier_id) -> Party:
@@ -111,10 +116,35 @@ def _normalize_receipt_lines(lines) -> dict[UUID, Decimal]:
             raise ValidationError("A Purchase Order line may appear only once in a receipt.")
         if not quantity.is_finite() or quantity <= 0:
             raise ValidationError("Received quantity must be greater than zero.")
-        normalized[line_id] = quantity
+        try:
+            canonical_quantity = quantity.quantize(_RECEIPT_QUANTITY_QUANTUM)
+        except InvalidOperation as exc:
+            raise ValidationError(
+                "Received quantity must fit within 18 digits and four decimal places."
+            ) from exc
+        if canonical_quantity != quantity or canonical_quantity > _MAX_RECEIPT_QUANTITY:
+            raise ValidationError(
+                "Received quantity must fit within 18 digits and four decimal places."
+            )
+        normalized[line_id] = canonical_quantity
     if not normalized:
         raise ValidationError("A Purchase Receipt requires at least one line.")
     return normalized
+
+
+def _normalize_receipt_date(value) -> date:
+    if isinstance(value, datetime):
+        raise ValidationError({"receipt_date": "Enter a valid receipt date."})
+    if isinstance(value, date):
+        return value
+    if isinstance(value, str):
+        try:
+            parsed = parse_date(value)
+        except ValueError:
+            parsed = None
+        if parsed is not None:
+            return parsed
+    raise ValidationError({"receipt_date": "Enter a valid receipt date."})
 
 
 def _receipt_payload(receipt: PurchaseReceipt) -> dict[UUID, Decimal]:
@@ -325,6 +355,7 @@ def receive_purchase_order(
         purchase_order_id = UUID(str(purchase_order_id))
     except (TypeError, ValueError) as exc:
         raise ValidationError({"purchase_order_id": "Select a valid Purchase Order."}) from exc
+    receipt_date = _normalize_receipt_date(receipt_date)
     key = idempotency_key.strip()
     if not key:
         raise ValidationError({"idempotency_key": "Idempotency key is required."})

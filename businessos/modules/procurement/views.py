@@ -1,3 +1,5 @@
+from uuid import UUID
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
@@ -53,6 +55,18 @@ def _line_data(cleaned_data):
     data = cleaned_data.copy()
     data["product_variant_id"] = data.pop("product_variant").id
     return data
+
+
+def _submitted_receipt_line_ids(data):
+    submitted = set()
+    for field_name in data:
+        if not field_name.startswith("line_"):
+            continue
+        try:
+            submitted.add(UUID(field_name.removeprefix("line_")))
+        except ValueError as exc:
+            raise ValidationError("The receipt contains an invalid Purchase Order line.") from exc
+    return submitted
 
 
 @login_required
@@ -268,13 +282,30 @@ def order_receive(request, order_id):
     if order.status != PurchaseOrder.Status.CONFIRMED:
         messages.error(request, "Only a confirmed Purchase Order may be received.")
         return redirect("procurement:order_detail", order_id=order.id)
-    lines = [line for line in order.lines.all() if line.remaining_quantity > 0]
+    order_lines = list(order.lines.all())
+    submitted_line_ids = set()
+    submitted_line_error = None
+    if request.method == "POST":
+        try:
+            submitted_line_ids = _submitted_receipt_line_ids(request.POST)
+        except ValidationError as error:
+            submitted_line_error = error
+    lines = (
+        order_lines
+        if request.method == "POST"
+        else [line for line in order_lines if line.remaining_quantity > 0]
+    )
     form = PurchaseReceiptForm(
         request.POST or None,
         company_id=context.company_id,
         order_lines=lines,
+        submitted_line_ids=submitted_line_ids,
     )
-    if request.method == "POST" and form.is_valid():
+    form_is_valid = form.is_valid() if request.method == "POST" else False
+    if submitted_line_error is not None:
+        _add_service_error(form, submitted_line_error)
+        form_is_valid = False
+    if request.method == "POST" and form_is_valid:
         try:
             receipt = receive_purchase_order(
                 context,

@@ -428,6 +428,50 @@ def test_receipt_input_validation_conflicting_key_and_atomic_rollback(
 
 
 @pytest.mark.django_db
+def test_receipt_quantity_precision_and_iso_date_retry_are_canonical(
+    business_context, draft_order, variant
+):
+    line = _confirm_with_line(business_context, draft_order, variant, quantity="5")
+    with pytest.raises(ValidationError, match="four decimal places"):
+        receive_purchase_order(
+            business_context,
+            purchase_order_id=draft_order.id,
+            receipt_date="2026-09-14",
+            idempotency_key="unsupported-precision",
+            lines=[
+                {
+                    "purchase_order_line_id": line.id,
+                    "quantity_received": "0.12345",
+                }
+            ],
+        )
+    assert not PurchaseReceipt.objects.exists()
+
+    payload = [
+        {"purchase_order_line_id": line.id, "quantity_received": "0.1234"}
+    ]
+    receipt = receive_purchase_order(
+        business_context,
+        purchase_order_id=draft_order.id,
+        receipt_date="2026-09-14",
+        idempotency_key="canonical-retry",
+        lines=payload,
+    )
+    retry = receive_purchase_order(
+        business_context,
+        purchase_order_id=str(draft_order.id),
+        receipt_date="2026-09-14",
+        idempotency_key="canonical-retry",
+        lines=payload,
+    )
+
+    assert retry.id == receipt.id
+    assert receipt.receipt_date == date(2026, 9, 14)
+    assert receipt.lines.get().quantity_received == Decimal("0.1234")
+    assert PurchaseReceipt.objects.count() == 1
+
+
+@pytest.mark.django_db
 def test_receipt_and_lines_are_immutable_and_direct_creation_is_blocked(
     business_context, draft_order, variant
 ):

@@ -1,4 +1,5 @@
 from decimal import Decimal
+from uuid import UUID
 
 from django import forms
 from django.utils import timezone
@@ -67,11 +68,16 @@ class PurchaseReceiptForm(CompanyBoundForm):
         help_text="Use the same key when safely retrying the exact same receipt.",
     )
 
-    def __init__(self, *args, company_id, order_lines, **kwargs):
+    def __init__(
+        self, *args, company_id, order_lines, submitted_line_ids=(), **kwargs
+    ):
         super().__init__(*args, company_id=company_id, **kwargs)
         self.order_lines = list(order_lines)
+        self.receipt_field_names = []
         for line in self.order_lines:
-            self.fields[f"line_{line.id}"] = forms.DecimalField(
+            field_name = f"line_{line.id}"
+            self.receipt_field_names.append(field_name)
+            self.fields[field_name] = forms.DecimalField(
                 required=False,
                 max_digits=18,
                 decimal_places=4,
@@ -81,15 +87,28 @@ class PurchaseReceiptForm(CompanyBoundForm):
                     f"{_display_quantity(line.remaining_quantity)}"
                 ),
             )
+        known_line_ids = {line.id for line in self.order_lines}
+        for line_id in submitted_line_ids:
+            if line_id in known_line_ids:
+                continue
+            field_name = f"line_{line_id}"
+            self.receipt_field_names.append(field_name)
+            self.fields[field_name] = forms.DecimalField(
+                required=False,
+                max_digits=18,
+                decimal_places=4,
+                min_value=Decimal("0.0001"),
+                label="Submitted Purchase Order line",
+            )
 
     def receipt_lines(self):
         return [
             {
-                "purchase_order_line_id": line.id,
-                "quantity_received": self.cleaned_data[f"line_{line.id}"],
+                "purchase_order_line_id": UUID(field_name.removeprefix("line_")),
+                "quantity_received": self.cleaned_data[field_name],
             }
-            for line in self.order_lines
-            if self.cleaned_data.get(f"line_{line.id}") is not None
+            for field_name in self.receipt_field_names
+            if self.cleaned_data.get(field_name) is not None
         ]
 
 
