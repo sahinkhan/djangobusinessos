@@ -381,25 +381,30 @@ def receive_purchase_order(
 
     try:
         with transaction.atomic():
+            posted_at = timezone.now()
             receipt = PurchaseReceipt(
                 company_id=context.company_id,
                 number=_receipt_number(),
                 purchase_order=order,
                 receipt_date=receipt_date,
                 idempotency_key=key,
-                posted_at=timezone.now(),
+                posted_at=posted_at,
+                created_at=posted_at,
+                updated_at=posted_at,
             )
-            receipt._allow_posted_create = True
-            receipt.save()
-            for line_id, quantity in normalized_lines.items():
-                receipt_line = PurchaseReceiptLine(
+            PurchaseReceipt.objects.bulk_create([receipt])
+            receipt_lines = [
+                PurchaseReceiptLine(
                     company_id=context.company_id,
                     purchase_receipt=receipt,
                     purchase_order_line=order_lines[line_id],
                     quantity_received=quantity,
+                    created_at=posted_at,
+                    updated_at=posted_at,
                 )
-                receipt_line._allow_posted_create = True
-                receipt_line.save()
+                for line_id, quantity in normalized_lines.items()
+            ]
+            PurchaseReceiptLine.objects.bulk_create(receipt_lines)
     except IntegrityError:
         existing = _receipt_for_key(context, key)
         if existing is None:

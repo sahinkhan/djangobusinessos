@@ -287,7 +287,7 @@ class PurchaseReceipt(UUIDTimestampedModel):
                 "idempotency_key",
                 "posted_at",
             ).first()
-        if self._state.adding and not getattr(self, "_allow_posted_create", False):
+        if self._state.adding:
             raise ValidationError("Purchase Receipts must be created through the receive service.")
         if not self.number:
             raise ValidationError({"number": "Receipt number is required."})
@@ -358,7 +358,7 @@ class PurchaseReceiptLine(UUIDTimestampedModel):
                 "purchase_order_line_id",
                 "quantity_received",
             ).first()
-        if self._state.adding and not getattr(self, "_allow_posted_create", False):
+        if self._state.adding:
             raise ValidationError(
                 "Purchase Receipt Lines must be created through the receive service."
             )

@@ -9,7 +9,6 @@ def register_procurement(apps, schema_editor):
             "name": "Procurement",
             "version": "0.1.0",
             "dependencies": ["party", "catalog", "organization", "reference", "access"],
-            "is_enabled": False,
         },
     )
 

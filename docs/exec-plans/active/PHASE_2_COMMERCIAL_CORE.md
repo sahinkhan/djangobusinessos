@@ -275,9 +275,16 @@ coverage exercises confirmation, line-position allocation, and over-receipt seri
 rollback and idempotency behavior are also covered. Fresh PostgreSQL bootstrap, module-local
 test discovery, and desktop/mobile UI were verified during implementation.
 
-Final implementation evidence: 84 tests passed on PostgreSQL/Python 3.13.15, the 23
+Independent-audit remediation removed the caller-settable receipt creation escape flag.
+The receive service now uses deliberate bulk persistence inside its existing atomic,
+validated transaction, while ordinary receipt and receipt-line `save()` creation is always
+rejected. Procurement manifest registration also preserves an existing deployment enablement
+choice, and PostgreSQL coverage proves that concurrent same-company/same-key receipts against
+different Purchase Orders resolve to one receipt plus one explicit validation conflict.
+
+Final implementation evidence: 86 tests passed on PostgreSQL/Python 3.13.15, the 25
 module-local Procurement tests were discovered and passed on PostgreSQL, and the SQLite
-suite passed 80 tests with four expected PostgreSQL-only skips. Ruff, Django system checks,
+suite passed 81 tests with five expected PostgreSQL-only skips. Ruff, Django system checks,
 migration drift, and reproducible Tailwind compilation passed. Representative 1280x720 and
 390x844 browser QA covered create, line entry, confirmation, partial receipt, receipt history,
 module navigation, exact quantity/unit-cost presentation, and local table scrolling without

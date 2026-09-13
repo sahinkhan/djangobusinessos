@@ -1,16 +1,20 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import date
 from decimal import Decimal
+from importlib import import_module
 from inspect import signature
 from threading import Barrier
 
 import pytest
+from django.apps import apps
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import close_old_connections, connection
+from django.db.models.query import QuerySet
 
 from businessos.core.access.models import UserCompanyAccess
 from businessos.core.common.context import BusinessContext
+from businessos.core.modules.models import BusinessModule
 from businessos.core.organization.models import Company
 from businessos.modules.catalog.models import Product, ProductVariant
 from businessos.modules.catalog.services import (
@@ -428,15 +432,17 @@ def test_receipt_and_lines_are_immutable_and_direct_creation_is_blocked(
     business_context, draft_order, variant
 ):
     line = _confirm_with_line(business_context, draft_order, variant)
+    direct_receipt = PurchaseReceipt(
+        company=draft_order.company,
+        number="PR-DIRECT",
+        purchase_order=draft_order,
+        receipt_date=date.today(),
+        idempotency_key="direct",
+        posted_at=draft_order.confirmed_at,
+    )
+    direct_receipt._allow_posted_create = True
     with pytest.raises(ValidationError, match="receive service"):
-        PurchaseReceipt.objects.create(
-            company=draft_order.company,
-            number="PR-DIRECT",
-            purchase_order=draft_order,
-            receipt_date=date.today(),
-            idempotency_key="direct",
-            posted_at=draft_order.confirmed_at,
-        )
+        direct_receipt.save()
     receipt = receive_purchase_order(
         business_context,
         purchase_order_id=draft_order.id,
@@ -444,10 +450,23 @@ def test_receipt_and_lines_are_immutable_and_direct_creation_is_blocked(
         idempotency_key="immutable",
         lines=[{"purchase_order_line_id": line.id, "quantity_received": "1"}],
     )
+    assert receipt.created_at is not None
+    assert receipt.updated_at is not None
+    direct_line = PurchaseReceiptLine(
+        company=draft_order.company,
+        purchase_receipt=receipt,
+        purchase_order_line=line,
+        quantity_received=Decimal("20"),
+    )
+    direct_line._allow_posted_create = True
+    with pytest.raises(ValidationError, match="receive service"):
+        direct_line.save()
     receipt.receipt_date = date(2026, 9, 20)
     with pytest.raises(ValidationError, match="immutable"):
         receipt.save()
     receipt_line = receipt.lines.get()
+    assert receipt_line.created_at is not None
+    assert receipt_line.updated_at is not None
     receipt_line.quantity_received = 2
     with pytest.raises(ValidationError, match="immutable"):
         receipt_line.save()
@@ -456,6 +475,30 @@ def test_receipt_and_lines_are_immutable_and_direct_creation_is_blocked(
     with pytest.raises(ValidationError, match="cannot be deleted"):
         receipt_line.delete()
     assert purchase_receipt_detail(business_context, receipt_id=receipt.id).id == receipt.id
+
+
+@pytest.mark.django_db
+def test_manifest_migration_preserves_existing_enablement():
+    module = BusinessModule.objects.get(code="procurement")
+    module.is_enabled = True
+    module.save(update_fields=["is_enabled"])
+
+    migration = import_module(
+        "businessos.modules.procurement.migrations.0002_register_manifest"
+    )
+    migration.register_procurement(apps, None)
+
+    module.refresh_from_db()
+    assert module.is_enabled is True
+    assert module.name == "Procurement"
+    assert module.version == "0.1.0"
+    assert module.dependencies == [
+        "party",
+        "catalog",
+        "organization",
+        "reference",
+        "access",
+    ]
 
 
 @pytest.mark.django_db
@@ -545,17 +588,14 @@ def test_failed_receipt_rolls_back_header_lines_and_received_totals(
         business_context, draft_order, second_variant, quantity="5"
     )
     confirm_purchase_order(business_context, order_id=draft_order.id)
-    original_save = PurchaseReceiptLine.save
-    calls = 0
+    original_bulk_create = QuerySet.bulk_create
 
-    def fail_second_line(instance, *args, **kwargs):
-        nonlocal calls
-        calls += 1
-        if calls == 2:
+    def fail_receipt_lines(queryset, objects, *args, **kwargs):
+        if queryset.model is PurchaseReceiptLine:
             raise RuntimeError("simulated receipt-line persistence failure")
-        return original_save(instance, *args, **kwargs)
+        return original_bulk_create(queryset, objects, *args, **kwargs)
 
-    monkeypatch.setattr(PurchaseReceiptLine, "save", fail_second_line)
+    monkeypatch.setattr(QuerySet, "bulk_create", fail_receipt_lines)
     with pytest.raises(RuntimeError, match="simulated"):
         receive_purchase_order(
             business_context,
@@ -668,3 +708,53 @@ def test_concurrent_over_receipt_is_serialized(business_context, draft_order, va
     assert received_quantity_for_line(
         business_context, purchase_order_line_id=line.id
     ) == Decimal("7")
+
+
+@pytest.mark.django_db(transaction=True)
+def test_concurrent_cross_order_idempotency_collision_is_explicit(
+    business_context, draft_order, variant, supplier, currency
+):
+    if connection.vendor != "postgresql":
+        pytest.skip("Company-wide receipt idempotency collision requires PostgreSQL.")
+    first_line = _confirm_with_line(business_context, draft_order, variant)
+    second_order = create_purchase_order(
+        business_context,
+        supplier_id=supplier.id,
+        order_date=date(2026, 9, 15),
+        currency_id=currency.id,
+    )
+    second_line = _confirm_with_line(business_context, second_order, variant)
+    start = Barrier(2)
+
+    def receive(order_id, line_id):
+        close_old_connections()
+        try:
+            start.wait(timeout=5)
+            return receive_purchase_order(
+                business_context,
+                purchase_order_id=order_id,
+                receipt_date=date(2026, 9, 16),
+                idempotency_key="cross-order-race",
+                lines=[{"purchase_order_line_id": line_id, "quantity_received": "1"}],
+            )
+        except Exception as error:
+            return error
+        finally:
+            connection.close()
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        results = [
+            future.result(timeout=10)
+            for future in [
+                executor.submit(receive, draft_order.id, first_line.id),
+                executor.submit(receive, second_order.id, second_line.id),
+            ]
+        ]
+
+    assert sum(isinstance(result, PurchaseReceipt) for result in results) == 1
+    failures = [result for result in results if isinstance(result, ValidationError)]
+    assert len(failures) == 1
+    assert "different Purchase Receipt" in str(failures[0])
+    receipts = PurchaseReceipt.objects.filter(idempotency_key="cross-order-race")
+    assert receipts.count() == 1
+    assert PurchaseReceiptLine.objects.filter(purchase_receipt__in=receipts).count() == 1
