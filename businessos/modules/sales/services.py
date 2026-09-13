@@ -69,7 +69,7 @@ def _order_number() -> str:
 def _persist_lifecycle_transition(
     order: SalesOrder, *, status: str, confirmed_at=None
 ) -> SalesOrder:
-    """Persist a transition after its public lifecycle service has locked and validated it."""
+    """Persist status after its public lifecycle service has locked and validated it."""
     changed_at = timezone.now()
     updates = {"status": status, "updated_at": changed_at}
     if confirmed_at is not None:
