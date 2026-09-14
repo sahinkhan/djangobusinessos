@@ -28,7 +28,7 @@ from businessos.modules.sales.manifest import (
     UPDATE_ORDERS,
     VIEW_ORDERS,
 )
-from businessos.modules.sales.models import SalesOrder
+from businessos.modules.sales.models import SalesOrder, SalesOrderLine
 from businessos.modules.sales.selectors import sales_orders_for_company
 
 
@@ -69,6 +69,27 @@ def test_manifest_reregistration_preserves_enablement_and_retired_permissions():
     assert same_module.id == module.id
     assert same_module.is_enabled
     assert not retired.is_active
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("registry_state", ["disabled", "missing"])
+def test_module_registry_state_does_not_disable_installed_python_services(
+    business_context, customer, currency, registry_state
+):
+    if registry_state == "missing":
+        BusinessModule.objects.filter(code="sales").delete()
+    else:
+        BusinessModule.objects.filter(code="sales").update(is_enabled=False)
+
+    order = sales_services.create_sales_order(
+        business_context,
+        customer_id=customer.id,
+        order_date=date(2026, 9, 14),
+        currency_id=currency.id,
+    )
+
+    assert order.company_id == business_context.company_id
+    assert order.status == SalesOrder.Status.DRAFT
 
 
 def test_sales_has_no_phase2_module_imports_or_integration_writes():
@@ -307,7 +328,7 @@ def _wait_until_blocked_by_this_connection(worker_pid):
             if cursor.fetchone()[0]:
                 return
             sleep(0.01)
-    pytest.fail("The Sales mutation did not wait for the company row lock.")
+    pytest.fail("The Sales mutation did not wait for the current transaction lock.")
 
 
 def _connection_worker(operation, ready, worker_pid):
@@ -361,3 +382,150 @@ def test_waiting_sales_mutation_rechecks_revoked_permission(
 
     draft_order.refresh_from_db()
     assert draft_order.notes == "Priority customer"
+
+
+@pytest.mark.django_db(transaction=True)
+def test_confirmation_wins_over_waiting_header_edit(
+    business_context, draft_order, variant
+):
+    if connection.vendor != "postgresql":
+        pytest.skip("Requires PostgreSQL row locks and separate connections.")
+    sales_services.add_sales_order_line(
+        business_context,
+        order_id=draft_order.id,
+        product_variant_id=variant.id,
+        quantity=Decimal("1"),
+        unit_price=Decimal("10"),
+    )
+    updated_audits_before = AuditEntry.objects.filter(
+        action="sales.order.updated", object_id=str(draft_order.id)
+    ).count()
+    ready, worker_pid = Event(), []
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        with transaction.atomic():
+            sales_services.confirm_sales_order(
+                business_context, order_id=draft_order.id
+            )
+            future = executor.submit(
+                _connection_worker,
+                lambda: sales_services.update_sales_order(
+                    business_context,
+                    order_id=draft_order.id,
+                    notes="Must not reach confirmed history",
+                ),
+                ready,
+                worker_pid,
+            )
+            assert ready.wait(10)
+            _wait_until_blocked_by_this_connection(worker_pid[0])
+        with pytest.raises(ValidationError, match="Only draft"):
+            future.result(timeout=20)
+
+    draft_order.refresh_from_db()
+    assert draft_order.status == SalesOrder.Status.CONFIRMED
+    assert draft_order.notes == "Priority customer"
+    assert AuditEntry.objects.filter(
+        action="sales.order.updated", object_id=str(draft_order.id)
+    ).count() == updated_audits_before
+    assert AuditEntry.objects.filter(
+        action="sales.order.confirmed", object_id=str(draft_order.id)
+    ).count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+def test_committed_header_edit_is_observed_by_waiting_confirmation(
+    business_context, draft_order, variant
+):
+    if connection.vendor != "postgresql":
+        pytest.skip("Requires PostgreSQL row locks and separate connections.")
+    sales_services.add_sales_order_line(
+        business_context,
+        order_id=draft_order.id,
+        product_variant_id=variant.id,
+        quantity=Decimal("1"),
+        unit_price=Decimal("10"),
+    )
+    ready, worker_pid = Event(), []
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        with transaction.atomic():
+            sales_services.update_sales_order(
+                business_context,
+                order_id=draft_order.id,
+                notes="Committed before confirmation",
+            )
+            future = executor.submit(
+                _connection_worker,
+                lambda: sales_services.confirm_sales_order(
+                    business_context, order_id=draft_order.id
+                ),
+                ready,
+                worker_pid,
+            )
+            assert ready.wait(10)
+            _wait_until_blocked_by_this_connection(worker_pid[0])
+        confirmed = future.result(timeout=20)
+
+    draft_order.refresh_from_db()
+    assert confirmed.status == SalesOrder.Status.CONFIRMED
+    assert draft_order.status == SalesOrder.Status.CONFIRMED
+    assert draft_order.notes == "Committed before confirmation"
+    assert AuditEntry.objects.filter(
+        action="sales.order.updated", object_id=str(draft_order.id)
+    ).count() == 2
+    assert AuditEntry.objects.filter(
+        action="sales.order.confirmed", object_id=str(draft_order.id)
+    ).count() == 1
+
+
+@pytest.mark.django_db(transaction=True)
+@pytest.mark.parametrize("delete_target", ["order", "line"])
+def test_confirmation_wins_over_waiting_stale_delete(
+    business_context, draft_order, variant, delete_target
+):
+    if connection.vendor != "postgresql":
+        pytest.skip("Requires PostgreSQL row locks and separate connections.")
+    line = sales_services.add_sales_order_line(
+        business_context,
+        order_id=draft_order.id,
+        product_variant_id=variant.id,
+        quantity=Decimal("1"),
+        unit_price=Decimal("10"),
+    )
+    stale_target = (
+        SalesOrder.objects.get(pk=draft_order.pk)
+        if delete_target == "order"
+        else SalesOrderLine.objects.get(pk=line.pk)
+    )
+    updated_audits_before = AuditEntry.objects.filter(
+        action="sales.order.updated", object_id=str(draft_order.id)
+    ).count()
+    ready, worker_pid = Event(), []
+
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        with transaction.atomic():
+            sales_services.confirm_sales_order(
+                business_context, order_id=draft_order.id
+            )
+            future = executor.submit(
+                _connection_worker,
+                stale_target.delete,
+                ready,
+                worker_pid,
+            )
+            assert ready.wait(10)
+            _wait_until_blocked_by_this_connection(worker_pid[0])
+        with pytest.raises(ValidationError):
+            future.result(timeout=20)
+
+    assert SalesOrder.objects.filter(
+        pk=draft_order.pk, status=SalesOrder.Status.CONFIRMED
+    ).exists()
+    assert SalesOrderLine.objects.filter(pk=line.pk).exists()
+    assert AuditEntry.objects.filter(
+        action="sales.order.updated", object_id=str(draft_order.id)
+    ).count() == updated_audits_before
+    assert AuditEntry.objects.filter(
+        action="sales.order.confirmed", object_id=str(draft_order.id)
+    ).count() == 1

@@ -4,6 +4,91 @@ from django.db import models, transaction
 from businessos.core.common.models import UUIDTimestampedModel
 
 
+class SalesOrderQuerySet(models.QuerySet):
+    def update(self, **kwargs):
+        raise ValidationError(
+            "Sales Order bulk updates are unsupported; use validated Sales services."
+        )
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        raise ValidationError(
+            "Sales Order bulk updates are unsupported; use validated Sales services."
+        )
+
+    def bulk_create(self, *args, **kwargs):
+        raise ValidationError(
+            "Sales Order bulk creation/upsert is unsupported; use validated Sales services."
+        )
+
+    def delete(self):
+        raise ValidationError(
+            "Sales Order queryset deletion is unsupported; immutable history must be preserved."
+        )
+
+    def _transition_locked_order(
+        self,
+        *,
+        order_id,
+        expected_status,
+        target_status,
+        changed_at,
+        confirmed_at=None,
+    ):
+        """Persist one validated lifecycle edge without exposing arbitrary bulk mutation."""
+        allowed_transitions = {
+            ("draft", "confirmed"),
+            ("confirmed", "cancelled"),
+        }
+        if (expected_status, target_status) not in allowed_transitions:
+            raise ValidationError("Unsupported Sales Order lifecycle transition.")
+        if target_status == "confirmed" and confirmed_at is None:
+            raise ValidationError("Confirmation time is required when confirming an order.")
+        if target_status == "cancelled" and confirmed_at is not None:
+            raise ValidationError("Cancellation cannot replace the confirmation time.")
+
+        with transaction.atomic():
+            try:
+                order = self.select_for_update().get(pk=order_id)
+            except self.model.DoesNotExist as exc:
+                raise ValidationError("The Sales Order no longer exists.") from exc
+            if order.status != expected_status:
+                raise ValidationError(
+                    f"Expected Sales Order status {expected_status}; found {order.status}."
+                )
+            updates = {"status": target_status, "updated_at": changed_at}
+            if target_status == "confirmed":
+                updates["confirmed_at"] = confirmed_at
+            models.QuerySet.update(self.filter(pk=order_id), **updates)
+            order.status = target_status
+            order.updated_at = changed_at
+            if target_status == "confirmed":
+                order.confirmed_at = confirmed_at
+            return order
+
+
+class SalesOrderLineQuerySet(models.QuerySet):
+    def update(self, **kwargs):
+        raise ValidationError(
+            "Sales Order Line bulk updates are unsupported; use validated Sales services."
+        )
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        raise ValidationError(
+            "Sales Order Line bulk updates are unsupported; use validated Sales services."
+        )
+
+    def bulk_create(self, *args, **kwargs):
+        raise ValidationError(
+            "Sales Order Line bulk creation/upsert is unsupported; use validated Sales services."
+        )
+
+    def delete(self):
+        raise ValidationError(
+            "Sales Order Line queryset deletion is unsupported; "
+            "immutable history must be preserved."
+        )
+
+
 class SalesOrder(UUIDTimestampedModel):
     class Status(models.TextChoices):
         DRAFT = "draft", "Draft"
@@ -24,6 +109,8 @@ class SalesOrder(UUIDTimestampedModel):
     status = models.CharField(max_length=12, choices=Status.choices, default=Status.DRAFT)
     notes = models.TextField(blank=True)
     confirmed_at = models.DateTimeField(blank=True, null=True)
+
+    objects = SalesOrderQuerySet.as_manager()
 
     class Meta:
         ordering = ["-order_date", "-created_at"]
@@ -140,6 +227,8 @@ class SalesOrderLine(UUIDTimestampedModel):
     quantity = models.DecimalField(max_digits=18, decimal_places=4)
     unit_price = models.DecimalField(max_digits=18, decimal_places=4)
     position = models.PositiveIntegerField()
+
+    objects = SalesOrderLineQuerySet.as_manager()
 
     class Meta:
         ordering = ["position", "created_at"]

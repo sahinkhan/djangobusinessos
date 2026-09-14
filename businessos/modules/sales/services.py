@@ -105,19 +105,17 @@ def _order_number() -> str:
 
 
 def _persist_lifecycle_transition(
-    order: SalesOrder, *, status: str, confirmed_at=None
+    order: SalesOrder, *, expected_status: str, status: str, confirmed_at=None
 ) -> SalesOrder:
-    """Persist status after its public lifecycle service has locked and validated it."""
+    """Persist exactly one accepted transition after authorization and aggregate locking."""
     changed_at = timezone.now()
-    updates = {"status": status, "updated_at": changed_at}
-    if confirmed_at is not None:
-        updates["confirmed_at"] = confirmed_at
-    SalesOrder.objects.filter(pk=order.pk).update(**updates)
-    order.status = status
-    order.updated_at = changed_at
-    if confirmed_at is not None:
-        order.confirmed_at = confirmed_at
-    return order
+    return SalesOrder.objects.get_queryset()._transition_locked_order(
+        order_id=order.pk,
+        expected_status=expected_status,
+        target_status=status,
+        changed_at=changed_at,
+        confirmed_at=confirmed_at,
+    )
 
 
 def _record_order_update(context: BusinessContext, order: SalesOrder, **metadata) -> None:
@@ -301,8 +299,9 @@ def confirm_sales_order(context: BusinessContext, *, order_id) -> SalesOrder:
         _variant(context, line.product_variant_id)
         line.full_clean()
     confirmed_at = timezone.now()
-    _persist_lifecycle_transition(
+    order = _persist_lifecycle_transition(
         order,
+        expected_status=SalesOrder.Status.DRAFT,
         status=SalesOrder.Status.CONFIRMED,
         confirmed_at=confirmed_at,
     )
@@ -324,7 +323,11 @@ def cancel_sales_order(context: BusinessContext, *, order_id) -> SalesOrder:
         return order
     if order.status != SalesOrder.Status.CONFIRMED:
         raise ValidationError("Only a confirmed Sales Order may be cancelled.")
-    _persist_lifecycle_transition(order, status=SalesOrder.Status.CANCELLED)
+    order = _persist_lifecycle_transition(
+        order,
+        expected_status=SalesOrder.Status.CONFIRMED,
+        status=SalesOrder.Status.CANCELLED,
+    )
     record_audit_entry(
         context=context,
         action="sales.order.cancelled",
