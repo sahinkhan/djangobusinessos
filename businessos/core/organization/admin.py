@@ -7,7 +7,15 @@ from .models import Branch, Company, Warehouse
 
 @admin.register(Company, site=businessos_admin_site)
 class CompanyAdmin(admin.ModelAdmin):
-    list_display = ("code", "name", "base_currency", "is_active")
+    list_display = (
+        "code",
+        "name",
+        "country",
+        "base_currency",
+        "timezone",
+        "default_language",
+        "is_active",
+    )
     search_fields = ("code", "name")
 
 

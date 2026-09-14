@@ -17,6 +17,10 @@ The roadmap is capability-driven, not date-driven. A later phase should not begi
 
 Goal: establish the minimum architecture needed to unblock fast module development.
 
+Current correctness status: FINAL PASS restored after independent adversarial re-audit. Foundation
+remediation is accepted at `f1f7f2f6c917308bedb3c48e51b8113a064d96c2` on
+`foundation-v1-correctness-remediation`, and Core Foundation v1 is FROZEN by ADR 0009.
+
 Deliver:
 
 - Django 5.2 LTS / Python 3.13 project
@@ -37,7 +41,34 @@ Exit gate: foundation tests/checks pass and shared contracts are frozen enough f
 
 ---
 
+## Phase 0H — Core Foundation v1 Hardening
+
+Status: Complete — FINAL PASS restored. The prior freeze recorded at
+`5e10ec23ad91a4ba8ef75ea7d29e8b2fb26e2095` on `foundation-v1-hardening` remains historical
+evidence of the acceptance later withdrawn by adversarial audit. Correctness remediation at
+`f1f7f2f6c917308bedb3c48e51b8113a064d96c2` passed independent re-audit; ADR 0009 is Accepted and
+freezes that implementation as the Core Foundation v1 operational baseline.
+
+Deliver:
+
+- minimal company-scoped BusinessOS RBAC with deny-by-default authorization
+- deterministic module permission declarations and registration
+- append-only Core audit records for security-sensitive actions
+- explicit company/branch/warehouse grant and revoke services
+- Company country, default language, IANA timezone and shared business-time helpers
+- immutable Company base currency through normal mutation paths
+- immutable Country/Currency/Language/UoM and permission identity codes
+- a documented boundary between Django technical permissions and BusinessOS authorization
+
+Exit gate: PASSED. Gate 2 received independent FINAL PASS against the accepted remediation SHA.
+Gate 3 canonical normalization and Phase 2 continuation have not started and remain separately
+authorized work.
+
+---
+
 ## Phase 1 — Shared Commercial Primitives
+
+Status: Accepted historically; not yet replayed onto the Gate 3A reconstruction candidate.
 
 Deliver:
 
@@ -59,7 +90,13 @@ Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contract
 
 ## Phase 2 — Commercial Core
 
-Parallelizable after Phase 1 contract freeze.
+Status: Development paused for Core Foundation v1 hardening. The accepted standalone Sales and
+Procurement references and Inventory remediation reference remain on their dedicated branches.
+Billing, Accounting and integrations must not start until the approved foundation reconstruction
+sequence reaches them. Contracts remain defined by ADR 0006 and
+`docs/exec-plans/active/PHASE_2_COMMERCIAL_CORE.md`.
+
+Standalone modules are parallelizable after the Phase 1 contract freeze. Optional cross-module integrations are implemented only after the standalone module contracts pass review.
 
 Deliver:
 

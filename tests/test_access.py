@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import connection
 
 from businessos.core.access.context import (
     SESSION_BRANCH_KEY,
@@ -27,7 +28,13 @@ def user(db):
 @pytest.mark.django_db
 def test_company_selector_returns_only_explicitly_allowed_companies(user, company):
     other_currency = Currency.objects.create(code="EUR", name="Euro", symbol="€")
-    Company.objects.create(code="OTHER", name="Other", base_currency=other_currency)
+    Company.objects.create(
+        code="OTHER",
+        name="Other",
+        base_currency=other_currency,
+        country=company.country,
+        default_language=company.default_language,
+    )
     UserCompanyAccess.objects.create(user=user, company=company)
 
     assert list(companies_for_user(user)) == [company]
@@ -65,7 +72,13 @@ def test_context_adapter_builds_immutable_validated_context(user, company, branc
 
 @pytest.mark.django_db
 def test_context_adapter_rejects_cross_company_branch(user, company, currency):
-    other = Company.objects.create(code="OTHER", name="Other", base_currency=currency)
+    other = Company.objects.create(
+        code="OTHER",
+        name="Other",
+        base_currency=currency,
+        country=company.country,
+        default_language=company.default_language,
+    )
     other_branch = Branch.objects.create(company=other, code="HQ", name="Other HQ")
     UserCompanyAccess.objects.create(user=user, company=company)
     request = SimpleNamespace(
@@ -117,8 +130,11 @@ def test_non_http_policy_validates_context(user, company):
 def test_warehouse_on_inactive_branch_is_not_valid_scope(user, company, branch, warehouse):
     UserCompanyAccess.objects.create(user=user, company=company)
     UserWarehouseAccess.objects.create(user=user, warehouse=warehouse)
-    branch.is_active = False
-    branch.save()
+    # Legacy/corrupt data must still fail closed; normal branch saves now prevent this state.
+    table = connection.ops.quote_name(Branch._meta.db_table)
+    branch_id = Branch._meta.pk.get_db_prep_value(branch.pk, connection)
+    with connection.cursor() as cursor:
+        cursor.execute(f"UPDATE {table} SET is_active = %s WHERE id = %s", [False, branch_id])
     context = BusinessContext(actor_id=user.id, company_id=company.id, warehouse_id=warehouse.id)
 
     with pytest.raises(PermissionDenied, match="branch is inactive"):

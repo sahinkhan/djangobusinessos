@@ -16,6 +16,15 @@ Core contains only capabilities that are truly shared infrastructure:
 - reference data
 - common utilities
 - module registry
+- company-scoped RBAC and organizational access lifecycle
+- immutable audit foundation
+- company jurisdiction/language/timezone and business-time helpers
+
+Core Access owns BusinessOS business authorization. Business modules declare stable permission
+codes in their manifests and consume `BusinessContext` authorization APIs. They must not treat
+Django model permissions as business authorization.
+
+Core Audit owns append-only audit facts. It does not own or reconstruct business aggregate state.
 
 Core must not contain Sales, Inventory, Accounting, HR, School, Hospital, Hotel or other business-specific workflows.
 

@@ -11,6 +11,7 @@ class BusinessModule(UUIDTimestampedModel):
     name = models.CharField(max_length=160)
     version = models.CharField(max_length=64)
     dependencies = models.JSONField(default=list, blank=True)
+    declared_permissions = models.JSONField(default=list, blank=True)
     is_enabled = models.BooleanField(default=False)
 
     class Meta:
@@ -25,6 +26,7 @@ class BusinessModule(UUIDTimestampedModel):
                     "name": self.name,
                     "version": self.version,
                     "depends": self.dependencies,
+                    "permissions": self.declared_permissions,
                 }
             )
         except ValueError as exc:

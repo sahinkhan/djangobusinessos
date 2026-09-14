@@ -24,6 +24,14 @@ The company owner of a Branch or Warehouse is immutable after creation. A correc
 
 Disabling a Branch does not silently mutate its Warehouses. An active Warehouse linked to an inactive Branch is unavailable as a valid business context until the Branch is reactivated or the Warehouse is reassigned/deactivated.
 
+#### Core Foundation v1 compatibility refinement
+
+The preceding activity semantics record the original Phase 0 decision. ADR 0009 later refined the
+supported mutation contract: an active Warehouse cannot belong to an inactive Branch, and active
+Warehouses must be deactivated or reassigned before their Branch can be deactivated. Legacy or
+corrupt inconsistent data remains unavailable and is denied by `BusinessContext` validation. All
+other decisions in this ADR remain in effect.
+
 ### Context and grants
 
 Every `BusinessContext` requires UUID actor and company identifiers. Optional branch and warehouse identifiers must also be UUIDs when present. Existence, active state, and organizational relationships are validated independently of authorization; superusers bypass grant checks only, never scope-integrity checks.

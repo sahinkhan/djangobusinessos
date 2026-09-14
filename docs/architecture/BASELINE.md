@@ -43,6 +43,9 @@ The initial core contains only capabilities needed by many modules immediately:
 - common utilities/base models
 - lightweight module registry/manifests
 - framework-neutral `BusinessContext`
+- minimal company-scoped BusinessOS RBAC and module-owned permission declarations
+- immutable audit records for security-sensitive business actions
+- company jurisdiction, language, timezone and shared business-time primitives
 
 Not part of the initial core:
 
@@ -125,6 +128,38 @@ Any record whose meaning is company-specific must have explicit company scope. B
 Do not use global mutable "current company" as the sole security mechanism. Authorization/query filtering must be based on allowed scope.
 
 The concrete Phase 0 identity, administration, organizational-ownership, and context-validation contracts are recorded in `docs/decisions/0001-foundation-security-contracts.md`.
+
+## Business authorization boundary
+
+Django groups, Django model permissions and `user.has_perm()` are technical/admin concerns.
+Business operations authorize through `BusinessContext`, validated organizational scope and
+Core Access `has_permission` / `require_permission`. Decisions deny by default. A superuser may
+bypass RBAC grants, but never actor/company validity or branch/warehouse ownership integrity.
+An active registered permission identity is required before that bypass applies.
+
+Organizational grants answer where a user may operate. Company-scoped roles answer what that user
+may do there. These are separate contracts.
+
+Core Access/RBAC records are inspection-only in the deployment Django admin. Supported mutation
+uses explicit audited Access services or deterministic module/Core permission registration.
+
+## Company identity and business time
+
+Company owns country, base currency, IANA timezone and default language. Country and language use
+Core Reference identities. Base currency is immutable through normal model/service paths after
+creation; currency conversion and functional-currency-change workflows are outside Core v1.
+
+Database timestamps are timezone-aware UTC. Shared company-time helpers derive local date/time
+from the configured Company timezone.
+
+Reference codes and permission codes are stable identities. Retirement uses `is_active=False`;
+ordinary updates must not repurpose codes.
+
+## Audit semantics
+
+Core Audit is append-only evidence, not event sourcing and not business state. Entries preserve
+actor, optional company scope, action, object identity, occurrence time and small structured
+metadata. Normal model and queryset update/delete paths reject mutation.
 
 ## Inventory invariant
 

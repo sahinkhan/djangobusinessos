@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "businessos.core.identity",
     "businessos.core.reference",
     "businessos.core.organization",
+    "businessos.core.audit",
     "businessos.core.access",
     "businessos.core.modules",
 ]

@@ -2,7 +2,18 @@
 
 ## Status
 
-Technical PASS — publication candidate pending hosted CI and formal contract freeze
+COMPLETE — CORE FOUNDATION V1 FROZEN; INDEPENDENT GATE 2 RE-AUDIT FINAL PASS
+
+The original Phase 0 implementation was accepted, then Foundation correctness was reopened by an
+independent adversarial audit that reproduced four authorization, ownership, immutable-evidence and
+bulk-mutation findings. Remediation was implemented and independently re-audited. Gate 2 FINAL PASS
+was restored, ADR 0009 was re-accepted, and Core Foundation v1 is FROZEN at implementation
+`f1f7f2f6c917308bedb3c48e51b8113a064d96c2`. The formal closure checkpoint before this documentation
+preflight is `5e824f83ae1c13364f35731d9d00c7ff830b6c54`.
+
+The earlier reopened state remains historical evidence, not the current status. Gate 3 canonical
+normalization and Phase 2 continuation have not started and require separate authorization. See
+`CORE_FOUNDATION_V1_RESTRUCTURE.md` and ADR 0009 for the complete reopening and remediation record.
 
 ## Objective
 
@@ -304,7 +315,9 @@ The verified implementation is published from the `phase0-foundation` branch aga
 - Normal runtime settings are PostgreSQL-only. The dedicated test settings use in-memory SQLite for fast isolated local tests; the same suite was also run successfully against PostgreSQL in Compose.
 - Access is represented by explicit grant records rather than a global current-company field. Superusers may access active organizational scope without grant rows; all other users require company access and any selected branch/warehouse grant.
 - Django admin is deployment-wide and superuser-only. Future company-scoped administration must use application views that apply `BusinessContext` rather than model-wide admin permissions.
-- Branch and Warehouse company ownership is immutable. Warehouse branch changes remain allowed only within the same company, and an inactive branch makes its linked warehouse invalid context without silently changing warehouse state.
+- Branch and Warehouse company ownership is immutable. Warehouse branch changes remain allowed only
+  within the same company. Active Warehouses must be deactivated or reassigned before their Branch
+  can be deactivated; legacy or corrupt inconsistent scope is still denied by context validation.
 - Email is stored trimmed/lowercase, authenticated case-insensitively, and protected by both Django's unique username requirement and a database `LOWER(email)` constraint.
 - Scope integrity is checked independently from permission bypasses. The reusable `validate_business_context` policy serves HTTP and non-HTTP callers.
 - Module discovery/loading is intentionally absent. Manifest registration preserves enablement unless the caller changes it explicitly.
@@ -349,4 +362,7 @@ Run in the Python 3.13.15 Compose web service:
 
 ### Next recommended task
 
-Confirm hosted CI, review the published Phase 0 candidate, and record the core-contract freeze. Do not begin Party/Catalog implementation until that gate is accepted.
+Phase 0 implementation and Core Foundation v1 acceptance are complete. Gate 3 pre-release canonical
+normalization is the next gated sequence, but it has not started and requires separate explicit
+authorization. Do not modify canonical `main`, normalize migrations/history, or continue Phase 2 as
+part of this documentation preflight.
