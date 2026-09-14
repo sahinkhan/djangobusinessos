@@ -17,8 +17,9 @@ The roadmap is capability-driven, not date-driven. A later phase should not begi
 
 Goal: establish the minimum architecture needed to unblock fast module development.
 
-Current correctness status: REOPENED after independent adversarial audit. Foundation remediation
-is implemented on `foundation-v1-correctness-remediation`; independent re-audit is pending.
+Current correctness status: FINAL PASS restored after independent adversarial re-audit. Foundation
+remediation is accepted at `f1f7f2f6c917308bedb3c48e51b8113a064d96c2` on
+`foundation-v1-correctness-remediation`, and Core Foundation v1 is FROZEN by ADR 0009.
 
 Deliver:
 
@@ -42,10 +43,11 @@ Exit gate: foundation tests/checks pass and shared contracts are frozen enough f
 
 ## Phase 0H — Core Foundation v1 Hardening
 
-Status: Acceptance REOPENED after independent adversarial audit. The prior freeze recorded at
-`5e10ec23ad91a4ba8ef75ea7d29e8b2fb26e2095` on `foundation-v1-hardening` is historical evidence.
-Correctness remediation is implemented on `foundation-v1-correctness-remediation`; independent
-re-audit is pending. ADR 0009 is reopened, not an accepted final operational baseline.
+Status: Complete — FINAL PASS restored. The prior freeze recorded at
+`5e10ec23ad91a4ba8ef75ea7d29e8b2fb26e2095` on `foundation-v1-hardening` remains historical
+evidence of the acceptance later withdrawn by adversarial audit. Correctness remediation at
+`f1f7f2f6c917308bedb3c48e51b8113a064d96c2` passed independent re-audit; ADR 0009 is Accepted and
+freezes that implementation as the Core Foundation v1 operational baseline.
 
 Deliver:
 
@@ -58,8 +60,9 @@ Deliver:
 - immutable Country/Currency/Language/UoM and permission identity codes
 - a documented boundary between Django technical permissions and BusinessOS authorization
 
-Exit gate: Gate 2 PASS WITHDRAWN pending independent adversarial re-audit and a new acceptance.
-Gate 3 canonical normalization and Phase 2 continuation are BLOCKED and have not started here.
+Exit gate: PASSED. Gate 2 received independent FINAL PASS against the accepted remediation SHA.
+Gate 3 canonical normalization and Phase 2 continuation have not started and remain separately
+authorized work.
 
 ---
 

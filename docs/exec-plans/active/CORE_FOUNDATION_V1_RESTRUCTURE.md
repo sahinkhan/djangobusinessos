@@ -2,14 +2,16 @@
 
 ## Status
 
-Core Foundation v1 acceptance reopened after independent adversarial audit. Gate 2 PASS is
-withdrawn and ADR 0009 is reopened. The freeze record at
-`5e10ec23ad91a4ba8ef75ea7d29e8b2fb26e2095` is historical evidence; the
-`foundation-v1-hardening` branch remains unchanged.
+Core Foundation v1 acceptance was reopened after independent adversarial audit. The prior Gate 2
+PASS was withdrawn, ADR 0009 was reopened, and the freeze record at
+`5e10ec23ad91a4ba8ef75ea7d29e8b2fb26e2095` became historical evidence. The
+`foundation-v1-hardening` evidence branch remains unchanged.
 
-Correctness remediation is implemented on `foundation-v1-correctness-remediation`, based exactly
-on that evidence commit. Independent adversarial re-audit is pending; no new freeze is declared.
-Gate 3 normalization and Phase 2 continuation are BLOCKED and have not started here.
+Correctness remediation was implemented on `foundation-v1-correctness-remediation`, based exactly
+on that evidence commit. Independent adversarial re-audit gave exact implementation
+`f1f7f2f6c917308bedb3c48e51b8113a064d96c2` Gate 2 FINAL PASS on 2026-09-14. ADR 0009 is Accepted
+again and Core Foundation v1 is FROZEN at that implementation. Gate 3 normalization and Phase 2
+continuation have not started and remain separately authorized work.
 
 Remediation covers the four reproduced findings:
 
@@ -28,7 +30,7 @@ remains covered despite normal model saves preventing that state.
 
 No schema migration, history normalization, Phase 2 adoption or unrelated infrastructure is added.
 
-Candidate implementation verification on 2026-09-14:
+Accepted remediation verification on 2026-09-14:
 
 - PostgreSQL 17 / Python 3.13: 200 tests passed without teardown warnings;
 - 36 new PostgreSQL concurrency cases passed (34 Access authorization/revocation cases and two
@@ -42,8 +44,8 @@ Candidate implementation verification on 2026-09-14:
   existing replacement of attribute-assignment join-row UUIDs remains unchanged);
 - `npm ci` passed and Tailwind matched the committed output byte-for-byte.
 
-Hosted exact-head CI and the published SHA are reported with the candidate completion report.
-These implementation checks do not restore Gate 2 acceptance or constitute independent re-audit.
+Hosted CI #39 passed at the exact published implementation SHA. The subsequent independent
+re-audit closed all four reopened findings and restored Gate 2 FINAL PASS.
 
 ## Historical implementation and verification (superseded acceptance)
 

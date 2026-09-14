@@ -1,6 +1,6 @@
 # ADR 0009 — Core Foundation v1 Contract
 
-Status: Reopened — previous acceptance withdrawn; independent re-audit pending
+Status: Accepted
 
 Date: 2026-09-14
 
@@ -90,10 +90,13 @@ The previous FINAL PASS for `63c798806c5a486d1a282f595e1d1603c2b37aa3` and freez
 `5e10ec23ad91a4ba8ef75ea7d29e8b2fb26e2095` are historical evidence, not current operational acceptance.
 The evidence branch `foundation-v1-hardening` remains unchanged.
 
-Correctness remediation is implemented on `foundation-v1-correctness-remediation`; independent
-re-audit is pending. Gate 2 has not regained PASS. Gate 3 and Phase 2 continuation remain blocked.
+Correctness remediation was implemented on `foundation-v1-correctness-remediation` at
+`f1f7f2f6c917308bedb3c48e51b8113a064d96c2`. Independent adversarial re-audit gave that exact
+implementation Gate 2 FINAL PASS on 2026-09-14. ADR 0009 is therefore re-accepted and Core
+Foundation v1 is FROZEN at that implementation commit. Gate 3 and Phase 2 continuation have not
+started and still require their separately authorized sequence.
 
-The candidate preserves the intended contracts with these explicit enforcement boundaries:
+The accepted remediation preserves the intended contracts with these explicit enforcement boundaries:
 
 - Scoped Access mutations begin an atomic transaction, lock the active context Company, validate
   context/permission against committed security state, mutate, then append audit in that transaction.
@@ -109,4 +112,5 @@ The candidate preserves the intended contracts with these explicit enforcement b
   branch. Branch retirement and warehouse saves serialize on the branch row to preserve activity
   consistency. Supported bulk paths cannot bypass these rules.
 
-These are candidate corrections, not a new freeze. No history or migrations were normalized.
+These enforcement boundaries are part of the re-accepted frozen contract. No history or migrations
+were normalized by the remediation or this acceptance decision.
