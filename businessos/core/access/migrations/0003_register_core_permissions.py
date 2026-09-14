@@ -1,6 +1,10 @@
 from django.db import migrations
 
-from businessos.core.access.permissions import CORE_PERMISSION_DECLARATIONS
+
+CORE_PERMISSION_DECLARATIONS = (
+    ("access.organization.manage", "Manage organizational access"),
+    ("access.role.manage", "Manage BusinessOS roles"),
+)
 
 
 def register_core_permissions(apps, schema_editor):
