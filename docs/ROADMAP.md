@@ -95,11 +95,11 @@ Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contract
 
 ## Phase 2 — Commercial Core
 
-Status: Commercial Core adoption is next, but Gate 4 remains separately gated and unauthorized. The
-accepted standalone Sales and Procurement references and Inventory remediation reference remain on
-their dedicated preserved branches and are not present on canonical `main`. Billing, Accounting and
-integrations must not start until the approved sequence reaches them. Contracts remain defined by ADR 0006 and
-`docs/exec-plans/active/PHASE_2_COMMERCIAL_CORE.md`.
+Status: Gate 4A Sales adoption is implemented on isolated branch `gate4a-sales-adoption` at
+`28c8028950be1997b4f3d0816b1ec04764222068` and awaits independent audit. It is not present on
+canonical `main` and is not yet accepted or closed. Procurement and Inventory adoption, Billing,
+Accounting, integrations, and any merge to `main` remain unauthorized. The preserved standalone
+Sales, Procurement, and Inventory evidence branches remain unchanged.
 
 Standalone modules are parallelizable after the Phase 1 contract freeze. Optional cross-module integrations are implemented only after the standalone module contracts pass review.
 

@@ -702,6 +702,61 @@ These modules must use Core Foundation v1 contracts from their first implementat
 
 Optional integrations remain deferred until standalone module acceptance.
 
+## Gate 4A Sales adoption candidate
+
+Gate 4A replays the accepted standalone Sales behavior onto canonical Core Foundation v1 without
+merging or cherry-picking the historical Sales branch. The code-bearing candidate is:
+
+```text
+Branch              gate4a-sales-adoption
+Canonical base      f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb
+Historical evidence 2aeb01c2766da9e78dd04252cfb9d3b221828e6c
+Implementation      28c8028950be1997b4f3d0816b1ec04764222068
+Status              awaiting independent Gate 4A audit
+```
+
+Preserved Sales semantics:
+
+```text
+SalesOrder / SalesOrderLine
+DRAFT -> CONFIRMED -> CANCELLED
+ProductVariant is the transactional item identity
+confirmed and cancelled documents are immutable
+totals are derived from lines
+confirmation does not change stock or create billing/accounting records
+```
+
+The final Gate 4A permission vocabulary is:
+
+```text
+sales.order.view
+sales.order.create
+sales.order.update
+sales.order.confirm
+sales.order.cancel
+```
+
+State-changing services accept `BusinessContext`, lock the active Company before authorization and
+mutation, and re-check the action permission inside the same transaction. Significant immutable
+audit actions are `sales.order.created`, `sales.order.updated`, `sales.order.confirmed`, and
+`sales.order.cancelled`. Successful retries and no-op updates do not duplicate audit records.
+
+Candidate evidence:
+
+- fresh PostgreSQL 17 zero-state migration and Sales permission/module bootstrap passed;
+- PostgreSQL full suite: 238 passed, including Sales concurrency, stale mutation, revocation, audit
+  rollback, and retry coverage;
+- SQLite: 197 passed with 41 expected PostgreSQL-only skips;
+- Ruff, Django checks, migration drift, module-local discovery, Docker startup, and repeatable demo
+  seed passed;
+- `npm ci` completed and Tailwind rebuilt byte-for-byte on the second clean build;
+- representative service/simple and variable-ProductVariant order workflows passed desktop and
+  390px mobile browser QA, including monetary precision and long-identity overflow checks.
+
+This record does not accept or close Gate 4A. Exact-head hosted CI and independent review remain
+required. Gate 4B Procurement, Gate 4C Inventory, Billing, Accounting, integrations, and merge to
+`main` remain unauthorized.
+
 ---
 
 # Final Canonical Product State
