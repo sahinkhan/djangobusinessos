@@ -95,15 +95,21 @@ Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contract
 
 ## Phase 2 — Commercial Core
 
-Status: independent audit BLOCKED the initial Gate 4A Sales adoption implementation
+Status: Gate 4A Sales is accepted, adopted, and closed. Gate 4B Procurement implementation
+candidate `395da2ad874fc2efb72219da71316b9a6d8f73bf` replays the historically accepted standalone
+contract onto Core Foundation v1 and is awaiting exact-head CI and independent audit. It is not
+merged, accepted, or closed.
+
+Historical Gate 4A record: independent audit BLOCKED the initial Sales adoption implementation
 `28c8028950be1997b4f3d0816b1ec04764222068` at audit head
 `fc609bcd81916c13921c2d1cc7b6a59eda1c1e19`. Remediation at
 `d62c34e36f0a8b11f59bfdb058143e27f5231c5d` closed the findings, and independent re-audit gave
 FINAL PASS to candidate `23338f1cfed11d21d4fa8fd7e92f8de120450977`; exact-head hosted CI #48
 also passed. Documentation-only acceptance commit `e0c848f34da0bce9b9c6e010a396026ac5889cf4`
 was adopted into canonical `main` by normal fast-forward, and exact-head main CI #50 passed. Gate
-4A Sales is accepted, adopted, and closed. Procurement and Inventory adoption, Billing,
-Accounting, and integrations remain unauthorized. Preserved historical branches remain
+4A Sales is accepted, adopted, and closed. Gate 4B candidate work is isolated on
+`gate4b-procurement-adoption`; Inventory adoption, Billing, Accounting, integrations, and any
+Procurement-to-Inventory write remain unauthorized. Preserved historical branches remain
 unchanged.
 
 Standalone modules are parallelizable after the Phase 1 contract freeze. Optional cross-module integrations are implemented only after the standalone module contracts pass review.

@@ -93,6 +93,24 @@ The first canonical adoption implementation is `28c8028950be1997b4f3d0816b1ec047
 
 The authoritative module-gating contract remains: `BusinessModule.is_enabled` controls navigation and HTTP availability only. Installed non-HTTP Python services remain callable and require valid `BusinessContext` plus the exact BusinessOS RBAC permission.
 
+## Canonical Gate 4B adoption candidate
+
+Gate 4B reconstructs historical standalone Procurement behavior from accepted implementation
+`09ee59db53ee1f6f90faa1f31170e50098a0a9ec` onto canonical main
+`fb9028bbbec5dfc56e7d579c3c351abcde764833`, without merging or cherry-picking historical
+branches. The code-bearing candidate is `395da2ad874fc2efb72219da71316b9a6d8f73bf` on
+`gate4b-procurement-adoption`.
+
+It adopts Core Foundation v1 BusinessContext, Company-lock-before-authorization ordering, exact
+six-permission RBAC, atomic immutable audit, business-local date defaults, HTTP-only module
+gating, and Procurement-local ORM hardening. Purchase Receipts remain Procurement facts and do
+not write Inventory, Billing, or Accounting. Local PostgreSQL verification passed 323 tests and
+the 40-test Procurement suite; SQLite passed 270 with 53 expected PostgreSQL-only skips.
+
+Status: implementation candidate awaiting exact-head hosted CI and independent Gate 4B audit.
+It is not merged to `main`, formally accepted, or closed. Gate 4C and all later Phase 2 work remain
+unauthorized.
+
 ## Ownership
 
 Sales owns customer sales-order lifecycle only.
@@ -887,7 +905,7 @@ Historical standalone Sales       accepted at a79cb95d031bb38719bcdccfb5b14670cc
 Canonical Gate 4A adoption        accepted, adopted, and closed
 Sales adoption checkpoint         e0c848f34da0bce9b9c6e010a396026ac5889cf4
 Canonical main                    Gate 4A closure commit following e0c848f3
-Procurement adoption              not authorized
+Procurement adoption candidate    395da2ad874fc2efb72219da71316b9a6d8f73bf; audit pending
 Inventory adoption                not authorized
 Billing / Accounting              not authorized
 Optional integrations             not authorized

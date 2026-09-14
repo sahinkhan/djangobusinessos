@@ -777,6 +777,19 @@ into canonical `main` by normal fast-forward; exact-head main CI run #50 succeed
 accepted, adopted, and closed. Gate 4B Procurement, Gate 4C Inventory, Billing, Accounting, and
 integrations remain unauthorized.
 
+## Gate 4B Procurement adoption candidate
+
+Gate 4B starts from canonical `main` at
+`fb9028bbbec5dfc56e7d579c3c351abcde764833` and uses historical Procurement closure
+`a99377ca55355a2e4cdebd64ff73cf29fd3eff83` only as read-only evidence. Candidate implementation
+`395da2ad874fc2efb72219da71316b9a6d8f73bf` preserves Purchase Order and immutable receipt
+semantics while adopting Foundation v1 RBAC, Company locking, audit, business time, and the
+canonical HTTP-only module-gating contract.
+
+The candidate remains isolated on `gate4b-procurement-adoption`, is not merged or formally
+accepted, and awaits exact-head hosted CI plus independent Gate 4B audit. Procurement creates no
+Inventory, Billing, or Accounting effects. Gate 4C and later work remain unauthorized.
+
 ---
 
 # Final Canonical Product State
