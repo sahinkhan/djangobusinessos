@@ -714,7 +714,10 @@ Historical evidence 2aeb01c2766da9e78dd04252cfb9d3b221828e6c
 Implementation      28c8028950be1997b4f3d0816b1ec04764222068
 Initial audit        BLOCKED at fc609bcd81916c13921c2d1cc7b6a59eda1c1e19
 Remediation          d62c34e36f0a8b11f59bfdb058143e27f5231c5d
-Status               awaiting independent Gate 4A re-audit
+Accepted candidate   23338f1cfed11d21d4fa8fd7e92f8de120450977
+Independent re-audit FINAL PASS
+Hosted CI            run #48 SUCCESS at the accepted candidate
+Status               formally accepted; canonical main adoption pending
 ```
 
 Preserved Sales semantics:
@@ -764,9 +767,11 @@ row-locked transition primitive limited to DRAFT -> CONFIRMED and CONFIRMED -> C
 PostgreSQL regressions cover both edit/confirmation orderings and confirmation winning over stale
 order/line deletion.
 
-This record does not accept or close Gate 4A. Exact-head hosted CI and independent re-audit remain
-required. Gate 4B Procurement, Gate 4C Inventory, Billing, Accounting, integrations, and merge to
-`main` remain unauthorized.
+Independent re-audit gave the remediated candidate
+`23338f1cfed11d21d4fa8fd7e92f8de120450977` FINAL PASS, and hosted CI run #48 succeeded against
+that exact SHA with 283 PostgreSQL tests and all required quality checks passing. Gate 4A is
+formally accepted but is not yet adopted into canonical `main`. Gate 4B Procurement, Gate 4C
+Inventory, Billing, Accounting, and integrations remain unauthorized.
 
 ---
 

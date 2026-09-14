@@ -89,7 +89,7 @@ that layout. Hosted CI run 25 passed on that exact commit.
 
 ## Canonical Gate 4A adoption status
 
-The first canonical adoption implementation is `28c8028950be1997b4f3d0816b1ec04764222068`; its initial audit/documentation head is `fc609bcd81916c13921c2d1cc7b6a59eda1c1e19`. Independent audit blocked acceptance pending explicit module-gating reconciliation, Sales-local ORM bulk-write/delete protection, transition-vs-edit/delete PostgreSQL regressions, and restoration of these canonical Phase 2 records. Remediation implementation `d62c34e36f0a8b11f59bfdb058143e27f5231c5d` closes those code/test findings and awaits exact-head CI plus independent re-audit. Gate 4A is not accepted, closed, frozen, or merged.
+The first canonical adoption implementation is `28c8028950be1997b4f3d0816b1ec04764222068`; its initial audit/documentation head is `fc609bcd81916c13921c2d1cc7b6a59eda1c1e19`. Independent audit blocked acceptance pending explicit module-gating reconciliation, Sales-local ORM bulk-write/delete protection, transition-vs-edit/delete PostgreSQL regressions, and restoration of these canonical Phase 2 records. Remediation implementation `d62c34e36f0a8b11f59bfdb058143e27f5231c5d` closed those findings. Independent re-audit gave candidate `23338f1cfed11d21d4fa8fd7e92f8de120450977` FINAL PASS, and exact-head hosted CI #48 succeeded with 283 PostgreSQL tests and all required checks passing. Gate 4A is formally accepted but has not yet been adopted into canonical `main`.
 
 The authoritative module-gating contract remains: `BusinessModule.is_enabled` controls navigation and HTTP availability only. Installed non-HTTP Python services remain callable and require valid `BusinessContext` plus the exact BusinessOS RBAC permission.
 
@@ -884,7 +884,7 @@ Phase 3 must not begin automatically.
 
 ```text
 Historical standalone Sales       accepted at a79cb95d031bb38719bcdccfb5b14670cc76cd17
-Canonical Gate 4A adoption        d62c34e3 remediation; awaiting independent re-audit
+Canonical Gate 4A adoption        accepted candidate 23338f1c; main adoption pending
 Canonical main                    f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb
 Procurement adoption              not authorized
 Inventory adoption                not authorized

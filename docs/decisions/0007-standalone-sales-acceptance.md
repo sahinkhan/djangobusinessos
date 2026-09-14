@@ -1,6 +1,7 @@
 # ADR 0007 — Standalone Sales Acceptance
 
-Status: Accepted for the historical standalone implementation; canonical Gate 4A adoption pending
+Status: Accepted for the historical standalone implementation and canonical Gate 4A candidate;
+canonical adoption pending
 
 Date: 2026-09-14
 
@@ -49,10 +50,16 @@ Breaking these contracts requires an explicit architecture decision and compatib
 
 ## Canonical Gate 4A status
 
-This ADR does not accept or close the canonical Gate 4A adoption. Remediation implementation
-`d62c34e36f0a8b11f59bfdb058143e27f5231c5d` remains isolated on
-`gate4a-sales-adoption` and requires exact-head hosted CI plus independent re-audit.
+Independent re-audit gave Gate 4A FINAL PASS after remediation implementation
+`d62c34e36f0a8b11f59bfdb058143e27f5231c5d` closed the initial findings. The formally accepted
+candidate is `23338f1cfed11d21d4fa8fd7e92f8de120450977` on `gate4a-sales-adoption`. Hosted CI run #48
+succeeded against that exact candidate with fresh PostgreSQL migrations, 283 tests, Ruff, Django
+checks, migration-drift checks, npm audit, and Tailwind reproducibility all passing.
+
+This decision preserves the initial BLOCKED audit at `fc609bcd81916c13921c2d1cc7b6a59eda1c1e19`
+and its remediation history. It formally accepts the reviewed Gate 4A candidate but does not claim
+that canonical adoption has occurred yet.
 
 Canonical `main` remains `f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb`. Procurement and
-Inventory adoption, Billing, Accounting, optional integrations, and merge to `main` remain
-unauthorized.
+Inventory adoption, Billing, Accounting, and optional integrations remain unauthorized. The
+controlled canonical adoption authorized after this acceptance remains pending verification.
