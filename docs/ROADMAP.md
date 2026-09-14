@@ -95,11 +95,13 @@ Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contract
 
 ## Phase 2 — Commercial Core
 
-Status: Gate 4A Sales adoption is implemented on isolated branch `gate4a-sales-adoption` at
-`28c8028950be1997b4f3d0816b1ec04764222068` and awaits independent audit. It is not present on
-canonical `main` and is not yet accepted or closed. Procurement and Inventory adoption, Billing,
-Accounting, integrations, and any merge to `main` remain unauthorized. The preserved standalone
-Sales, Procurement, and Inventory evidence branches remain unchanged.
+Status: independent audit BLOCKED the initial Gate 4A Sales adoption implementation
+`28c8028950be1997b4f3d0816b1ec04764222068` at audit head
+`fc609bcd81916c13921c2d1cc7b6a59eda1c1e19`. Narrow remediation is implemented at
+`d62c34e36f0a8b11f59bfdb058143e27f5231c5d` on `gate4a-sales-adoption` and awaits independent
+re-audit. Gate 4A is not accepted, closed, or present on canonical `main`. Procurement and
+Inventory adoption, Billing, Accounting, integrations, and any merge to `main` remain
+unauthorized. Preserved historical branches remain unchanged.
 
 Standalone modules are parallelizable after the Phase 1 contract freeze. Optional cross-module integrations are implemented only after the standalone module contracts pass review.
 

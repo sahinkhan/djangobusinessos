@@ -712,7 +712,9 @@ Branch              gate4a-sales-adoption
 Canonical base      f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb
 Historical evidence 2aeb01c2766da9e78dd04252cfb9d3b221828e6c
 Implementation      28c8028950be1997b4f3d0816b1ec04764222068
-Status              awaiting independent Gate 4A audit
+Initial audit        BLOCKED at fc609bcd81916c13921c2d1cc7b6a59eda1c1e19
+Remediation          d62c34e36f0a8b11f59bfdb058143e27f5231c5d
+Status               awaiting independent Gate 4A re-audit
 ```
 
 Preserved Sales semantics:
@@ -753,7 +755,16 @@ Candidate evidence:
 - representative service/simple and variable-ProductVariant order workflows passed desktop and
   390px mobile browser QA, including monetary precision and long-identity overflow checks.
 
-This record does not accept or close Gate 4A. Exact-head hosted CI and independent review remain
+The independent audit required explicit reconciliation of the module-gating contract, ORM bulk
+immutability protection, missing transition-vs-edit/delete concurrency coverage, and restoration
+of canonical Phase 2 documentation. Remediation preserves ADR 0005's HTTP-only module gate;
+installed Python services remain governed by BusinessContext and RBAC. Sales-local QuerySets now
+reject public bulk update/create/upsert/delete paths, while lifecycle services use one private,
+row-locked transition primitive limited to DRAFT -> CONFIRMED and CONFIRMED -> CANCELLED.
+PostgreSQL regressions cover both edit/confirmation orderings and confirmation winning over stale
+order/line deletion.
+
+This record does not accept or close Gate 4A. Exact-head hosted CI and independent re-audit remain
 required. Gate 4B Procurement, Gate 4C Inventory, Billing, Accounting, integrations, and merge to
 `main` remain unauthorized.
 
