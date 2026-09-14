@@ -10,8 +10,9 @@ PASS was withdrawn, ADR 0009 was reopened, and the freeze record at
 Correctness remediation was implemented on `foundation-v1-correctness-remediation`, based exactly
 on that evidence commit. Independent adversarial re-audit gave exact implementation
 `f1f7f2f6c917308bedb3c48e51b8113a064d96c2` Gate 2 FINAL PASS on 2026-09-14. ADR 0009 is Accepted
-again and Core Foundation v1 is FROZEN at that implementation. Gate 3A reconstruction is complete
-on an isolated review candidate; Gate 3B canonical `main` cutover and Phase 2 continuation remain
+again and Core Foundation v1 is FROZEN at that implementation. Gate 3A reconstruction received
+independent FINAL PASS at accepted candidate `780144c5560e1d46cc5d545dc29b33522cd2d1f5`, with hosted
+CI #42 successful at the exact SHA. Gate 3B canonical `main` cutover and Phase 2 continuation remain
 unauthorized.
 
 Remediation covers the four reproduced findings:
@@ -592,8 +593,18 @@ Local candidate evidence:
   matched 519 sorted facts covering tables, columns, types, nullability, defaults, primary/foreign/
   unique/check constraints, and indexes. Raw dump differences were only column ordering and dump nonce.
 
-Hosted exact-head CI and independent Gate 3A review remain publication gates. This record does not
-claim Gate 3B cutover or Phase 2 adoption.
+Independent Gate 3A audit gave FINAL PASS to candidate
+`780144c5560e1d46cc5d545dc29b33522cd2d1f5`. Hosted CI run #42 succeeded against that exact SHA.
+The accepted canonical checkpoints are:
+
+```text
+Canonical Phase 0 candidate   4ef16c271dfce235dbcb874fabaa5df0c63edd54
+Canonical Phase 1 candidate   5b95aaa0f13a64a862999e13c6533d1bbb5c81f3
+Accepted Gate 3A candidate    780144c5560e1d46cc5d545dc29b33522cd2d1f5
+```
+
+Gate 3A is closed with FINAL PASS. This record does not authorize or claim Gate 3B canonical `main`
+cutover, Phase 2 / Gate 4 adoption, or any replay of standalone Phase 2 modules.
 
 ---
 

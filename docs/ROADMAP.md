@@ -62,8 +62,9 @@ Deliver:
 - a documented boundary between Django technical permissions and BusinessOS authorization
 
 Exit gate: PASSED. Gate 2 received independent FINAL PASS against the accepted remediation SHA.
-Gate 3A reconstruction is implemented for independent review; Gate 3B canonical `main` cutover and
-Phase 2 adoption remain unauthorized.
+Gate 3A received independent FINAL PASS at accepted candidate
+`780144c5560e1d46cc5d545dc29b33522cd2d1f5`; hosted CI #42 succeeded at that exact SHA. Gate 3B
+canonical `main` cutover and Phase 2 adoption remain unauthorized.
 
 ---
 
@@ -92,7 +93,7 @@ Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contract
 
 ## Phase 2 — Commercial Core
 
-Status: Development remains paused pending Gate 3A review and a later Phase 2 adoption gate. The
+Status: Development remains paused pending separate Gate 3B and Phase 2 adoption authorizations. The
 accepted standalone Sales and Procurement references and Inventory remediation reference remain on
 their dedicated archived branches and are not present in this candidate. Billing, Accounting and
 integrations must not start until the approved sequence reaches them. Contracts remain defined by ADR 0006 and
