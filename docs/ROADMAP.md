@@ -20,7 +20,7 @@ Goal: establish the minimum architecture needed to unblock fast module developme
 Current correctness status: COMPLETE. Foundation remediation was accepted at
 `f1f7f2f6c917308bedb3c48e51b8113a064d96c2`; Core Foundation v1 remains FROZEN by ADR 0009 and is
 reconstructed as the canonical Phase 0 checkpoint `4ef16c271dfce235dbcb874fabaa5df0c63edd54`
-on the Gate 3A candidate branch.
+on canonical `main`.
 
 Deliver:
 
@@ -64,7 +64,9 @@ Deliver:
 Exit gate: PASSED. Gate 2 received independent FINAL PASS against the accepted remediation SHA.
 Gate 3A received independent FINAL PASS at accepted candidate
 `780144c5560e1d46cc5d545dc29b33522cd2d1f5`; hosted CI #42 succeeded at that exact SHA. Gate 3B
-canonical `main` cutover and Phase 2 adoption remain unauthorized.
+canonical `main` cutover received independent FINAL PASS at
+`29d6c12913145bd1b64f572b5bc94c1f53d9987a`, with hosted main CI #45 successful. Gate 3 is closed;
+Phase 2 / Gate 4 adoption remains separately gated and unauthorized.
 
 ---
 
@@ -93,9 +95,9 @@ Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contract
 
 ## Phase 2 — Commercial Core
 
-Status: Development remains paused pending separate Gate 3B and Phase 2 adoption authorizations. The
+Status: Commercial Core adoption is next, but Gate 4 remains separately gated and unauthorized. The
 accepted standalone Sales and Procurement references and Inventory remediation reference remain on
-their dedicated archived branches and are not present in this candidate. Billing, Accounting and
+their dedicated preserved branches and are not present on canonical `main`. Billing, Accounting and
 integrations must not start until the approved sequence reaches them. Contracts remain defined by ADR 0006 and
 `docs/exec-plans/active/PHASE_2_COMMERCIAL_CORE.md`.
 

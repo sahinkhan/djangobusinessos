@@ -12,8 +12,9 @@ on that evidence commit. Independent adversarial re-audit gave exact implementat
 `f1f7f2f6c917308bedb3c48e51b8113a064d96c2` Gate 2 FINAL PASS on 2026-09-14. ADR 0009 is Accepted
 again and Core Foundation v1 is FROZEN at that implementation. Gate 3A reconstruction received
 independent FINAL PASS at accepted candidate `780144c5560e1d46cc5d545dc29b33522cd2d1f5`, with hosted
-CI #42 successful at the exact SHA. Gate 3B canonical `main` cutover and Phase 2 continuation remain
-unauthorized.
+CI #42 successful at the exact SHA. Gate 3B canonical `main` cutover received independent FINAL PASS
+at `29d6c12913145bd1b64f572b5bc94c1f53d9987a`; hosted main CI #45 succeeded at that exact SHA.
+Gate 3 is closed. Phase 2 / Gate 4 remains separately gated and unauthorized.
 
 Remediation covers the four reproduced findings:
 
@@ -603,8 +604,38 @@ Canonical Phase 1 candidate   5b95aaa0f13a64a862999e13c6533d1bbb5c81f3
 Accepted Gate 3A candidate    780144c5560e1d46cc5d545dc29b33522cd2d1f5
 ```
 
-Gate 3A is closed with FINAL PASS. This record does not authorize or claim Gate 3B canonical `main`
-cutover, Phase 2 / Gate 4 adoption, or any replay of standalone Phase 2 modules.
+Gate 3A is closed with FINAL PASS.
+
+## Gate 3B canonical cutover outcome
+
+The lease-guarded canonical cutover moved only `refs/heads/main` from
+`febe5b45941c6956fd98006c04abded16a9ff998` to Gate 3A closure
+`29d6c12913145bd1b64f572b5bc94c1f53d9987a`. Recovery tag `archive/pre-gate3b/main` preserves the
+old main commit. All pre-Gate-3 archive tags and historical Phase 0, Phase 1, Sales, Procurement,
+and Inventory branches remain preserved.
+
+Independent verification gave Gate 3B FINAL PASS. Hosted main CI run #45 succeeded against exact
+head `29d6c12913145bd1b64f572b5bc94c1f53d9987a`, including fresh PostgreSQL migration, 200 tests,
+Ruff, Django system checks, migration drift, `npm ci`, and Tailwind reproducibility.
+
+Canonical `main` now contains:
+
+```text
+Phase 0  Complete Core Foundation v1
+Phase 1  Party + Catalog
+Phase 2  Not yet adopted
+```
+
+Gate 3A and Gate 3B are closed. The exceptional pre-release canonical migration-normalization
+window is also closed. From this baseline forward, committed supported migrations are append-only;
+future schema evolution uses normal additive Django migrations. Any exceptional migration-history
+rewrite requires a separately approved architecture gate.
+
+Future canonical development starts from normalized `main`. Accepted standalone Phase 2 inputs
+remain preserved at Sales `2aeb01c2766da9e78dd04252cfb9d3b221828e6c`, Procurement
+`a99377ca55355a2e4cdebd64ff73cf29fd3eff83`, and Inventory remediation
+`f45afdfea33d3fd03d469e6a0cd63d0e5358f38c`. This closure does not authorize Gate 4, adopt those
+modules, or begin Billing, Accounting, or integrations.
 
 ---
 
