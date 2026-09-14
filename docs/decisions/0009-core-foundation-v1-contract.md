@@ -1,6 +1,6 @@
 # ADR 0009 — Core Foundation v1 Contract
 
-Status: Accepted
+Status: Reopened — previous acceptance withdrawn; independent re-audit pending
 
 Date: 2026-09-14
 
@@ -85,9 +85,28 @@ It does not normalize migration or Git history and does not merge Phase 2 branch
 
 ## Gate
 
-Gate 2 received its independent FINAL PASS on 2026-09-14. Core Foundation v1 is FROZEN at accepted
-implementation commit `63c798806c5a486d1a282f595e1d1603c2b37aa3`.
+Core Foundation v1 acceptance reopened after independent adversarial PostgreSQL audit.
+The previous FINAL PASS for `63c798806c5a486d1a282f595e1d1603c2b37aa3` and freeze record at
+`5e10ec23ad91a4ba8ef75ea7d29e8b2fb26e2095` are historical evidence, not current operational acceptance.
+The evidence branch `foundation-v1-hardening` remains unchanged.
 
-Freeze means these foundational contracts cannot be casually redesigned. Additive evolution remains
-possible, and any change to a frozen public contract requires explicit architectural review and an
-ADR. Gate 3 history normalization remains a separate operation requiring explicit authorization.
+Correctness remediation is implemented on `foundation-v1-correctness-remediation`; independent
+re-audit is pending. Gate 2 has not regained PASS. Gate 3 and Phase 2 continuation remain blocked.
+
+The candidate preserves the intended contracts with these explicit enforcement boundaries:
+
+- Scoped Access mutations begin an atomic transaction, lock the active context Company, validate
+  context/permission against committed security state, mutate, then append audit in that transaction.
+  PostgreSQL READ COMMITTED and company-before-branch/warehouse/role lock ordering are required.
+- Authorization requires both assignment and Role ownership to match the context Company.
+- Protected queryset `update` and `bulk_update` fields are rejected. Company, Branch, Warehouse,
+  Reference, Permission, Role and UserRoleAssignment bulk creation (including conflict upserts) is
+  unsupported; use validated saves and owning Access services. This deliberately narrows unsafe bulk
+  APIs. Reference labels and retirement remain editable; identity codes do not.
+- Audit permits plain append-only bulk insertion, but rejects every conflict-update and bulk-update.
+- Company reference changes use validated saves. Branch/Warehouse ownership stays immutable;
+  warehouse branch/activity changes use validated saves. Deactivate warehouses before retiring their
+  branch. Branch retirement and warehouse saves serialize on the branch row to preserve activity
+  consistency. Supported bulk paths cannot bypass these rules.
+
+These are candidate corrections, not a new freeze. No history or migrations were normalized.

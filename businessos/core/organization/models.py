@@ -1,7 +1,7 @@
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import models, router, transaction
 
 from businessos.core.common.models import ActiveUUIDTimestampedModel
 
@@ -26,14 +26,64 @@ def _validate_immutable_company(instance):
 
 
 class CompanyQuerySet(models.QuerySet):
-    def update(self, **kwargs):
-        if "base_currency" in kwargs or "base_currency_id" in kwargs:
+    def _check_bulk_fields(self, fields):
+        if {"base_currency", "base_currency_id"}.intersection(fields):
             raise ValidationError("Base currency is immutable after company creation.")
-        if "timezone" in kwargs:
-            raise ValidationError(
-                "Timezone changes require the validated Company model save path."
-            )
+        if "timezone" in fields:
+            raise ValidationError("Timezone changes require the validated Company model save path.")
+        if {"country", "country_id", "default_language", "default_language_id"}.intersection(
+            fields
+        ):
+            raise ValidationError("Company reference changes require validated model saves.")
+
+    def update(self, **kwargs):
+        self._check_bulk_fields(kwargs)
         return super().update(**kwargs)
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        self._check_bulk_fields(fields)
+        return super().bulk_update(objs, fields, batch_size=batch_size)
+
+    def bulk_create(self, *args, **kwargs):
+        raise ValidationError("Company bulk creation/upsert requires validated model saves.")
+
+
+class BranchQuerySet(models.QuerySet):
+    def _check_bulk_fields(self, fields):
+        if {"company", "company_id", "is_active"}.intersection(fields):
+            raise ValidationError(
+                "Branch ownership/activity changes require validated model saves."
+            )
+
+    def update(self, **kwargs):
+        self._check_bulk_fields(kwargs)
+        return super().update(**kwargs)
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        self._check_bulk_fields(fields)
+        return super().bulk_update(objs, fields, batch_size=batch_size)
+
+    def bulk_create(self, *args, **kwargs):
+        raise ValidationError("Branch bulk creation/upsert requires validated model saves.")
+
+
+class WarehouseQuerySet(models.QuerySet):
+    def _check_bulk_fields(self, fields):
+        if {"company", "company_id", "branch", "branch_id", "is_active"}.intersection(fields):
+            raise ValidationError(
+                "Warehouse ownership/branch/activity changes require validated model saves."
+            )
+
+    def update(self, **kwargs):
+        self._check_bulk_fields(kwargs)
+        return super().update(**kwargs)
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        self._check_bulk_fields(fields)
+        return super().bulk_update(objs, fields, batch_size=batch_size)
+
+    def bulk_create(self, *args, **kwargs):
+        raise ValidationError("Warehouse bulk creation/upsert requires validated model saves.")
 
 
 class Company(ActiveUUIDTimestampedModel):
@@ -120,6 +170,8 @@ class Branch(ActiveUUIDTimestampedModel):
     code = models.CharField(max_length=32)
     name = models.CharField(max_length=160)
 
+    objects = BranchQuerySet.as_manager()
+
     class Meta:
         ordering = ["company__code", "code"]
         constraints = [
@@ -132,11 +184,18 @@ class Branch(ActiveUUIDTimestampedModel):
         super().clean()
         self.code = self.code.strip().upper()
         _validate_immutable_company(self)
+        if not self.is_active and self.warehouses.filter(is_active=True).exists():
+            raise ValidationError({"is_active": "Deactivate active warehouses before the branch."})
 
-    def save(self, *args, **kwargs):
-        self.code = self.code.strip().upper()
-        self.full_clean()
-        super().save(*args, **kwargs)
+    def save(self, *args, using=None, **kwargs):
+        using = using or router.db_for_write(type(self), instance=self)
+        with transaction.atomic(using=using):
+            # Match Access's company-before-branch order, including FK writes.
+            Company.objects.using(using).select_for_update().filter(pk=self.company_id).first()
+            type(self).objects.using(using).select_for_update().filter(pk=self.pk).first()
+            self.code = self.code.strip().upper()
+            self.full_clean()
+            super().save(*args, using=using, **kwargs)
 
     def __str__(self):
         return f"{self.company.code} / {self.code} — {self.name}"
@@ -153,6 +212,8 @@ class Warehouse(ActiveUUIDTimestampedModel):
     )
     code = models.CharField(max_length=32)
     name = models.CharField(max_length=160)
+
+    objects = WarehouseQuerySet.as_manager()
 
     class Meta:
         ordering = ["company__code", "code"]
@@ -171,10 +232,22 @@ class Warehouse(ActiveUUIDTimestampedModel):
         if self.is_active and self.branch_id and not self.branch.is_active:
             raise ValidationError({"branch": "An active warehouse requires an active branch."})
 
-    def save(self, *args, **kwargs):
-        self.code = self.code.strip().upper()
-        self.full_clean()
-        super().save(*args, **kwargs)
+    def save(self, *args, using=None, **kwargs):
+        using = using or router.db_for_write(type(self), instance=self)
+        with transaction.atomic(using=using):
+            Company.objects.using(using).select_for_update().filter(pk=self.company_id).first()
+            if self.branch_id:
+                branch = (
+                    Branch.objects.using(using)
+                    .select_for_update()
+                    .filter(pk=self.branch_id, company_id=self.company_id)
+                    .first()
+                )
+                if branch is not None:
+                    self.branch = branch  # Do not validate a stale cached branch object.
+            self.code = self.code.strip().upper()
+            self.full_clean()
+            super().save(*args, using=using, **kwargs)
 
     def __str__(self):
         return f"{self.company.code} / {self.code} — {self.name}"

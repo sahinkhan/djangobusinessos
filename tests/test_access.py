@@ -4,6 +4,7 @@ from uuid import uuid4
 import pytest
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import connection
 
 from businessos.core.access.context import (
     SESSION_BRANCH_KEY,
@@ -129,8 +130,11 @@ def test_non_http_policy_validates_context(user, company):
 def test_warehouse_on_inactive_branch_is_not_valid_scope(user, company, branch, warehouse):
     UserCompanyAccess.objects.create(user=user, company=company)
     UserWarehouseAccess.objects.create(user=user, warehouse=warehouse)
-    branch.is_active = False
-    branch.save()
+    # Legacy/corrupt data must still fail closed; normal branch saves now prevent this state.
+    table = connection.ops.quote_name(Branch._meta.db_table)
+    branch_id = Branch._meta.pk.get_db_prep_value(branch.pk, connection)
+    with connection.cursor() as cursor:
+        cursor.execute(f"UPDATE {table} SET is_active = %s WHERE id = %s", [False, branch_id])
     context = BusinessContext(actor_id=user.id, company_id=company.id, warehouse_id=warehouse.id)
 
     with pytest.raises(PermissionDenied, match="branch is inactive"):

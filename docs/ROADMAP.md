@@ -17,6 +17,9 @@ The roadmap is capability-driven, not date-driven. A later phase should not begi
 
 Goal: establish the minimum architecture needed to unblock fast module development.
 
+Current correctness status: REOPENED after independent adversarial audit. Foundation remediation
+is implemented on `foundation-v1-correctness-remediation`; independent re-audit is pending.
+
 Deliver:
 
 - Django 5.2 LTS / Python 3.13 project
@@ -39,9 +42,10 @@ Exit gate: foundation tests/checks pass and shared contracts are frozen enough f
 
 ## Phase 0H — Core Foundation v1 Hardening
 
-Status: Complete on `foundation-v1-hardening`. Gate 2 received FINAL PASS and ADR 0009 freezes Core
-Foundation v1 at accepted implementation commit `63c798806c5a486d1a282f595e1d1603c2b37aa3`.
-It is not merged, and Gate 3 canonical normalization has not started.
+Status: Acceptance REOPENED after independent adversarial audit. The prior freeze recorded at
+`5e10ec23ad91a4ba8ef75ea7d29e8b2fb26e2095` on `foundation-v1-hardening` is historical evidence.
+Correctness remediation is implemented on `foundation-v1-correctness-remediation`; independent
+re-audit is pending. ADR 0009 is reopened, not an accepted final operational baseline.
 
 Deliver:
 
@@ -54,8 +58,8 @@ Deliver:
 - immutable Country/Currency/Language/UoM and permission identity codes
 - a documented boundary between Django technical permissions and BusinessOS authorization
 
-Exit gate: PASSED. The Core Foundation v1 contract is FROZEN. Canonical history/migration
-normalization remains a separately authorized Gate 3 operation.
+Exit gate: Gate 2 PASS WITHDRAWN pending independent adversarial re-audit and a new acceptance.
+Gate 3 canonical normalization and Phase 2 continuation are BLOCKED and have not started here.
 
 ---
 

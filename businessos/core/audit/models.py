@@ -6,6 +6,29 @@ from businessos.core.common.models import UUIDTimestampedModel
 
 
 class ImmutableAuditQuerySet(models.QuerySet):
+    def bulk_update(self, objs, fields, batch_size=None):
+        raise ValidationError("Audit entries are immutable.")
+
+    def bulk_create(
+        self,
+        objs,
+        batch_size=None,
+        ignore_conflicts=False,
+        update_conflicts=False,
+        update_fields=None,
+        unique_fields=None,
+    ):
+        if update_conflicts:
+            raise ValidationError("Audit entries are immutable; conflict updates are forbidden.")
+        return super().bulk_create(
+            objs,
+            batch_size=batch_size,
+            ignore_conflicts=ignore_conflicts,
+            update_conflicts=update_conflicts,
+            update_fields=update_fields,
+            unique_fields=unique_fields,
+        )
+
     def update(self, **kwargs):
         raise ValidationError("Audit entries are immutable.")
 
@@ -37,9 +60,7 @@ class AuditEntry(UUIDTimestampedModel):
     class Meta:
         ordering = ["-occurred_at", "-created_at"]
         indexes = [
-            models.Index(
-                fields=["company", "occurred_at"], name="business_au_company_e21dc8_idx"
-            ),
+            models.Index(fields=["company", "occurred_at"], name="business_au_company_e21dc8_idx"),
             models.Index(
                 fields=["object_type", "object_id"], name="business_au_object__9292e8_idx"
             ),

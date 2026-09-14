@@ -2,10 +2,50 @@
 
 ## Status
 
-Gate 1 and Gate 2 are complete. The independent Gate 2 re-audit received FINAL PASS, ADR 0009 is
-Accepted, and Core Foundation v1 is FROZEN at implementation commit
-`63c798806c5a486d1a282f595e1d1603c2b37aa3`. Gate 3 has not started and still requires separate
-explicit authorization.
+Core Foundation v1 acceptance reopened after independent adversarial audit. Gate 2 PASS is
+withdrawn and ADR 0009 is reopened. The freeze record at
+`5e10ec23ad91a4ba8ef75ea7d29e8b2fb26e2095` is historical evidence; the
+`foundation-v1-hardening` branch remains unchanged.
+
+Correctness remediation is implemented on `foundation-v1-correctness-remediation`, based exactly
+on that evidence commit. Independent adversarial re-audit is pending; no new freeze is declared.
+Gate 3 normalization and Phase 2 continuation are BLOCKED and have not started here.
+
+Remediation covers the four reproduced findings:
+
+- all 11 scoped Access mutation services lock Company before authorization and mutation;
+- Branch/Warehouse ownership, branch consistency and activity cannot bypass validation via bulk APIs;
+- audit evidence, reference/permission identities and Company protected fields reject unsafe bulk
+  writes/upserts;
+- authorization fails closed on malformed cross-company role assignments, and supported assignment
+  bulk writes are rejected.
+
+PostgreSQL regressions observe real lock waits for all 11 services against role, permission and
+company-access revocation, plus the opposite self-assignment/revocation ordering. Branch retirement
+and warehouse activation are tested in both concurrent orderings. Existing tests are retained;
+the inactive-branch scope test now uses explicitly corrupt legacy data so its denial assertion
+remains covered despite normal model saves preventing that state.
+
+No schema migration, history normalization, Phase 2 adoption or unrelated infrastructure is added.
+
+Candidate implementation verification on 2026-09-14:
+
+- PostgreSQL 17 / Python 3.13: 200 tests passed without teardown warnings;
+- 36 new PostgreSQL concurrency cases passed (34 Access authorization/revocation cases and two
+  Branch/Warehouse activity orderings); the existing Catalog concurrency case also passed;
+- SQLite: 163 passed, 37 expected PostgreSQL-only skips;
+- Ruff, Django checks and migration drift passed; no migrations were created or changed;
+- fresh PostgreSQL bootstrap and legacy Company upgrade passed (`ZZ` / `UND` / `UTC`, preserved
+  currency and active Core permissions); the disposable legacy database was removed;
+- Docker build/startup and login HTTP 200 passed;
+- demo seeding preserved counts, business identities and attribute mappings on retry (Catalog's
+  existing replacement of attribute-assignment join-row UUIDs remains unchanged);
+- `npm ci` passed and Tailwind matched the committed output byte-for-byte.
+
+Hosted exact-head CI and the published SHA are reported with the candidate completion report.
+These implementation checks do not restore Gate 2 acceptance or constitute independent re-audit.
+
+## Historical implementation and verification (superseded acceptance)
 
 Implemented outcome:
 
@@ -16,7 +56,7 @@ Implemented outcome:
   immutable through normal model/service mutation;
 - Reference and permission codes are immutable identities;
 - shared company-local datetime/date helpers establish the business-time contract;
-- ADR 0009 records the accepted, frozen Core Foundation v1 boundary.
+- ADR 0009 recorded the former acceptance, now withdrawn pending independent re-audit.
 
 Gate 2 remediation after the audit of `62d6931e22127cc9c42ba59fe6b80a7f664f8c1d`:
 
@@ -41,7 +81,8 @@ Remediation verification on 2026-09-14:
   reproducibility passed.
 
 No Phase 2 branch was merged, no canonical history was rewritten, and no excluded infrastructure
-or capability was introduced. Gate 2 is complete; Gate 3 and Phase 2 adoption remain unstarted.
+or capability was introduced. That earlier Gate 2 acceptance has since been reopened; Gate 3 and
+Phase 2 adoption remain unstarted.
 
 Gate 1 implementation verification on 2026-09-14:
 

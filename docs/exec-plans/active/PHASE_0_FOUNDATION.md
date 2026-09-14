@@ -2,7 +2,11 @@
 
 ## Status
 
-COMPLETE — PUBLISHED, CI VERIFIED, AND CONTRACTS FROZEN
+REOPENED — FOUNDATION CORRECTNESS REMEDIATION IMPLEMENTED; INDEPENDENT RE-AUDIT PENDING
+
+The prior published acceptance/freeze below is a historical record. Independent adversarial audit
+reopened Foundation correctness, including Branch/Warehouse ownership protection. See
+`CORE_FOUNDATION_V1_RESTRUCTURE.md` and reopened ADR 0009. Gate 3 and Phase 2 continuation are blocked.
 
 ## Objective
 
@@ -349,4 +353,5 @@ Run in the Python 3.13.15 Compose web service:
 
 ### Next recommended task
 
-Phase 0 is closed. Continue the independent Phase 1 Party/Catalog remediation review without reopening frozen foundation contracts unless a concrete defect requires an explicit architecture decision.
+The earlier Phase 0 closure is superseded by the Foundation correctness reopening above. A new
+independent re-audit and acceptance are required before any new formal freeze or Gate 3 work.

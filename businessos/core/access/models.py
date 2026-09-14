@@ -8,6 +8,14 @@ from .permissions import validate_permission_code
 
 
 class PermissionQuerySet(models.QuerySet):
+    def bulk_create(self, *args, **kwargs):
+        raise ValidationError("Permission bulk creation/upsert requires validated model saves.")
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        if "code" in fields:
+            raise ValidationError("Permission identity is immutable.")
+        return super().bulk_update(objs, fields, batch_size=batch_size)
+
     def update(self, **kwargs):
         if "code" in kwargs:
             raise ValidationError("Permission identity is immutable.")
@@ -45,6 +53,21 @@ class Permission(UUIDTimestampedModel):
         return self.code
 
 
+class RoleQuerySet(models.QuerySet):
+    def update(self, **kwargs):
+        if {"company", "company_id"}.intersection(kwargs):
+            raise ValidationError("Role company is immutable.")
+        return super().update(**kwargs)
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        if {"company", "company_id"}.intersection(fields):
+            raise ValidationError("Role company is immutable.")
+        return super().bulk_update(objs, fields, batch_size=batch_size)
+
+    def bulk_create(self, *args, **kwargs):
+        raise ValidationError("Role bulk creation/upsert requires validated model saves.")
+
+
 class Role(UUIDTimestampedModel):
     company = models.ForeignKey(
         "organization.Company", on_delete=models.CASCADE, related_name="roles"
@@ -52,6 +75,8 @@ class Role(UUIDTimestampedModel):
     code = models.CharField(max_length=64)
     name = models.CharField(max_length=160)
     is_active = models.BooleanField(default=True)
+
+    objects = RoleQuerySet.as_manager()
 
     class Meta:
         ordering = ["company__code", "code"]
@@ -80,9 +105,7 @@ class Role(UUIDTimestampedModel):
 
 class RolePermission(UUIDTimestampedModel):
     role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="permission_links")
-    permission = models.ForeignKey(
-        Permission, on_delete=models.PROTECT, related_name="role_links"
-    )
+    permission = models.ForeignKey(Permission, on_delete=models.PROTECT, related_name="role_links")
 
     class Meta:
         constraints = [
@@ -90,6 +113,25 @@ class RolePermission(UUIDTimestampedModel):
                 fields=["role", "permission"], name="unique_permission_per_role"
             )
         ]
+
+
+class UserRoleAssignmentQuerySet(models.QuerySet):
+    def _check_bulk_fields(self, fields):
+        if {"user", "user_id", "company", "company_id", "role", "role_id"}.intersection(fields):
+            raise ValidationError("Role assignment changes require validated model saves.")
+
+    def update(self, **kwargs):
+        self._check_bulk_fields(kwargs)
+        return super().update(**kwargs)
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        self._check_bulk_fields(fields)
+        return super().bulk_update(objs, fields, batch_size=batch_size)
+
+    def bulk_create(self, *args, **kwargs):
+        raise ValidationError(
+            "Role assignment bulk creation/upsert requires validated model saves."
+        )
 
 
 class UserRoleAssignment(UUIDTimestampedModel):
@@ -100,6 +142,8 @@ class UserRoleAssignment(UUIDTimestampedModel):
         "organization.Company", on_delete=models.CASCADE, related_name="user_role_assignments"
     )
     role = models.ForeignKey(Role, on_delete=models.CASCADE, related_name="user_assignments")
+
+    objects = UserRoleAssignmentQuerySet.as_manager()
 
     class Meta:
         constraints = [
@@ -112,9 +156,13 @@ class UserRoleAssignment(UUIDTimestampedModel):
         super().clean()
         if self.role_id and self.company_id and self.role.company_id != self.company_id:
             raise ValidationError({"role": "The role must belong to the assigned company."})
-        if self.user_id and self.company_id and not UserCompanyAccess.objects.filter(
-            user_id=self.user_id, company_id=self.company_id
-        ).exists():
+        if (
+            self.user_id
+            and self.company_id
+            and not UserCompanyAccess.objects.filter(
+                user_id=self.user_id, company_id=self.company_id
+            ).exists()
+        ):
             raise ValidationError({"user": "Grant company access before assigning a role."})
 
     def save(self, *args, **kwargs):
@@ -154,9 +202,13 @@ class UserBranchAccess(UUIDTimestampedModel):
 
     def clean(self):
         super().clean()
-        if self.user_id and self.branch_id and not UserCompanyAccess.objects.filter(
-            user_id=self.user_id, company_id=self.branch.company_id
-        ).exists():
+        if (
+            self.user_id
+            and self.branch_id
+            and not UserCompanyAccess.objects.filter(
+                user_id=self.user_id, company_id=self.branch.company_id
+            ).exists()
+        ):
             raise ValidationError({"branch": "Grant company access before branch access."})
 
     def save(self, *args, **kwargs):
@@ -181,9 +233,13 @@ class UserWarehouseAccess(UUIDTimestampedModel):
 
     def clean(self):
         super().clean()
-        if self.user_id and self.warehouse_id and not UserCompanyAccess.objects.filter(
-            user_id=self.user_id, company_id=self.warehouse.company_id
-        ).exists():
+        if (
+            self.user_id
+            and self.warehouse_id
+            and not UserCompanyAccess.objects.filter(
+                user_id=self.user_id, company_id=self.warehouse.company_id
+            ).exists()
+        ):
             raise ValidationError({"warehouse": "Grant company access before warehouse access."})
 
     def save(self, *args, **kwargs):

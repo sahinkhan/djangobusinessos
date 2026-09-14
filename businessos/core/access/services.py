@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ValidationError
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
 
 from businessos.core.audit.services import record_audit_entry
@@ -55,14 +55,21 @@ def _target_user(user_id: UUID, *, require_active: bool = True):
 
 
 def _lock_context_company(context: BusinessContext) -> Company:
-    return Company.objects.select_for_update().get(id=context.company_id, is_active=True)
+    # Every scoped security mutation takes this lock BEFORE reading authorization.
+    # Under PostgreSQL READ COMMITTED, waiters then see committed revocations.
+    company = (
+        Company.objects.select_for_update().filter(id=context.company_id, is_active=True).first()
+    )
+    if company is None:
+        raise PermissionDenied("The selected company does not exist or is inactive.")
+    return company
 
 
 @transaction.atomic
 def grant_company_access(context: BusinessContext, *, user_id: UUID) -> UserCompanyAccess:
+    company = _lock_context_company(context)
     require_permission(context, MANAGE_ORGANIZATIONAL_ACCESS)
     user = _target_user(user_id)
-    company = _lock_context_company(context)
     access, created = UserCompanyAccess.objects.get_or_create(user=user, company=company)
     if created:
         record_audit_entry(
@@ -77,9 +84,9 @@ def grant_company_access(context: BusinessContext, *, user_id: UUID) -> UserComp
 
 @transaction.atomic
 def revoke_company_access(context: BusinessContext, *, user_id: UUID) -> bool:
+    _lock_context_company(context)
     require_permission(context, MANAGE_ORGANIZATIONAL_ACCESS)
     user = _target_user(user_id, require_active=False)
-    _lock_context_company(context)
     branch_count, _ = UserBranchAccess.objects.filter(
         user=user, branch__company_id=context.company_id
     ).delete()
@@ -92,9 +99,7 @@ def revoke_company_access(context: BusinessContext, *, user_id: UUID) -> bool:
         )
     )
     UserRoleAssignment.objects.filter(id__in=assignments).delete()
-    deleted, _ = UserCompanyAccess.objects.filter(
-        user=user, company_id=context.company_id
-    ).delete()
+    deleted, _ = UserCompanyAccess.objects.filter(user=user, company_id=context.company_id).delete()
     if deleted:
         record_audit_entry(
             context=context,
@@ -114,12 +119,14 @@ def revoke_company_access(context: BusinessContext, *, user_id: UUID) -> bool:
 def grant_branch_access(
     context: BusinessContext, *, user_id: UUID, branch_id: UUID
 ) -> UserBranchAccess:
-    require_permission(context, MANAGE_ORGANIZATIONAL_ACCESS)
     _lock_context_company(context)
+    require_permission(context, MANAGE_ORGANIZATIONAL_ACCESS)
     user = _target_user(user_id)
-    branch = Branch.objects.select_for_update().filter(
-        id=branch_id, company_id=context.company_id, is_active=True
-    ).first()
+    branch = (
+        Branch.objects.select_for_update()
+        .filter(id=branch_id, company_id=context.company_id, is_active=True)
+        .first()
+    )
     if branch is None:
         raise ValidationError("The branch is outside the selected company or inactive.")
     if not UserCompanyAccess.objects.filter(user=user, company_id=context.company_id).exists():
@@ -138,8 +145,8 @@ def grant_branch_access(
 
 @transaction.atomic
 def revoke_branch_access(context: BusinessContext, *, user_id: UUID, branch_id: UUID) -> bool:
-    require_permission(context, MANAGE_ORGANIZATIONAL_ACCESS)
     _lock_context_company(context)
+    require_permission(context, MANAGE_ORGANIZATIONAL_ACCESS)
     user = _target_user(user_id, require_active=False)
     branch = Branch.objects.filter(id=branch_id, company_id=context.company_id).first()
     if branch is None:
@@ -160,12 +167,14 @@ def revoke_branch_access(context: BusinessContext, *, user_id: UUID, branch_id: 
 def grant_warehouse_access(
     context: BusinessContext, *, user_id: UUID, warehouse_id: UUID
 ) -> UserWarehouseAccess:
-    require_permission(context, MANAGE_ORGANIZATIONAL_ACCESS)
     _lock_context_company(context)
+    require_permission(context, MANAGE_ORGANIZATIONAL_ACCESS)
     user = _target_user(user_id)
-    warehouse = Warehouse.objects.select_for_update().filter(
-        id=warehouse_id, company_id=context.company_id, is_active=True
-    ).first()
+    warehouse = (
+        Warehouse.objects.select_for_update()
+        .filter(id=warehouse_id, company_id=context.company_id, is_active=True)
+        .first()
+    )
     if warehouse is None:
         raise ValidationError("The warehouse is outside the selected company or inactive.")
     if not UserCompanyAccess.objects.filter(user=user, company_id=context.company_id).exists():
@@ -183,11 +192,9 @@ def grant_warehouse_access(
 
 
 @transaction.atomic
-def revoke_warehouse_access(
-    context: BusinessContext, *, user_id: UUID, warehouse_id: UUID
-) -> bool:
-    require_permission(context, MANAGE_ORGANIZATIONAL_ACCESS)
+def revoke_warehouse_access(context: BusinessContext, *, user_id: UUID, warehouse_id: UUID) -> bool:
     _lock_context_company(context)
+    require_permission(context, MANAGE_ORGANIZATIONAL_ACCESS)
     user = _target_user(user_id, require_active=False)
     warehouse = Warehouse.objects.filter(id=warehouse_id, company_id=context.company_id).first()
     if warehouse is None:
@@ -206,8 +213,8 @@ def revoke_warehouse_access(
 
 @transaction.atomic
 def create_role(context: BusinessContext, *, code: str, name: str) -> Role:
-    require_permission(context, MANAGE_ROLES)
     _lock_context_company(context)
+    require_permission(context, MANAGE_ROLES)
     role = Role(company_id=context.company_id, code=code, name=name)
     role.save()
     record_audit_entry(
@@ -223,11 +230,13 @@ def create_role(context: BusinessContext, *, code: str, name: str) -> Role:
 def grant_role_permission(
     context: BusinessContext, *, role_id: UUID, permission_code: str
 ) -> RolePermission:
-    require_permission(context, MANAGE_ROLES)
     _lock_context_company(context)
-    role = Role.objects.select_for_update().filter(
-        id=role_id, company_id=context.company_id, is_active=True
-    ).first()
+    require_permission(context, MANAGE_ROLES)
+    role = (
+        Role.objects.select_for_update()
+        .filter(id=role_id, company_id=context.company_id, is_active=True)
+        .first()
+    )
     if role is None:
         raise ValidationError("The role is outside the selected company or inactive.")
     permission = Permission.objects.filter(code=permission_code, is_active=True).first()
@@ -249,14 +258,12 @@ def grant_role_permission(
 def revoke_role_permission(
     context: BusinessContext, *, role_id: UUID, permission_code: str
 ) -> bool:
-    require_permission(context, MANAGE_ROLES)
     _lock_context_company(context)
+    require_permission(context, MANAGE_ROLES)
     role = Role.objects.filter(id=role_id, company_id=context.company_id).first()
     if role is None:
         raise ValidationError("The role is outside the selected company.")
-    deleted, _ = RolePermission.objects.filter(
-        role=role, permission__code=permission_code
-    ).delete()
+    deleted, _ = RolePermission.objects.filter(role=role, permission__code=permission_code).delete()
     if deleted:
         record_audit_entry(
             context=context,
@@ -269,15 +276,11 @@ def revoke_role_permission(
 
 
 @transaction.atomic
-def assign_role(
-    context: BusinessContext, *, user_id: UUID, role_id: UUID
-) -> UserRoleAssignment:
-    require_permission(context, MANAGE_ROLES)
+def assign_role(context: BusinessContext, *, user_id: UUID, role_id: UUID) -> UserRoleAssignment:
     _lock_context_company(context)
+    require_permission(context, MANAGE_ROLES)
     user = _target_user(user_id)
-    role = Role.objects.filter(
-        id=role_id, company_id=context.company_id, is_active=True
-    ).first()
+    role = Role.objects.filter(id=role_id, company_id=context.company_id, is_active=True).first()
     if role is None:
         raise ValidationError("The role is outside the selected company or inactive.")
     if not UserCompanyAccess.objects.filter(user=user, company_id=context.company_id).exists():
@@ -298,8 +301,8 @@ def assign_role(
 
 @transaction.atomic
 def revoke_role(context: BusinessContext, *, user_id: UUID, role_id: UUID) -> bool:
-    require_permission(context, MANAGE_ROLES)
     _lock_context_company(context)
+    require_permission(context, MANAGE_ROLES)
     role = Role.objects.filter(id=role_id, company_id=context.company_id).first()
     if role is None:
         raise ValidationError("The role is outside the selected company.")

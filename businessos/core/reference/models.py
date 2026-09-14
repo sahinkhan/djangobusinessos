@@ -5,6 +5,14 @@ from businessos.core.common.models import ActiveUUIDTimestampedModel
 
 
 class ImmutableReferenceQuerySet(models.QuerySet):
+    def bulk_create(self, *args, **kwargs):
+        raise ValidationError("Reference bulk creation/upsert requires validated model saves.")
+
+    def bulk_update(self, objs, fields, batch_size=None):
+        if "code" in fields:
+            raise ValidationError("Reference identity codes are immutable after creation.")
+        return super().bulk_update(objs, fields, batch_size=batch_size)
+
     def update(self, **kwargs):
         if "code" in kwargs:
             raise ValidationError("Reference identity codes are immutable after creation.")
