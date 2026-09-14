@@ -83,6 +83,14 @@ Redis/Celery, Go services or a custom framework.
 
 It does not normalize migration or Git history and does not merge Phase 2 branches.
 
+## Pre-release canonical baseline
+
+Gate 3A reconstructs the accepted contract as the original supported Phase 0 schema on the isolated
+`gate3-canonical-reconstruction` candidate. The historical development upgrade migrations,
+including the temporary `ZZ` / `UND` population path, remain preserved by pre-Gate-3 archive refs
+but are unnecessary for a zero-state canonical installation with no legacy Company rows. This does
+not change any accepted runtime invariant or authorize canonical `main` cutover.
+
 ## Gate
 
 Core Foundation v1 acceptance reopened after independent adversarial PostgreSQL audit.

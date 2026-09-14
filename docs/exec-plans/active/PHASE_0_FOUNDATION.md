@@ -11,9 +11,11 @@ was restored, ADR 0009 was re-accepted, and Core Foundation v1 is FROZEN at impl
 `f1f7f2f6c917308bedb3c48e51b8113a064d96c2`. The formal closure checkpoint before this documentation
 preflight is `5e824f83ae1c13364f35731d9d00c7ff830b6c54`.
 
-The earlier reopened state remains historical evidence, not the current status. Gate 3 canonical
-normalization and Phase 2 continuation have not started and require separate authorization. See
-`CORE_FOUNDATION_V1_RESTRUCTURE.md` and ADR 0009 for the complete reopening and remediation record.
+The earlier reopened state remains historical evidence, not the current status. Gate 3A has now
+reconstructed the accepted Core state as canonical Phase 0 checkpoint
+`4ef16c271dfce235dbcb874fabaa5df0c63edd54` on `gate3-canonical-reconstruction`. Gate 3B canonical
+`main` cutover and Phase 2 continuation remain unauthorized. See
+`CORE_FOUNDATION_V1_RESTRUCTURE.md` and ADR 0009 for the complete record.
 
 ## Objective
 
@@ -362,7 +364,6 @@ Run in the Python 3.13.15 Compose web service:
 
 ### Next recommended task
 
-Phase 0 implementation and Core Foundation v1 acceptance are complete. Gate 3 pre-release canonical
-normalization is the next gated sequence, but it has not started and requires separate explicit
-authorization. Do not modify canonical `main`, normalize migrations/history, or continue Phase 2 as
-part of this documentation preflight.
+Phase 0 implementation and Core Foundation v1 acceptance are complete. Gate 3A reconstructed the
+review candidate without modifying canonical `main`. Obtain independent Gate 3A acceptance and
+separate Gate 3B authorization before any canonical cutover; do not continue Phase 2 here.

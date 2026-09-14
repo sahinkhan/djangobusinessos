@@ -1,6 +1,8 @@
 # BusinessOS
 
-BusinessOS is a modular Django business application. Phase 0 provides the small, explicit core needed to begin business-module development without coupling domain services to Django requests.
+BusinessOS is a modular Django business application. Phase 0 provides the complete Core Foundation
+v1, and Phase 1 adds the accepted Party and variant-first Catalog modules without coupling domain
+services to Django requests.
 
 ## Requirements
 
@@ -72,9 +74,13 @@ python manage.py makemigrations --check
 - `businessos/core/access` — explicit per-user organization grants and request adapter
 - `businessos/core/modules` — manifest validation and enabled-module registry
 - `businessos/core/common` — UUID/timestamp models and framework-neutral `BusinessContext`
-- `businessos/modules` — standard business modules, beginning in Phase 1
+- `businessos/modules/party` — company-scoped person/organization identity, contacts, and addresses
+- `businessos/modules/catalog` — products and concrete sellable/purchasable ProductVariant identity
+- `businessos/modules` — standard business modules; Phase 2 modules are not adopted on this candidate
 - `businessos/extensions` — deployment-specific extensions
 
 Read `AGENTS.md` and the documents under `docs/architecture/` before changing core contracts or adding modules.
 
-Foundation security and ownership semantics are recorded in `docs/decisions/0001-foundation-security-contracts.md`.
+Foundation security and ownership semantics are recorded in ADR 0001 and ADR 0009. The
+`gate3-canonical-reconstruction` branch is a review candidate only; canonical `main` has not been
+cut over.

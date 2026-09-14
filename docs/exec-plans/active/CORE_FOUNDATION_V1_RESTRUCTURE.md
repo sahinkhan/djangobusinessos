@@ -10,8 +10,9 @@ PASS was withdrawn, ADR 0009 was reopened, and the freeze record at
 Correctness remediation was implemented on `foundation-v1-correctness-remediation`, based exactly
 on that evidence commit. Independent adversarial re-audit gave exact implementation
 `f1f7f2f6c917308bedb3c48e51b8113a064d96c2` Gate 2 FINAL PASS on 2026-09-14. ADR 0009 is Accepted
-again and Core Foundation v1 is FROZEN at that implementation. Gate 3 normalization and Phase 2
-continuation have not started and remain separately authorized work.
+again and Core Foundation v1 is FROZEN at that implementation. Gate 3A reconstruction is complete
+on an isolated review candidate; Gate 3B canonical `main` cutover and Phase 2 continuation remain
+unauthorized.
 
 Remediation covers the four reproduced findings:
 
@@ -548,6 +549,51 @@ Do not claim old GitHub objects never existed. The objective is a clean canonica
 Do not replace canonical `main` until the complete normalized candidate passes the full CI/test/bootstrap suite.
 
 No partial force-update of `main` during reconstruction.
+
+## Gate 3A reconstruction outcome
+
+Gate 3A preserves the pre-reconstruction heads under annotated `archive/pre-gate3/*` tags and builds
+only on `gate3-canonical-reconstruction`. No existing branch or tag is moved.
+
+Canonical checkpoints:
+
+```text
+Phase 0 / Core Foundation v1
+4ef16c271dfce235dbcb874fabaa5df0c63edd54
+
+Phase 1 Party + Catalog
+5b95aaa0f13a64a862999e13c6533d1bbb5c81f3
+```
+
+Core migration inventory is normalized from 13 development schema/data files to nine supported
+files: one initial each for Identity, Reference, Organization, and Module Registry; two initials
+each for Access and Core Audit where Django resolves cross-app foreign-key dependencies; and one
+frozen Access permission data migration. The final email constraint, Company business identity,
+reference identity rules, RBAC, audit schema, and module permission field are present directly in
+that canonical graph.
+
+Party and Catalog each retain one final initial schema migration and one deterministic manifest data
+migration. The data migrations keep their declarations locally and preserve existing deployment
+enablement on retry.
+
+Local candidate evidence:
+
+- fresh PostgreSQL 17 zero-state migration completed without manual intervention;
+- PostgreSQL full suite: 200 passed, including Foundation adversarial concurrency and Catalog row-lock tests;
+- SQLite: 163 passed, 37 expected PostgreSQL-only skips;
+- core permission bootstrap produced exactly the two frozen Core v1 identities;
+- reference seed retry reported 8 created then 0 created;
+- Phase 1 demo retry reported 14 created then 0 created, with final Party/Product/Variant/Attribute/
+  Value/Assignment counts `2/3/5/2/4/6`;
+- Ruff, Django system checks, and migration drift checks passed;
+- `npm ci` reported no vulnerabilities and Tailwind rebuilt byte-for-byte;
+- a clean Docker Compose build applied the canonical graph and served `/login/` with HTTP 200;
+- semantic PostgreSQL comparison against accepted pre-normalization checkpoint `130c44bf...`
+  matched 519 sorted facts covering tables, columns, types, nullability, defaults, primary/foreign/
+  unique/check constraints, and indexes. Raw dump differences were only column ordering and dump nonce.
+
+Hosted exact-head CI and independent Gate 3A review remain publication gates. This record does not
+claim Gate 3B cutover or Phase 2 adoption.
 
 ---
 

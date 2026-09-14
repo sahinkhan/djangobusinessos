@@ -1,6 +1,6 @@
 # Phase 1 — Shared Commercial Primitives
 
-Status: FOLLOW-UP REMEDIATION IMPLEMENTED — AWAITING ARCHITECTURE REVIEW
+Status: COMPLETE — ACCEPTED CONTRACTS REPLAYED ON GATE 3A CANDIDATE
 
 ## Goal
 
@@ -458,6 +458,14 @@ The main purpose of Phase 1 is not feature depth. It is to freeze the first reus
 - Local SQLite verification passed 60 tests with one expected PostgreSQL-only skip. PostgreSQL verification passed all 61 tests. Ruff, Django checks, migration drift, fresh migration bootstrap, Docker startup, desktop/mobile navigation, and live enabled/disabled HTTP behavior passed.
 - No schema migration was required. ADR 0005 records the two clarified contracts for architecture review.
 
-### Next task
+### Gate 3A canonical replay
 
-Review the follow-up Phase 1 remediation and ADR 0005. Do not begin Phase 2 until this remediation is accepted and an explicit Phase 2 execution plan is approved.
+- The independently accepted Phase 1 behavior from `361d832713dcd2325363b4059a4f3b6cac7d3715`
+  is replayed on canonical Core Foundation v1 at checkpoint
+  `5b95aaa0f13a64a862999e13c6533d1bbb5c81f3`.
+- Party and Catalog each use one canonical schema migration plus one deterministic, migration-local
+  manifest registration migration.
+- ADRs 0003, 0004, and 0005 remain Accepted; ProductVariant remains the downstream transactional
+  item identity and Catalog owns no authoritative stock.
+- This candidate does not adopt Sales, Procurement, Inventory, Billing, or Accounting. Gate 3B
+  canonical `main` cutover and every Phase 2 adoption action require separate authorization.

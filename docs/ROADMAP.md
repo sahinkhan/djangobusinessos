@@ -17,9 +17,10 @@ The roadmap is capability-driven, not date-driven. A later phase should not begi
 
 Goal: establish the minimum architecture needed to unblock fast module development.
 
-Current correctness status: FINAL PASS restored after independent adversarial re-audit. Foundation
-remediation is accepted at `f1f7f2f6c917308bedb3c48e51b8113a064d96c2` on
-`foundation-v1-correctness-remediation`, and Core Foundation v1 is FROZEN by ADR 0009.
+Current correctness status: COMPLETE. Foundation remediation was accepted at
+`f1f7f2f6c917308bedb3c48e51b8113a064d96c2`; Core Foundation v1 remains FROZEN by ADR 0009 and is
+reconstructed as the canonical Phase 0 checkpoint `4ef16c271dfce235dbcb874fabaa5df0c63edd54`
+on the Gate 3A candidate branch.
 
 Deliver:
 
@@ -61,14 +62,15 @@ Deliver:
 - a documented boundary between Django technical permissions and BusinessOS authorization
 
 Exit gate: PASSED. Gate 2 received independent FINAL PASS against the accepted remediation SHA.
-Gate 3 canonical normalization and Phase 2 continuation have not started and remain separately
-authorized work.
+Gate 3A reconstruction is implemented for independent review; Gate 3B canonical `main` cutover and
+Phase 2 adoption remain unauthorized.
 
 ---
 
 ## Phase 1 — Shared Commercial Primitives
 
-Status: Accepted historically; not yet replayed onto the Gate 3A reconstruction candidate.
+Status: COMPLETE. Accepted Party + Catalog behavior is replayed on the canonical Core baseline at
+checkpoint `5b95aaa0f13a64a862999e13c6533d1bbb5c81f3`. ADRs 0004 and 0005 remain Accepted.
 
 Deliver:
 
@@ -90,10 +92,10 @@ Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contract
 
 ## Phase 2 — Commercial Core
 
-Status: Development paused for Core Foundation v1 hardening. The accepted standalone Sales and
-Procurement references and Inventory remediation reference remain on their dedicated branches.
-Billing, Accounting and integrations must not start until the approved foundation reconstruction
-sequence reaches them. Contracts remain defined by ADR 0006 and
+Status: Development remains paused pending Gate 3A review and a later Phase 2 adoption gate. The
+accepted standalone Sales and Procurement references and Inventory remediation reference remain on
+their dedicated archived branches and are not present in this candidate. Billing, Accounting and
+integrations must not start until the approved sequence reaches them. Contracts remain defined by ADR 0006 and
 `docs/exec-plans/active/PHASE_2_COMMERCIAL_CORE.md`.
 
 Standalone modules are parallelizable after the Phase 1 contract freeze. Optional cross-module integrations are implemented only after the standalone module contracts pass review.
