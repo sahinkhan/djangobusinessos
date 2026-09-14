@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% load sales_format %}
+
+{% block title %}Sales Orders · BusinessOS{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with current="Sales Orders" %}{% endblock %}
+{% block page_header %}
+<div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+  {% include "components/page_heading.html" with heading="Sales Orders" description="Customer orders confirm without creating stock or invoices." %}
+  {% if can_create %}<a class="btn-primary" href="{% url 'sales:order_create' %}">Create order</a>{% endif %}
+</div>
+{% endblock %}
+{% block content %}
+<form method="get" class="mb-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto]" role="search">
+  <input name="q" value="{{ filter_form.q.value|default:'' }}" placeholder="Search number or customer" aria-label="Search Sales Orders">
+  {{ filter_form.status }}
+  <button class="btn-secondary" type="submit">Filter</button>
+</form>
+<section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div class="overflow-x-auto"><table class="data-table">
+  <thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Status</th><th>Total</th></tr></thead>
+  <tbody>{% for order in orders %}<tr><td><a class="font-semibold text-indigo-700" href="{% url 'sales:order_detail' order.id %}">{{ order.number }}</a></td><td>{{ order.customer.display_name }}</td><td>{{ order.order_date }}</td><td><span class="{% if order.status == 'confirmed' %}badge-success{% else %}badge-neutral{% endif %}">{{ order.get_status_display }}</span></td><td>{{ order.currency.code }} {{ order.total|currency_amount:order.currency.decimal_places }}</td></tr>{% empty %}<tr><td colspan="5">No Sales Orders match this company scope.</td></tr>{% endfor %}</tbody>
+</table></div></section>
+{% endblock %}

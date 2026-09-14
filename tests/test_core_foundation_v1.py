@@ -60,12 +60,12 @@ def create_other_company(company, *, code="OTHER", timezone="UTC"):
 def test_business_rbac_denies_by_default_and_allows_company_role(
     operator, company, business_context
 ):
-    permission = Permission.objects.create(code="sales.order.view", name="View sales orders")
+    permission = Permission.objects.create(code="example.record.view", name="View records")
     role = Role.objects.create(company=company, code="VIEWER", name="Viewer")
     RolePermission.objects.create(role=role, permission=permission)
 
     assert not has_permission(business_context, permission.code)
-    with pytest.raises(PermissionDenied, match="sales.order.view"):
+    with pytest.raises(PermissionDenied, match="example.record.view"):
         require_permission(business_context, permission.code)
 
     UserRoleAssignment.objects.create(user=operator, company=company, role=role)
@@ -258,7 +258,7 @@ def test_company_access_can_be_revoked_after_target_user_is_deactivated(
 def test_role_services_are_company_safe_retry_safe_and_audited(admin_context, company):
     target = get_user_model().objects.create_user("target@example.com", "password")
     grant_company_access(admin_context, user_id=target.id)
-    permission = Permission.objects.create(code="sales.order.view", name="View sales orders")
+    permission = Permission.objects.create(code="example.record.view", name="View records")
     role = create_role(admin_context, code="viewer", name="Viewer")
     first_link = grant_role_permission(
         admin_context, role_id=role.id, permission_code=permission.code
@@ -353,12 +353,12 @@ def test_manifest_rejects_invalid_duplicate_or_foreign_permission_codes(permissi
 def test_permission_code_is_validated_and_immutable():
     with pytest.raises(ValidationError, match="module.resource.action"):
         Permission.objects.create(code="bad", name="Bad")
-    permission = Permission.objects.create(code="sales.order.view", name="View")
-    permission.code = "sales.order.update"
+    permission = Permission.objects.create(code="example.record.view", name="View")
+    permission.code = "example.record.update"
     with pytest.raises(ValidationError, match="immutable"):
         permission.save()
     with pytest.raises(ValidationError, match="immutable"):
-        Permission.objects.filter(id=permission.id).update(code="sales.order.update")
+        Permission.objects.filter(id=permission.id).update(code="example.record.update")
 
 
 @pytest.mark.django_db
