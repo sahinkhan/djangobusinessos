@@ -77,4 +77,7 @@ python manage.py makemigrations --check
 
 Read `AGENTS.md` and the documents under `docs/architecture/` before changing core contracts or adding modules.
 
-Foundation security and ownership semantics are recorded in `docs/decisions/0001-foundation-security-contracts.md`.
+ADR 0001 records the original Phase 0 security and ownership contracts. ADR 0009 records the current
+Core Foundation v1 hardening contract, including RBAC, organizational grant/revoke lifecycle, audit,
+company identity/time, protected bulk-mutation boundaries, and refined Branch/Warehouse activity
+semantics.
