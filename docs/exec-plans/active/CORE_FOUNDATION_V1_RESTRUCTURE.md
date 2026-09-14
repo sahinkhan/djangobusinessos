@@ -2,7 +2,8 @@
 
 ## Status
 
-Gate 1 implemented on `foundation-v1-hardening`; independent Gate 2 audit pending.
+Gate 1 implemented on `foundation-v1-hardening`; narrow Gate 2 remediation implemented and
+independent re-audit pending.
 
 Implemented outcome:
 
@@ -14,6 +15,28 @@ Implemented outcome:
 - Reference and permission codes are immutable identities;
 - shared company-local datetime/date helpers establish the business-time contract;
 - ADR 0009 records the candidate Core Foundation v1 boundary.
+
+Gate 2 remediation after the audit of `62d6931e22127cc9c42ba59fe6b80a7f664f8c1d`:
+
+- Core Access management permissions now bootstrap deterministically through a forward migration;
+- authorization requires an active registered permission before superuser role-grant bypass;
+- all Access/RBAC deployment-admin models are inspection-only so lifecycle/audit services cannot be
+  bypassed there;
+- Company queryset timezone mutation is rejected in favor of validated model mutation;
+- permission re-registration preserves explicit retirement state.
+
+Remediation verification on 2026-09-14:
+
+- PostgreSQL 17 / Python 3.13: 89 tests passed without warnings;
+- focused Core Foundation/Admin suite: 30 tests passed on PostgreSQL;
+- SQLite: 88 tests passed with one expected PostgreSQL-only Catalog concurrency skip;
+- fresh PostgreSQL bootstrap created both active Core management permissions automatically;
+- the legacy-Company upgrade still produced explicit `ZZ` / `UND` / `UTC` values and the active
+  Core permissions;
+- delegated non-superuser management, superuser fail-closed semantics, read-only security admin,
+  stale-authority cleanup and queryset-timezone rejection regressions passed;
+- Ruff, Django checks, migration drift, Docker startup, demo idempotency and Tailwind
+  reproducibility passed.
 
 No Phase 2 branch was merged, no canonical history was rewritten, and no excluded infrastructure
 or capability was introduced. Gate 2, Gate 3 and Phase 2 adoption remain unstarted.

@@ -23,7 +23,8 @@ company-scoped `UserRoleAssignment`. Authorization validates `BusinessContext` a
 scope first, then evaluates active roles and permissions. Missing grants deny by default.
 
 Superusers bypass RBAC grants only. They do not bypass actor/company validity or branch/warehouse
-ownership integrity.
+ownership integrity, permission-code validation, permission identity existence or permission
+retirement. An active registered Permission must exist before any superuser grant bypass applies.
 
 Django groups, Django model permissions and `user.has_perm()` remain technical/admin mechanisms.
 They are not authoritative for BusinessOS business actions.
@@ -35,11 +36,19 @@ their module manifest. Registration is deterministic and retry-safe. A later man
 previous permission does not delete or deactivate its identity or existing role links; retirement
 requires an explicit future operation.
 
+Core Access deterministically bootstraps `access.organization.manage` and `access.role.manage` as
+active permission identities through a forward data migration. Re-registration preserves an
+explicitly retired permission rather than silently reactivating it.
+
 ### Organizational grants and roles
 
 Organizational access defines where a user may operate. RBAC defines what the user may do there.
 Grant/revoke services are explicit and atomic. Revoking company access removes subordinate branch,
 warehouse and role assignments so re-grant cannot resurrect stale authority.
+
+The deployment Django admin exposes Access/RBAC records for inspection only. It cannot add, change
+or delete those records; audited Access application services and module permission registration are
+the supported mutation paths.
 
 ### Audit
 

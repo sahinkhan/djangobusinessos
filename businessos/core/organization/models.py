@@ -29,6 +29,10 @@ class CompanyQuerySet(models.QuerySet):
     def update(self, **kwargs):
         if "base_currency" in kwargs or "base_currency_id" in kwargs:
             raise ValidationError("Base currency is immutable after company creation.")
+        if "timezone" in kwargs:
+            raise ValidationError(
+                "Timezone changes require the validated Company model save path."
+            )
         return super().update(**kwargs)
 
 

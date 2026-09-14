@@ -24,7 +24,7 @@ def register_manifest(value: Mapping, *, enabled: bool | None = None) -> Busines
         defaults=defaults,
     )
     for permission_code in manifest.permissions:
-        Permission.objects.update_or_create(
+        Permission.objects.get_or_create(
             code=permission_code,
             defaults={"name": permission_code, "is_active": True},
         )

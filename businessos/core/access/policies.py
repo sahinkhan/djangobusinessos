@@ -5,6 +5,7 @@ from businessos.core.common.context import BusinessContext
 from businessos.core.organization.models import Branch, Company, Warehouse
 
 from .models import (
+    Permission,
     UserBranchAccess,
     UserCompanyAccess,
     UserRoleAssignment,
@@ -62,6 +63,8 @@ def has_permission(context: BusinessContext, permission_code: str) -> bool:
     """Return an explicit BusinessOS authorization decision; default is deny."""
     validate_business_context(context)
     validate_permission_code(permission_code)
+    if not Permission.objects.filter(code=permission_code, is_active=True).exists():
+        return False
     user = get_user_model().objects.get(id=context.actor_id)
     if user.is_superuser:
         return True

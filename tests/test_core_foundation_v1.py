@@ -13,6 +13,7 @@ from businessos.core.access.models import (
     UserRoleAssignment,
     UserWarehouseAccess,
 )
+from businessos.core.access.permissions import CORE_PERMISSION_DECLARATIONS
 from businessos.core.access.policies import has_permission, require_permission
 from businessos.core.access.services import (
     assign_role,
@@ -21,6 +22,7 @@ from businessos.core.access.services import (
     grant_company_access,
     grant_role_permission,
     grant_warehouse_access,
+    register_core_permissions,
     revoke_company_access,
     revoke_role,
     revoke_role_permission,
@@ -101,16 +103,74 @@ def test_same_user_can_hold_distinct_roles_in_each_company(operator, company):
 
 
 @pytest.mark.django_db
-def test_superuser_bypasses_grants_but_not_context_integrity(superuser, company, branch):
+def test_core_management_permissions_bootstrap_and_reregister_idempotently():
+    expected = {code for code, _ in CORE_PERMISSION_DECLARATIONS}
+    before = {
+        permission.code: permission.id
+        for permission in Permission.objects.filter(code__in=expected, is_active=True)
+    }
+
+    first = register_core_permissions()
+    second = register_core_permissions()
+
+    assert set(before) == expected
+    assert {permission.code: permission.id for permission in first} == before
+    assert {permission.code: permission.id for permission in second} == before
+
+    retired = Permission.objects.get(code="access.role.manage")
+    retired.is_active = False
+    retired.save()
+    register_core_permissions()
+    retired.refresh_from_db()
+    assert not retired.is_active
+
+
+@pytest.mark.django_db
+def test_delegated_administrator_can_manage_roles_and_organization(
+    admin_context, company
+):
+    delegate = get_user_model().objects.create_user("delegate@example.com", "password")
+    managed_user = get_user_model().objects.create_user("managed@example.com", "password")
+    grant_company_access(admin_context, user_id=delegate.id)
+    administrator = create_role(admin_context, code="ADMINISTRATOR", name="Administrator")
+    for permission_code, _ in CORE_PERMISSION_DECLARATIONS:
+        grant_role_permission(
+            admin_context, role_id=administrator.id, permission_code=permission_code
+        )
+    assign_role(admin_context, user_id=delegate.id, role_id=administrator.id)
+    delegated_context = BusinessContext(actor_id=delegate.id, company_id=company.id)
+
+    assert has_permission(delegated_context, "access.role.manage")
+    assert has_permission(delegated_context, "access.organization.manage")
+    assert create_role(delegated_context, code="VIEWER", name="Viewer").company == company
+    assert grant_company_access(delegated_context, user_id=managed_user.id).company == company
+
+
+@pytest.mark.django_db
+def test_superuser_bypasses_role_grants_only(superuser, company, branch):
     context = BusinessContext(actor_id=superuser.id, company_id=company.id)
-    assert has_permission(context, "unregistered.permission.code")
+    permission = Permission.objects.get(code="access.role.manage")
+
+    assert has_permission(context, permission.code)
+    assert not has_permission(context, "unregistered.permission.code")
+    with pytest.raises(PermissionDenied, match="unregistered.permission.code"):
+        require_permission(context, "unregistered.permission.code")
+
+    permission.is_active = False
+    permission.save()
+    assert not has_permission(context, permission.code)
+    with pytest.raises(PermissionDenied, match="access.role.manage"):
+        require_permission(context, permission.code)
+
+    with pytest.raises(ValueError, match="module.resource.action"):
+        has_permission(context, "invalid")
 
     other = create_other_company(company)
     bad_context = BusinessContext(
         actor_id=superuser.id, company_id=other.id, branch_id=branch.id
     )
     with pytest.raises(PermissionDenied, match="outside the selected company"):
-        has_permission(bad_context, "unregistered.permission.code")
+        has_permission(bad_context, "access.role.manage")
 
 
 @pytest.mark.django_db
@@ -259,6 +319,12 @@ def test_manifest_permissions_are_validated_registered_and_not_implicitly_delete
     assert Permission.objects.filter(id=permission.id, is_active=True).exists()
     assert RolePermission.objects.filter(id=link.id).exists()
 
+    permission.is_active = False
+    permission.save()
+    register_manifest(manifest)
+    permission.refresh_from_db()
+    assert not permission.is_active
+
 
 @pytest.mark.parametrize(
     "permissions",
@@ -329,6 +395,8 @@ def test_company_identity_validates_timezone_and_base_currency_is_immutable(comp
         company.save()
     with pytest.raises(ValidationError, match="immutable"):
         Company.objects.filter(id=company.id).update(base_currency=replacement)
+    with pytest.raises(ValidationError, match="validated Company model save"):
+        Company.objects.filter(id=company.id).update(timezone="Not/A_Timezone")
 
 
 @pytest.mark.django_db

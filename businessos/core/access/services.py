@@ -17,10 +17,26 @@ from .models import (
     UserRoleAssignment,
     UserWarehouseAccess,
 )
+from .permissions import CORE_PERMISSION_DECLARATIONS
 from .policies import require_permission
 
-MANAGE_ORGANIZATIONAL_ACCESS = "access.organization.manage"
-MANAGE_ROLES = "access.role.manage"
+MANAGE_ORGANIZATIONAL_ACCESS = CORE_PERMISSION_DECLARATIONS[0][0]
+MANAGE_ROLES = CORE_PERMISSION_DECLARATIONS[1][0]
+
+
+@transaction.atomic
+def register_core_permissions() -> tuple[Permission, ...]:
+    registered = []
+    for code, name in CORE_PERMISSION_DECLARATIONS:
+        permission, created = Permission.objects.get_or_create(
+            code=code,
+            defaults={"name": name, "is_active": True},
+        )
+        if not created and permission.name != name:
+            Permission.objects.filter(id=permission.id).update(name=name)
+            permission.name = name
+        registered.append(permission)
+    return tuple(registered)
 
 
 def _target_user(user_id: UUID, *, require_active: bool = True):

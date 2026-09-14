@@ -39,7 +39,8 @@ Exit gate: foundation tests/checks pass and shared contracts are frozen enough f
 
 ## Phase 0H — Core Foundation v1 Hardening
 
-Status: Implemented on `foundation-v1-hardening` — independent audit pending. Not frozen or merged.
+Status: Implemented on `foundation-v1-hardening`; Gate 2 remediation awaits independent re-audit.
+Not frozen or merged.
 
 Deliver:
 

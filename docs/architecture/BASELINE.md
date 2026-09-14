@@ -135,9 +135,13 @@ Django groups, Django model permissions and `user.has_perm()` are technical/admi
 Business operations authorize through `BusinessContext`, validated organizational scope and
 Core Access `has_permission` / `require_permission`. Decisions deny by default. A superuser may
 bypass RBAC grants, but never actor/company validity or branch/warehouse ownership integrity.
+An active registered permission identity is required before that bypass applies.
 
 Organizational grants answer where a user may operate. Company-scoped roles answer what that user
 may do there. These are separate contracts.
+
+Core Access/RBAC records are inspection-only in the deployment Django admin. Supported mutation
+uses explicit audited Access services or deterministic module/Core permission registration.
 
 ## Company identity and business time
 
