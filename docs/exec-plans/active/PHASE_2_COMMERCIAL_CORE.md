@@ -89,7 +89,7 @@ that layout. Hosted CI run 25 passed on that exact commit.
 
 ## Canonical Gate 4A adoption status
 
-The first canonical adoption implementation is `28c8028950be1997b4f3d0816b1ec04764222068`; its initial audit/documentation head is `fc609bcd81916c13921c2d1cc7b6a59eda1c1e19`. Independent audit blocked acceptance pending explicit module-gating reconciliation, Sales-local ORM bulk-write/delete protection, transition-vs-edit/delete PostgreSQL regressions, and restoration of these canonical Phase 2 records. Remediation implementation `d62c34e36f0a8b11f59bfdb058143e27f5231c5d` closed those findings. Independent re-audit gave candidate `23338f1cfed11d21d4fa8fd7e92f8de120450977` FINAL PASS, and exact-head hosted CI #48 succeeded with 283 PostgreSQL tests and all required checks passing. Gate 4A is formally accepted but has not yet been adopted into canonical `main`.
+The first canonical adoption implementation is `28c8028950be1997b4f3d0816b1ec04764222068`; its initial audit/documentation head is `fc609bcd81916c13921c2d1cc7b6a59eda1c1e19`. Independent audit blocked acceptance pending explicit module-gating reconciliation, Sales-local ORM bulk-write/delete protection, transition-vs-edit/delete PostgreSQL regressions, and restoration of these canonical Phase 2 records. Remediation implementation `d62c34e36f0a8b11f59bfdb058143e27f5231c5d` closed those findings. Independent re-audit gave candidate `23338f1cfed11d21d4fa8fd7e92f8de120450977` FINAL PASS, and exact-head hosted CI #48 succeeded with 283 PostgreSQL tests and all required checks passing. Documentation-only acceptance commit `e0c848f34da0bce9b9c6e010a396026ac5889cf4` was adopted into canonical `main` by normal fast-forward, and exact-head main CI #50 succeeded. Gate 4A is accepted, adopted, and closed.
 
 The authoritative module-gating contract remains: `BusinessModule.is_enabled` controls navigation and HTTP availability only. Installed non-HTTP Python services remain callable and require valid `BusinessContext` plus the exact BusinessOS RBAC permission.
 
@@ -884,8 +884,9 @@ Phase 3 must not begin automatically.
 
 ```text
 Historical standalone Sales       accepted at a79cb95d031bb38719bcdccfb5b14670cc76cd17
-Canonical Gate 4A adoption        accepted candidate 23338f1c; main adoption pending
-Canonical main                    f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb
+Canonical Gate 4A adoption        accepted, adopted, and closed
+Sales adoption checkpoint         e0c848f34da0bce9b9c6e010a396026ac5889cf4
+Canonical main                    Gate 4A closure commit following e0c848f3
 Procurement adoption              not authorized
 Inventory adoption                not authorized
 Billing / Accounting              not authorized

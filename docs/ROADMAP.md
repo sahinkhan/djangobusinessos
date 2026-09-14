@@ -100,9 +100,11 @@ Status: independent audit BLOCKED the initial Gate 4A Sales adoption implementat
 `fc609bcd81916c13921c2d1cc7b6a59eda1c1e19`. Remediation at
 `d62c34e36f0a8b11f59bfdb058143e27f5231c5d` closed the findings, and independent re-audit gave
 FINAL PASS to candidate `23338f1cfed11d21d4fa8fd7e92f8de120450977`; exact-head hosted CI #48
-also passed. Gate 4A is formally accepted but not yet adopted into canonical `main`. Procurement
-and Inventory adoption, Billing, Accounting, and integrations remain unauthorized. Preserved
-historical branches remain unchanged.
+also passed. Documentation-only acceptance commit `e0c848f34da0bce9b9c6e010a396026ac5889cf4`
+was adopted into canonical `main` by normal fast-forward, and exact-head main CI #50 passed. Gate
+4A Sales is accepted, adopted, and closed. Procurement and Inventory adoption, Billing,
+Accounting, and integrations remain unauthorized. Preserved historical branches remain
+unchanged.
 
 Standalone modules are parallelizable after the Phase 1 contract freeze. Optional cross-module integrations are implemented only after the standalone module contracts pass review.
 

@@ -717,7 +717,9 @@ Remediation          d62c34e36f0a8b11f59bfdb058143e27f5231c5d
 Accepted candidate   23338f1cfed11d21d4fa8fd7e92f8de120450977
 Independent re-audit FINAL PASS
 Hosted CI            run #48 SUCCESS at the accepted candidate
-Status               formally accepted; canonical main adoption pending
+Adoption checkpoint  e0c848f34da0bce9b9c6e010a396026ac5889cf4
+Main CI              run #50 SUCCESS at the adoption checkpoint
+Status               accepted, adopted, and closed
 ```
 
 Preserved Sales semantics:
@@ -769,9 +771,11 @@ order/line deletion.
 
 Independent re-audit gave the remediated candidate
 `23338f1cfed11d21d4fa8fd7e92f8de120450977` FINAL PASS, and hosted CI run #48 succeeded against
-that exact SHA with 283 PostgreSQL tests and all required quality checks passing. Gate 4A is
-formally accepted but is not yet adopted into canonical `main`. Gate 4B Procurement, Gate 4C
-Inventory, Billing, Accounting, and integrations remain unauthorized.
+that exact SHA with 283 PostgreSQL tests and all required quality checks passing. The
+documentation-only acceptance commit `e0c848f34da0bce9b9c6e010a396026ac5889cf4` was then adopted
+into canonical `main` by normal fast-forward; exact-head main CI run #50 succeeded. Gate 4A is
+accepted, adopted, and closed. Gate 4B Procurement, Gate 4C Inventory, Billing, Accounting, and
+integrations remain unauthorized.
 
 ---
 
