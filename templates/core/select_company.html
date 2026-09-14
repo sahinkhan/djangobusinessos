@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block title %}Select company · BusinessOS{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with current="Company scope" %}{% endblock %}
+{% block page_header %}{% include "components/page_heading.html" with heading="Select company" description="Choose the explicit company scope used by Party and Catalog operations." %}{% endblock %}
+{% block content %}
+<form method="post" class="card max-w-xl space-y-5">
+  {% csrf_token %}
+  <input type="hidden" name="next" value="{{ request.GET.next }}">
+  {% for field in form %}<div><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}</div>{% endfor %}
+  <button class="btn-primary" type="submit">Use this company</button>
+</form>
+{% endblock %}

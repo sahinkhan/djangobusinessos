@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+
+{% block title %}{{ party.display_name }} · BusinessOS{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with parent_label="Parties" parent_url="/parties/" current=party.display_name %}{% endblock %}
+{% block page_header %}
+<div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+  {% include "components/page_heading.html" with heading=party.display_name description=party.legal_name %}
+  <a class="btn-secondary" href="{% url 'party:edit' party.id %}">Edit party</a>
+</div>
+{% endblock %}
+{% block content %}
+<div class="grid gap-5 lg:grid-cols-3">
+  <section class="card lg:col-span-1">
+    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Identity</p>
+    <dl class="mt-4 space-y-3 text-sm">
+      <div><dt class="text-slate-500">Type</dt><dd class="font-semibold">{{ party.get_party_type_display }}</dd></div>
+      <div><dt class="text-slate-500">Roles</dt><dd>{% if party.is_customer %}<span class="badge-success">Customer</span>{% endif %} {% if party.is_supplier %}<span class="badge-neutral">Supplier</span>{% endif %}</dd></div>
+      <div><dt class="text-slate-500">Status</dt><dd>{% if party.is_active %}Active{% else %}Inactive{% endif %}</dd></div>
+    </dl>
+  </section>
+  <section class="card lg:col-span-2">
+    <div class="flex items-center justify-between"><h2 class="font-semibold">Contact methods</h2><a class="btn-secondary" href="{% url 'party:contact_create' party.id %}">Add contact</a></div>
+    <div class="mt-4 space-y-3">
+      {% for contact in party.contact_methods.all %}<div class="flex items-center justify-between gap-3 rounded-xl bg-slate-50 p-4 text-sm"><span><strong>{{ contact.get_kind_display }}</strong> · {{ contact.value }}{% if contact.is_primary %} <span class="badge-success">Primary</span>{% endif %}</span><a class="text-indigo-700" href="{% url 'party:contact_edit' party.id contact.id %}">Edit</a></div>{% empty %}<p class="text-sm text-slate-500">No contact methods yet.</p>{% endfor %}
+    </div>
+  </section>
+</div>
+<section class="card mt-5">
+  <div class="flex items-center justify-between"><h2 class="font-semibold">Addresses</h2><a class="btn-secondary" href="{% url 'party:address_create' party.id %}">Add address</a></div>
+  <div class="mt-4 grid gap-4 md:grid-cols-2">
+    {% for address in party.addresses.all %}<article class="rounded-xl border border-slate-200 p-4 text-sm leading-6"><div class="flex justify-between gap-3"><span><strong>{{ address.label|default:"Address" }}</strong>{% if address.is_default %} <span class="badge-success">Default</span>{% endif %}</span><a class="text-indigo-700" href="{% url 'party:address_edit' party.id address.id %}">Edit</a></div>{{ address.line_1 }}{% if address.line_2 %}, {{ address.line_2 }}{% endif %}<br>{{ address.city }}{% if address.region %}, {{ address.region }}{% endif %} {{ address.postal_code }}<br>{{ address.country.name }}</article>{% empty %}<p class="text-sm text-slate-500">No addresses yet.</p>{% endfor %}
+  </div>
+</section>
+{% endblock %}

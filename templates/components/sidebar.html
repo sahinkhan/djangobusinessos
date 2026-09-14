@@ -8,12 +8,22 @@
   </div>
   <nav class="flex-1 space-y-1 px-3 py-5" aria-label="Primary navigation">
     <p class="px-3 pb-2 text-xs font-semibold uppercase tracking-wider text-slate-500">Workspace</p>
-    <a href="{% url 'home' %}" class="nav-item nav-item-active">
+    <a href="{% url 'home' %}" class="nav-item{% if request.resolver_match.url_name == 'home' %} nav-item-active{% endif %}">
       <span aria-hidden="true">⌂</span><span>Overview</span>
     </a>
-    <div class="mt-6 rounded-xl border border-dashed border-slate-700 p-4 text-xs leading-5 text-slate-400">
-      Business modules will appear here as they are delivered in later phases.
+    {% if "party" in enabled_module_codes %}
+      <a href="{% url 'party:list' %}" class="nav-item{% if request.resolver_match.namespace == 'party' %} nav-item-active{% endif %}">
+        <span aria-hidden="true">◎</span><span>Parties</span>
+      </a>
+    {% endif %}
+    {% if "catalog" in enabled_module_codes %}
+      <a href="{% url 'catalog:product_list' %}" class="nav-item{% if request.resolver_match.namespace == 'catalog' %} nav-item-active{% endif %}">
+        <span aria-hidden="true">◇</span><span>Catalog</span>
+      </a>
+    {% endif %}
+    <div class="mt-6 rounded-xl border border-slate-700 bg-slate-900 p-4 text-xs leading-5 text-slate-400">
+      Party and variant-first Catalog are the shared commercial primitives.
     </div>
   </nav>
-  <div class="border-t border-slate-800 p-4 text-xs text-slate-500">Foundation v0.1</div>
+  <div class="border-t border-slate-800 p-4 text-xs text-slate-500">BusinessOS · Phase 1</div>
 </aside>

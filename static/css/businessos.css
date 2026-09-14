@@ -12,6 +12,7 @@
 .btn-secondary:hover { background: #f8fafc; }
 .form-label { display: block; margin-bottom: .4rem; color: #334155; font-size: .875rem; font-weight: 600; }
 input, select, textarea { width: 100%; border: 1px solid #cbd5e1; border-radius: .65rem; background: white; padding: .7rem .8rem; color: #0f172a; outline: none; }
+input[type="checkbox"], input[type="radio"] { width: auto; padding: 0; }
 input:focus, select:focus, textarea:focus { border-color: #6366f1; box-shadow: 0 0 0 3px rgb(99 102 241 / .15); }
 .form-error { margin-top: .35rem; color: #dc2626; font-size: .8rem; }
 .alert { display: flex; border: 1px solid #bfdbfe; border-radius: .75rem; background: #eff6ff; padding: .8rem 1rem; color: #1e40af; font-size: .875rem; }

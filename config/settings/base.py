@@ -15,6 +15,7 @@ CSRF_TRUSTED_ORIGINS = [
 ]
 
 INSTALLED_APPS = [
+    "config",
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -27,6 +28,8 @@ INSTALLED_APPS = [
     "businessos.core.audit",
     "businessos.core.access",
     "businessos.core.modules",
+    "businessos.modules.party",
+    "businessos.modules.catalog",
 ]
 
 MIDDLEWARE = [
@@ -51,6 +54,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "businessos.core.modules.context_processors.module_navigation",
             ],
         },
     },
