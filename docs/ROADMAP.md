@@ -39,8 +39,9 @@ Exit gate: foundation tests/checks pass and shared contracts are frozen enough f
 
 ## Phase 0H — Core Foundation v1 Hardening
 
-Status: Implemented on `foundation-v1-hardening`; Gate 2 remediation awaits independent re-audit.
-Not frozen or merged.
+Status: Complete on `foundation-v1-hardening`. Gate 2 received FINAL PASS and ADR 0009 freezes Core
+Foundation v1 at accepted implementation commit `63c798806c5a486d1a282f595e1d1603c2b37aa3`.
+It is not merged, and Gate 3 canonical normalization has not started.
 
 Deliver:
 
@@ -53,8 +54,8 @@ Deliver:
 - immutable Country/Currency/Language/UoM and permission identity codes
 - a documented boundary between Django technical permissions and BusinessOS authorization
 
-Exit gate: independent Core audit must pass before the Core Foundation v1 contract is frozen or any
-canonical history/migration normalization starts.
+Exit gate: PASSED. The Core Foundation v1 contract is FROZEN. Canonical history/migration
+normalization remains a separately authorized Gate 3 operation.
 
 ---
 

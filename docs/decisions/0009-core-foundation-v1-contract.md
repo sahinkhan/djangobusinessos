@@ -1,6 +1,6 @@
 # ADR 0009 — Core Foundation v1 Contract
 
-Status: Proposed — implemented; independent audit pending
+Status: Accepted
 
 Date: 2026-09-14
 
@@ -85,6 +85,9 @@ It does not normalize migration or Git history and does not merge Phase 2 branch
 
 ## Gate
 
-The implementation remains a candidate until independent Gate 2 audit passes. Only that audit may
-promote this ADR to Accepted and mark Core Foundation v1 FROZEN. Gate 3 history normalization needs
-separate explicit authorization after acceptance.
+Gate 2 received its independent FINAL PASS on 2026-09-14. Core Foundation v1 is FROZEN at accepted
+implementation commit `63c798806c5a486d1a282f595e1d1603c2b37aa3`.
+
+Freeze means these foundational contracts cannot be casually redesigned. Additive evolution remains
+possible, and any change to a frozen public contract requires explicit architectural review and an
+ADR. Gate 3 history normalization remains a separate operation requiring explicit authorization.

@@ -2,8 +2,10 @@
 
 ## Status
 
-Gate 1 implemented on `foundation-v1-hardening`; narrow Gate 2 remediation implemented and
-independent re-audit pending.
+Gate 1 and Gate 2 are complete. The independent Gate 2 re-audit received FINAL PASS, ADR 0009 is
+Accepted, and Core Foundation v1 is FROZEN at implementation commit
+`63c798806c5a486d1a282f595e1d1603c2b37aa3`. Gate 3 has not started and still requires separate
+explicit authorization.
 
 Implemented outcome:
 
@@ -14,7 +16,7 @@ Implemented outcome:
   immutable through normal model/service mutation;
 - Reference and permission codes are immutable identities;
 - shared company-local datetime/date helpers establish the business-time contract;
-- ADR 0009 records the candidate Core Foundation v1 boundary.
+- ADR 0009 records the accepted, frozen Core Foundation v1 boundary.
 
 Gate 2 remediation after the audit of `62d6931e22127cc9c42ba59fe6b80a7f664f8c1d`:
 
@@ -39,7 +41,7 @@ Remediation verification on 2026-09-14:
   reproducibility passed.
 
 No Phase 2 branch was merged, no canonical history was rewritten, and no excluded infrastructure
-or capability was introduced. Gate 2, Gate 3 and Phase 2 adoption remain unstarted.
+or capability was introduced. Gate 2 is complete; Gate 3 and Phase 2 adoption remain unstarted.
 
 Gate 1 implementation verification on 2026-09-14:
 
@@ -58,7 +60,7 @@ Known limitations at this gate:
   correction before those values drive business behavior;
 - direct raw SQL remains outside normal model/service immutability guarantees;
 - Party/Catalog and accepted Phase 2 modules have not yet adopted fine-grained RBAC permissions;
-- Core v1 is not frozen until independent Gate 2 review passes.
+- Gate 3 canonical normalization has not started and requires separate explicit authorization.
 
 This plan is intentionally pre-release. Do not rewrite canonical history until the Core Foundation v1 implementation has passed independent review.
 
