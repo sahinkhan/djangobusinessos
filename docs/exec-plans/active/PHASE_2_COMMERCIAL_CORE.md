@@ -107,8 +107,16 @@ gating, and Procurement-local ORM hardening. Purchase Receipts remain Procuremen
 not write Inventory, Billing, or Accounting. Local PostgreSQL verification passed 323 tests and
 the 40-test Procurement suite; SQLite passed 270 with 53 expected PostgreSQL-only skips.
 
-Status: implementation candidate awaiting exact-head hosted CI and independent Gate 4B audit.
-It is not merged to `main`, formally accepted, or closed. Gate 4C and all later Phase 2 work remain
+Candidate documentation head `12d1a1f90689979048cdf3b4f59836b026dd153f` passed hosted CI #53.
+Completion review nevertheless returned BLOCKED because deterministic PostgreSQL coverage was
+missing for role/company-access revocation across representative mutations and for confirmation
+versus header edit, line edit/removal, and stale instance deletion. Remediation
+`b8c49e1fb5b62f9169038b59e35b6d4e7adfb8e0` adds the complete matrix without changing production
+code or migrations. Local remediation verification passed 342 PostgreSQL tests, including 27
+Procurement concurrency cases, and 270 SQLite tests with 72 expected PostgreSQL-only skips.
+
+Status: remediation awaiting exact-head hosted CI and independent Gate 4B re-audit. It is not
+merged to `main`, formally accepted, or closed. Gate 4C and all later Phase 2 work remain
 unauthorized.
 
 ## Ownership

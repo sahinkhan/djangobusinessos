@@ -97,8 +97,12 @@ Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contract
 
 Status: Gate 4A Sales is accepted, adopted, and closed. Gate 4B Procurement implementation
 candidate `395da2ad874fc2efb72219da71316b9a6d8f73bf` replays the historically accepted standalone
-contract onto Core Foundation v1 and is awaiting exact-head CI and independent audit. It is not
-merged, accepted, or closed.
+contract onto Core Foundation v1. Candidate head `12d1a1f90689979048cdf3b4f59836b026dd153f`
+passed hosted CI #53 but completion review BLOCKED on missing authorization-revocation and
+confirmation-versus-mutation PostgreSQL coverage. Narrow test remediation
+`b8c49e1fb5b62f9169038b59e35b6d4e7adfb8e0` closes those gaps without production changes and is
+awaiting exact-head CI plus independent Gate 4B re-audit. Gate 4B is not merged, accepted, or
+closed.
 
 Historical Gate 4A record: independent audit BLOCKED the initial Sales adoption implementation
 `28c8028950be1997b4f3d0816b1ec04764222068` at audit head

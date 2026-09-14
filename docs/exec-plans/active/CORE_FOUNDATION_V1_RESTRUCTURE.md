@@ -787,8 +787,12 @@ semantics while adopting Foundation v1 RBAC, Company locking, audit, business ti
 canonical HTTP-only module-gating contract.
 
 The candidate remains isolated on `gate4b-procurement-adoption`, is not merged or formally
-accepted, and awaits exact-head hosted CI plus independent Gate 4B audit. Procurement creates no
-Inventory, Billing, or Accounting effects. Gate 4C and later work remain unauthorized.
+accepted, and candidate head `12d1a1f90689979048cdf3b4f59836b026dd153f` passed hosted CI #53.
+Completion review then BLOCKED acceptance on missing authorization-revocation and
+confirmation-versus-mutation PostgreSQL coverage. Narrow test-only remediation
+`b8c49e1fb5b62f9169038b59e35b6d4e7adfb8e0` closes those gaps and awaits exact-head CI plus
+independent Gate 4B re-audit. Procurement creates no Inventory, Billing, or Accounting effects.
+Gate 4C and later work remain unauthorized.
 
 ---
 

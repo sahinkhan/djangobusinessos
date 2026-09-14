@@ -13,7 +13,12 @@ head is `a99377ca55355a2e4cdebd64ff73cf29fd3eff83`.
 Gate 4B replays that behavior onto canonical Core Foundation v1 and the adopted Party, Catalog,
 and Sales baseline. The implementation candidate is
 `395da2ad874fc2efb72219da71316b9a6d8f73bf` on `gate4b-procurement-adoption`. It is not merged,
-formally accepted, or closed; independent Gate 4B audit remains mandatory.
+formally accepted, or closed. Candidate documentation head
+`12d1a1f90689979048cdf3b4f59836b026dd153f` passed hosted CI #53, but completion review blocked
+acceptance because its PostgreSQL suite did not yet cover the full authorization-revocation and
+confirmation-versus-mutation concurrency matrix. Narrow test remediation
+`b8c49e1fb5b62f9169038b59e35b6d4e7adfb8e0` closes those coverage gaps without changing
+production code or migrations. Independent Gate 4B re-audit remains mandatory.
 
 ## Decision
 
@@ -78,7 +83,18 @@ Local candidate evidence at implementation `395da2ad...`:
   cancellation without receipts, and explicit no-Inventory wording without page overflow.
 
 This is candidate evidence, not an acceptance assertion. Exact-head hosted CI and independent
-Gate 4B audit are still pending.
+Gate 4B audit were required. Hosted CI #53 subsequently passed exact candidate head `12d1a1f...`,
+but the completion review remained BLOCKED on missing deterministic PostgreSQL coverage for role
+and company-access revocation across representative mutations, confirmation versus header/line
+edit/removal, and confirmation versus stale order/line deletion.
+
+Remediation `b8c49e1...` adds that coverage using observed PostgreSQL row-lock blocking rather than
+timing assumptions. The authorization matrix covers role, permission, and company-access
+revocation across order update, confirmation, cancellation, and receipt posting. Both sides of
+the confirmation-versus-draft-mutation ordering and stale instance deletion are covered, with
+atomic mutation/audit assertions. Local remediation verification passed 342 PostgreSQL tests,
+including all 27 Procurement concurrency cases, plus 270 SQLite tests with 72 explicit
+PostgreSQL-only skips. Exact-head hosted CI and independent Gate 4B re-audit remain pending.
 
 ## Consequences
 
