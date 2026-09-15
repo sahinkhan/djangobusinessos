@@ -1,6 +1,7 @@
 from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
+from zoneinfo import ZoneInfo
 
 import pytest
 from django.core.exceptions import PermissionDenied, ValidationError
@@ -879,6 +880,89 @@ def test_movement_edit_changed_minute_does_not_preserve_subminute_precision(
     assert response.status_code == 302
     movement.refresh_from_db()
     assert movement.effective_at == datetime(2026, 9, 15, 2, 31, tzinfo=UTC)
+    assert movement.effective_at.second == 0
+    assert movement.effective_at.microsecond == 0
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    ("instant", "expected_fold"),
+    [
+        (datetime(2026, 11, 1, 5, 30, 45, 123456, tzinfo=UTC), 0),
+        (datetime(2026, 11, 1, 6, 30, 45, 123456, tzinfo=UTC), 1),
+    ],
+)
+def test_movement_edit_preserves_exact_trusted_instant_across_dst_fold(
+    client, operator, company, business_context, instant, expected_fold
+):
+    company.timezone = "America/New_York"
+    company.save()
+    register_manifest(MODULE, enabled=True)
+    movement = services.create_stock_movement(
+        business_context,
+        movement_type=StockMovement.Type.RECEIPT,
+        effective_at=instant,
+    )
+    client.force_login(operator)
+    session = client.session
+    session[SESSION_COMPANY_KEY] = str(company.id)
+    session.save()
+
+    url = reverse("inventory:edit", args=[movement.id])
+    response = client.get(url)
+    assert response.status_code == 200
+    assert b'value="2026-11-01T01:30"' in response.content
+
+    response = client.post(
+        url,
+        {
+            "scope_company_id": company.id,
+            "movement_type": StockMovement.Type.RECEIPT,
+            "effective_at": "2026-11-01T01:30",
+            "reference": "",
+            "notes": f"Fold {expected_fold} notes changed",
+        },
+    )
+    assert response.status_code == 302
+    movement.refresh_from_db()
+    assert movement.effective_at == instant
+    assert movement.effective_at.second == 45
+    assert movement.effective_at.microsecond == 123456
+    assert timezone.localtime(
+        movement.effective_at, ZoneInfo("America/New_York")
+    ).fold == expected_fold
+
+
+@pytest.mark.django_db
+def test_movement_edit_changed_time_from_dst_fold_uses_new_valid_instant(
+    client, operator, company, business_context
+):
+    company.timezone = "America/New_York"
+    company.save()
+    register_manifest(MODULE, enabled=True)
+    movement = services.create_stock_movement(
+        business_context,
+        movement_type=StockMovement.Type.RECEIPT,
+        effective_at=datetime(2026, 11, 1, 5, 30, 45, 123456, tzinfo=UTC),
+    )
+    client.force_login(operator)
+    session = client.session
+    session[SESSION_COMPANY_KEY] = str(company.id)
+    session.save()
+
+    response = client.post(
+        reverse("inventory:edit", args=[movement.id]),
+        {
+            "scope_company_id": company.id,
+            "movement_type": StockMovement.Type.RECEIPT,
+            "effective_at": "2026-11-01T03:00",
+            "reference": "",
+            "notes": "Changed beyond the fold",
+        },
+    )
+    assert response.status_code == 302
+    movement.refresh_from_db()
+    assert movement.effective_at == datetime(2026, 11, 1, 8, 0, tzinfo=UTC)
     assert movement.effective_at.second == 0
     assert movement.effective_at.microsecond == 0
 

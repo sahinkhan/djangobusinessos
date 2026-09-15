@@ -16,8 +16,11 @@ from .models import StockMovement
 class CompanyDateTimeField(forms.DateTimeField):
     """Interpret and render naive form values in one explicit company timezone."""
 
-    def __init__(self, *args, business_timezone, **kwargs):
+    def __init__(
+        self, *args, business_timezone, original_effective_at=None, **kwargs
+    ):
         self.business_timezone = business_timezone
+        self.original_effective_at = original_effective_at
         super().__init__(*args, **kwargs)
 
     def prepare_value(self, value):
@@ -26,6 +29,15 @@ class CompanyDateTimeField(forms.DateTimeField):
         return super().prepare_value(value)
 
     def to_python(self, value):
+        original = self.original_effective_at
+        if (
+            isinstance(value, str)
+            and original is not None
+            and timezone.is_aware(original)
+        ):
+            original_local = timezone.localtime(original, self.business_timezone)
+            if value == original_local.strftime("%Y-%m-%dT%H:%M"):
+                return original
         with timezone.override(self.business_timezone):
             return super().to_python(value)
 
@@ -50,6 +62,7 @@ class MovementForm(CompanyBoundForm):
         self.business_timezone = company_timezone(company_id)
         self.fields["effective_at"] = CompanyDateTimeField(
             business_timezone=self.business_timezone,
+            original_effective_at=original_effective_at,
             widget=forms.DateTimeInput(
                 attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"
             ),
