@@ -43,7 +43,8 @@ The listed branches below record the historical standalone-development strategy.
 adoption is sequential and separately authorized: Sales first, then Procurement, then Inventory.
 Gate 4A and Gate 4B are accepted, adopted, and closed.
 Gate 4C's historical adoption and post-closure correction are accepted, adopted, and closed.
-Sales now has an isolated post-closure remediation awaiting independent corrective re-audit.
+Sales post-closure remediation has independent FINAL PASS and formal corrective acceptance;
+canonical adoption and re-closure remain pending.
 Billing, Accounting, and integrations remain unauthorized.
 
 Recommended branches:
@@ -115,8 +116,13 @@ PostgreSQL tests, 98 Sales PostgreSQL tests, eight focused concurrency/revocatio
 SQLite tests with 96 expected PostgreSQL-only skips. Real-browser checks passed at 390x844 and
 1280x720. No migration, generated CSS, shared module, or integration change was introduced.
 
-The historical Gate 4A acceptance/adoption/closure remains preserved. This post-closure candidate
-awaits independent Sales corrective re-audit and is not accepted, adopted, or re-closed.
+The historical Gate 4A acceptance/adoption/closure remains preserved, including closure
+`fb9028bbbec5dfc56e7d579c3c351abcde764833` and the later REVISE audit. Final corrective candidate
+`b34a98a1f47c7d0c526fa4dbd60207d5123f9fe3` passed exact-head hosted CI
+[#74](https://github.com/sahinkhan/djangobusinessos/actions/runs/34961977826) with 437 PostgreSQL
+tests and all required checks; independent corrective re-audit returned FINAL PASS. The candidate
+is formally accepted but has not yet been adopted or re-closed. The current frozen Sales
+foundation scope is complete. Future Sales extensions remain open and separately governed.
 
 ## Canonical Gate 4B adoption closure
 
@@ -409,10 +415,11 @@ behavior and is formally ACCEPTED at checkpoint
 normal fast-forward and passed exact-head main CI #71
 ([run 34957834165](https://github.com/sahinkhan/djangobusinessos/actions/runs/34957834165)). The Gate
 4C post-closure corrective cycle is CLOSED; the original historical closure remains preserved.
-Sales post-closure audit is REVISE. Sales-local remediation
-`f9092cebe2f27504c0f3dfc772524645e25c1f91` is implemented and awaits independent corrective
-re-audit; it is not accepted, adopted, or re-closed. Billing, Accounting, integrations, and
-production deployment remain unauthorized.
+Sales post-closure audit retains the historical REVISE result. Sales-local remediation
+`f9092cebe2f27504c0f3dfc772524645e25c1f91` and final candidate
+`b34a98a1f47c7d0c526fa4dbd60207d5123f9fe3` received independent corrective FINAL PASS and formal
+acceptance. Canonical adoption and re-closure remain pending. Billing, Accounting, integrations,
+and production deployment remain unauthorized.
 
 Phase 2 minimum models:
 
@@ -1017,7 +1024,7 @@ Inventory corrective candidate     23a12ae; independent corrective re-audit REVI
 Inventory precision candidate      d7fc63c; independent corrective re-audit REVISE
 Inventory final corrective         09794e92; FINAL PASS
 Inventory corrective adoption      35663e4f; accepted, adopted, and closed
-Sales post-closure remediation      f9092ceb; awaiting independent corrective re-audit
+Sales post-closure remediation      b34a98a1; FINAL PASS / accepted; adoption pending
 Billing / Accounting              not authorized
 Optional integrations             not authorized
 ```

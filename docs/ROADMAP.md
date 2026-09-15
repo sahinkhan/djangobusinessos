@@ -156,9 +156,14 @@ snapshot refreshes could persist without `sales.order.updated` evidence; long cu
 maximum supported totals could overflow the order document; and non-finite Decimal inputs could
 escape canonical validation. Sales-local remediation is implemented at
 `f9092cebe2f27504c0f3dfc772524645e25c1f91` on
-`gate4a-sales-postclosure-remediation`. It preserves the historical Gate 4A closure and awaits an
-independent Sales corrective re-audit; it is not accepted, adopted, or re-closed. Billing,
-Accounting, and integrations remain unauthorized.
+`gate4a-sales-postclosure-remediation`. Final corrective candidate
+`b34a98a1f47c7d0c526fa4dbd60207d5123f9fe3` passed exact-head hosted CI
+[#74](https://github.com/sahinkhan/djangobusinessos/actions/runs/34961977826) with 437 PostgreSQL
+tests and all required checks, and independent corrective re-audit returned FINAL PASS. The
+historical Gate 4A closure remains preserved and the corrective candidate is formally accepted;
+canonical corrective adoption and re-closure remain pending this execution. The current frozen
+Sales foundation scope is complete. Future Sales extensions remain open and separately governed.
+Billing, Accounting, and integrations remain unauthorized.
 
 Gate 4C original implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
 

@@ -1,6 +1,6 @@
 # ADR 0007 — Standalone Sales Acceptance
 
-Status: Accepted — historical closure preserved; post-closure remediation awaits re-audit
+Status: Accepted — historical closure preserved; post-closure remediation formally accepted
 
 Date: 2026-09-14
 
@@ -84,8 +84,17 @@ Post-closure corrective implementation `f9092cebe2f27504c0f3dfc772524645e25c1f91
 deletion authority from persisted ownership under the aggregate lock, compares every mutable
 business snapshot field for audit purposes, adds Sales-local document containment, and rejects
 non-finite quantities/prices before ordering comparisons. The remediation is isolated on
-`gate4a-sales-postclosure-remediation` and awaits independent Sales corrective re-audit.
+`gate4a-sales-postclosure-remediation`. Final corrective candidate
+`b34a98a1f47c7d0c526fa4dbd60207d5123f9fe3` passed exact-head hosted CI
+[#74](https://github.com/sahinkhan/djangobusinessos/actions/runs/34961977826) with 437 PostgreSQL
+tests, Ruff, Django checks, migration drift, `npm ci`, Tailwind, and CSS reproducibility passing.
+Independent Sales corrective re-audit returned FINAL PASS.
 
-The historical standalone and Gate 4A acceptance/adoption/closure records remain valid evidence.
-This corrective candidate is not yet accepted, adopted into `main`, or re-closed. Procurement,
-Billing, Accounting, integrations, and deployment are outside this corrective scope.
+The historical standalone and Gate 4A acceptance/adoption/closure records remain valid evidence,
+including historical closure `fb9028bbbec5dfc56e7d579c3c351abcde764833` and the later REVISE
+finding sequence. The corrective candidate is formally accepted but is not yet adopted into
+`main` or re-closed. The current frozen Sales foundation scope is complete. Future Sales
+extensions—including quotation, tax, discounts/promotions, shipment/delivery, returns/RMA,
+credit notes, commissions, CRM, Inventory reservation, Billing, and POS/E-commerce integration—
+remain open and separately governed. Procurement, Billing, Accounting, integrations, and
+deployment are outside this corrective execution.
