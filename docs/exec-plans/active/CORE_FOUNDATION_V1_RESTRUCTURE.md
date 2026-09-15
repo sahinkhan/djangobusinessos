@@ -875,6 +875,14 @@ cycle. The current frozen Sales foundation scope is canonically complete; future
 remain open and separately governed. Billing, Accounting, integrations, and production deployment
 remain unauthorized.
 
+Procurement's historical Gate 4B closure also remains preserved. A later independent Procurement
+post-closure audit returned REVISE for historical-line parent substitution on delete, receipt UUID
+alias/duplicate partial-processing risk, incomplete SKU/name snapshot audit detection,
+boundary-value UI overflow, and non-finite line Decimal validation. Narrow Procurement-local
+remediation `1ccaf0bc74816b11035cb33f24e172ff8f902329` is isolated on
+`gate4b-procurement-postclosure-remediation`. It is IMPLEMENTED / AWAITING INDEPENDENT
+PROCUREMENT CORRECTIVE RE-AUDIT and has not been accepted, adopted, merged, or re-closed.
+
 ---
 
 # Final Canonical Product State

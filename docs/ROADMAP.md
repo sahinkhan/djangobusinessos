@@ -169,6 +169,18 @@ corrective cycle. The current frozen Sales foundation scope is canonically compl
 extensions remain open and separately governed. Billing, Accounting, and integrations remain
 unauthorized.
 
+An independent Procurement post-closure audit subsequently returned REVISE for five narrow
+findings: mutable in-memory parent substitution could bypass historical line deletion protection;
+noncanonical or duplicate receipt-field UUID representations could be discarded before partial
+HTTP processing; SKU/name-only snapshot refreshes could persist without
+`procurement.order.updated` evidence; supported boundary values could overflow Procurement
+documents; and non-finite line Decimals could escape canonical validation. Procurement-local
+remediation is implemented at `1ccaf0bc74816b11035cb33f24e172ff8f902329` on
+`gate4b-procurement-postclosure-remediation`. The historical Gate 4B closure remains preserved.
+This corrective candidate is AWAITING INDEPENDENT PROCUREMENT CORRECTIVE RE-AUDIT and is not
+accepted, adopted, merged, or re-closed. Billing, Accounting, integrations, and deployment remain
+unauthorized.
+
 Gate 4C original implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
 
 Historical Gate 4A record: independent audit BLOCKED the initial Sales adoption implementation

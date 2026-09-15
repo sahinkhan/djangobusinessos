@@ -107,3 +107,19 @@ exact head `1eabb0e...`, and independent Gate 4B re-audit returned FINAL PASS.
 Gate 4B is formally accepted at candidate `1eabb0e...`, adopted at checkpoint `e4ea179...`, and
 closed. Gate 4C Inventory, Billing, Accounting, optional integrations, Procurement-to-Inventory
 posting, production launch, and full Phase 2 completion remain outside this decision.
+
+## Post-closure audit history
+
+An independent Procurement post-closure audit returned REVISE for five narrow findings:
+
+- historical `PurchaseOrderLine` deletion could authorize against a caller-mutated parent;
+- receipt HTTP processing could silently discard noncanonical or duplicate UUID field aliases;
+- SKU/name-only snapshot refreshes could persist without the canonical update audit;
+- supported supplier, SKU, quantity, cost, and total values could overflow Procurement UI;
+- non-finite order-line Decimal values could escape field-specific validation.
+
+Procurement-local remediation is implemented at
+`1ccaf0bc74816b11035cb33f24e172ff8f902329` on
+`gate4b-procurement-postclosure-remediation`. It preserves the historical acceptance record and
+adds no schema, integration, or cross-module behavior. Status: IMPLEMENTED / AWAITING INDEPENDENT
+PROCUREMENT CORRECTIVE RE-AUDIT. It is not yet accepted, adopted into `main`, or re-closed.

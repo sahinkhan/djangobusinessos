@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — SALES POST-CLOSURE REMEDIATION AWAITS INDEPENDENT RE-AUDIT
+Status: IN PROGRESS — PROCUREMENT POST-CLOSURE REMEDIATION AWAITS INDEPENDENT RE-AUDIT
 
 Canonical Gate 4 base: `f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb`
 
@@ -426,6 +426,14 @@ Sales post-closure audit retains the historical REVISE result. Sales-local remed
 acceptance. Acceptance checkpoint `5ccada2bdb8f28bbc031e25aae72a88f7f454e09` was adopted into
 canonical `main` and passed exact-head main CI #76. The corrective cycle is closed. Billing,
 Accounting, integrations, and production deployment remain unauthorized.
+
+Procurement retains its historical Gate 4B acceptance/adoption/closure. A subsequent independent
+post-closure audit returned REVISE for five narrow findings: historical-line parent substitution
+on instance delete, noncanonical/duplicate receipt UUID field partial-processing risk, omitted
+SKU/name snapshot audit detection, supported-value UI overflow, and non-finite order-line Decimal
+validation. Procurement-local remediation `1ccaf0bc74816b11035cb33f24e172ff8f902329` is isolated on
+`gate4b-procurement-postclosure-remediation`. Status: IMPLEMENTED / AWAITING INDEPENDENT
+PROCUREMENT CORRECTIVE RE-AUDIT. It is not accepted, adopted into `main`, merged, or re-closed.
 
 Phase 2 minimum models:
 
@@ -1024,6 +1032,7 @@ Sales adoption checkpoint         e0c848f34da0bce9b9c6e010a396026ac5889cf4
 Canonical corrective adoption     35663e4f6b4112903838e0a8069f47885c83f7ce
 Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9
 Procurement adoption checkpoint   e4ea1791f0b2c7d1209ea574de3689970e1fc398; closed
+Procurement post-closure remediation 1ccaf0bc; awaiting independent corrective re-audit
 Inventory accepted candidate      8b522709; historical FINAL PASS
 Inventory adoption checkpoint     60f879a0; historically accepted, adopted, and closed
 Inventory corrective candidate     23a12ae; independent corrective re-audit REVISE
