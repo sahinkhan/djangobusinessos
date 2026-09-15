@@ -136,9 +136,13 @@ one residual timestamp-precision issue: an unchanged minute-granular edit could 
 trusted persisted seconds and microseconds. Narrow remediation
 `b33e6faaf931777575292a42af775a1c11986984` preserves the original aware instant when the submitted
 company-local minute is unchanged, while a changed minute remains normalized to the submitted
-minute. It is isolated on `gate4c-inventory-postclosure-remediation` and awaits independent Gate 4C
-corrective re-audit. It is not adopted into `main`; Billing, Accounting, and integrations remain
-unauthorized.
+minute. Candidate head `d7fc63c2af77e210cdbae8a72837c1497200f251` passed CI #68, but independent
+re-audit returned REVISE because a trusted persisted DST fall-back-fold minute was rejected during
+generic parsing before preservation. Final narrow remediation
+`145c9d51a3507aa1df8d6548659e16e506940d1e` performs the trusted raw-minute match before generic
+DST conversion while retaining ambiguity/gap rejection for other input. It is isolated on
+`gate4c-inventory-postclosure-remediation` and awaits independent final Gate 4C corrective
+re-audit. It is not adopted into `main`; Billing, Accounting, and integrations remain unauthorized.
 
 Gate 4C original implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
 

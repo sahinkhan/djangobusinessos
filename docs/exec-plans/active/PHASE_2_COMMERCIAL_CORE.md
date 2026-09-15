@@ -374,10 +374,16 @@ candidate `23a12ae544be2e611ac3fd5bfa90d62299599648`. Independent corrective re-
 for one residual issue: an unchanged minute-granular movement edit could truncate the existing
 seconds and microseconds. Narrow remediation `b33e6faaf931777575292a42af775a1c11986984` preserves the
 trusted original aware instant when the submitted company-local minute is unchanged and keeps the
-validated normalized value when the minute changes. Current status is IMPLEMENTED / AWAITING
-INDEPENDENT GATE 4C CORRECTIVE RE-AUDIT. It is isolated on
-`gate4c-inventory-postclosure-remediation`, has no migration or cross-module behavior, is not
-adopted into canonical `main`, and must not be described as a new FINAL PASS or re-closure.
+validated normalized value when the minute changes. Candidate head
+`d7fc63c2af77e210cdbae8a72837c1497200f251` passed CI #68, but independent re-audit returned REVISE
+because generic ambiguity validation ran before trusted-original preservation for persisted DST
+fall-back-fold minutes. Final narrow remediation
+`145c9d51a3507aa1df8d6548659e16e506940d1e` matches the raw submitted minute against the trusted
+persisted instant before generic conversion, while changed/new ambiguous or nonexistent input still
+uses normal Django validation. Current status is IMPLEMENTED / AWAITING INDEPENDENT FINAL GATE 4C
+CORRECTIVE RE-AUDIT. It is isolated on `gate4c-inventory-postclosure-remediation`, has no migration
+or cross-module behavior, is not adopted into canonical `main`, and must not be described as a new
+FINAL PASS or re-closure.
 
 Phase 2 minimum models:
 
@@ -979,7 +985,8 @@ Procurement adoption checkpoint   e4ea1791f0b2c7d1209ea574de3689970e1fc398; clos
 Inventory accepted candidate      8b522709; historical FINAL PASS
 Inventory adoption checkpoint     60f879a0; historically accepted, adopted, and closed
 Inventory corrective candidate     23a12ae; independent corrective re-audit REVISE
-Inventory precision remediation    b33e6faa; awaiting independent corrective re-audit
+Inventory precision candidate      d7fc63c; independent corrective re-audit REVISE
+Inventory DST-fold remediation     145c9d51; awaiting independent final corrective re-audit
 Billing / Accounting              not authorized
 Optional integrations             not authorized
 ```

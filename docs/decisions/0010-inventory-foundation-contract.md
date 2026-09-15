@@ -127,5 +127,12 @@ trusted persisted instant with a minute-normalized value and lose seconds and mi
 Remediation `b33e6faaf931777575292a42af775a1c11986984` passes the trusted server-side original timestamp to
 the edit form and preserves it only when its displayed company-local minute is unchanged; an
 explicitly changed minute continues to use the validated parsed value. The Company timezone and DST
-validation contract is unchanged. Status remains IMPLEMENTED / AWAITING INDEPENDENT GATE 4C
-CORRECTIVE RE-AUDIT; this is not a new FINAL PASS, adoption, or re-closure.
+validation contract is unchanged. Candidate head
+`d7fc63c2af77e210cdbae8a72837c1497200f251` passed CI #68, but independent re-audit returned REVISE:
+a persisted instant within a DST fall-back fold was rejected by generic ambiguity validation before
+the trusted-original comparison ran. Final narrow remediation
+`145c9d51a3507aa1df8d6548659e16e506940d1e` compares the raw minute to the persisted instant's
+company-local rendered minute before generic conversion, preserving either fold exactly while
+continuing to reject newly entered ambiguous or nonexistent times. Status is IMPLEMENTED /
+AWAITING INDEPENDENT FINAL GATE 4C CORRECTIVE RE-AUDIT; this is not a new FINAL PASS, adoption, or
+re-closure.
