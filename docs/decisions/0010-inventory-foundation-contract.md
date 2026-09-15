@@ -136,5 +136,9 @@ company-local rendered minute before generic conversion, preserving either fold 
 continuing to reject newly entered ambiguous or nonexistent times. Final corrective candidate
 `09794e9293da78117e5873ebbff9f4b98fa5e1b7` passed CI #69 with 422 PostgreSQL tests, and independent
 final corrective re-audit returned FINAL PASS. The post-closure corrective implementation is
-formally ACCEPTED; canonical adoption and corrective-cycle closure remain pending. The original
-historical Gate 4C closure remains preserved.
+formally ACCEPTED at checkpoint `35663e4f6b4112903838e0a8069f47885c83f7ce`, adopted into
+canonical `main` by normal fast-forward, and passed exact-head main CI #71
+([run 34957834165](https://github.com/sahinkhan/djangobusinessos/actions/runs/34957834165)). The
+post-closure corrective cycle is CLOSED. The original historical Gate 4C closure remains preserved.
+This closure adds no Inventory capability and does not authorize Sales remediation, Billing,
+Accounting, integrations, or production deployment.

@@ -383,8 +383,13 @@ persisted instant before generic conversion, while changed/new ambiguous or none
 uses normal Django validation. Final corrective candidate
 `09794e9293da78117e5873ebbff9f4b98fa5e1b7` passed exact-head CI #69 with 422 PostgreSQL tests, and
 independent final corrective re-audit returned FINAL PASS. It has no migration or cross-module
-behavior and is formally ACCEPTED on `gate4c-inventory-postclosure-remediation`; adoption into
-canonical `main` and corrective-cycle closure remain pending.
+behavior and is formally ACCEPTED at checkpoint
+`35663e4f6b4112903838e0a8069f47885c83f7ce`. That checkpoint was adopted into canonical `main` by
+normal fast-forward and passed exact-head main CI #71
+([run 34957834165](https://github.com/sahinkhan/djangobusinessos/actions/runs/34957834165)). The Gate
+4C post-closure corrective cycle is CLOSED; the original historical closure remains preserved.
+Sales post-closure audit is REVISE and Sales remediation remains unauthorized. Billing,
+Accounting, integrations, and production deployment remain unauthorized.
 
 Phase 2 minimum models:
 
@@ -980,14 +985,16 @@ Phase 3 must not begin automatically.
 Historical standalone Sales       accepted at a79cb95d031bb38719bcdccfb5b14670cc76cd17
 Canonical Gate 4A adoption        accepted, adopted, and closed
 Sales adoption checkpoint         e0c848f34da0bce9b9c6e010a396026ac5889cf4
-Canonical main                    60f879a036e0fd21eada1375fa695f32adc7dc91
+Canonical corrective adoption     35663e4f6b4112903838e0a8069f47885c83f7ce
 Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9
 Procurement adoption checkpoint   e4ea1791f0b2c7d1209ea574de3689970e1fc398; closed
 Inventory accepted candidate      8b522709; historical FINAL PASS
 Inventory adoption checkpoint     60f879a0; historically accepted, adopted, and closed
 Inventory corrective candidate     23a12ae; independent corrective re-audit REVISE
 Inventory precision candidate      d7fc63c; independent corrective re-audit REVISE
-Inventory final corrective         09794e92; FINAL PASS and formally accepted, adoption pending
+Inventory final corrective         09794e92; FINAL PASS
+Inventory corrective adoption      35663e4f; accepted, adopted, and closed
+Sales post-closure audit            REVISE; remediation not authorized
 Billing / Accounting              not authorized
 Optional integrations             not authorized
 ```

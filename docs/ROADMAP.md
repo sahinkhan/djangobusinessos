@@ -144,8 +144,12 @@ DST conversion while retaining ambiguity/gap rejection for other input. It is is
 `gate4c-inventory-postclosure-remediation` at final corrective candidate
 `09794e9293da78117e5873ebbff9f4b98fa5e1b7`. CI #69 passed that exact head with 422 PostgreSQL
 tests, and independent final corrective re-audit returned FINAL PASS. The correction is formally
-accepted but is not yet adopted into `main`; Billing, Accounting, integrations, and Sales
-post-closure remediation remain unauthorized.
+accepted at checkpoint `35663e4f6b4112903838e0a8069f47885c83f7ce`, adopted into canonical `main`
+by normal fast-forward, and passed exact-head main CI #71
+([run 34957834165](https://github.com/sahinkhan/djangobusinessos/actions/runs/34957834165)). The Gate
+4C post-closure corrective audit cycle is FINAL PASS, formally accepted, adopted, and closed; the
+original historical closure remains preserved. Sales post-closure audit is REVISE and its
+remediation remains unauthorized. Billing, Accounting, and integrations remain unauthorized.
 
 Gate 4C original implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
 

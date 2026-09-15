@@ -850,8 +850,12 @@ match before generic timezone conversion and retains normal ambiguity/gap reject
 is isolated on `gate4c-inventory-postclosure-remediation` at final candidate
 `09794e9293da78117e5873ebbff9f4b98fa5e1b7`. Exact-head CI #69 passed with 422 PostgreSQL tests,
 and independent final corrective re-audit returned FINAL PASS. The correction is formally
-ACCEPTED; adoption into canonical `main` and corrective-cycle closure remain pending. The original
-historical closure remains recorded.
+ACCEPTED at checkpoint `35663e4f6b4112903838e0a8069f47885c83f7ce`, adopted into canonical `main`
+by normal fast-forward, and passed exact-head main CI #71
+([run 34957834165](https://github.com/sahinkhan/djangobusinessos/actions/runs/34957834165)). The Gate
+4C post-closure corrective cycle is CLOSED, while the original historical closure remains recorded.
+Sales post-closure audit is REVISE and remediation remains unauthorized. Billing, Accounting,
+integrations, and production deployment remain unauthorized.
 
 ---
 
