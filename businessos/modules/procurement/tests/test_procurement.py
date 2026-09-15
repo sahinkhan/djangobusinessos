@@ -532,3 +532,141 @@ def test_non_finite_line_values_fail_with_validation_error_and_roll_back(
     purchase_line.refresh_from_db()
     assert (purchase_line.quantity, purchase_line.unit_cost) == original
     assert AuditEntry.objects.count() == audit_count
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("invalid_value", ["NaN", "Infinity", "-Infinity", "not-a-number"])
+@pytest.mark.parametrize("field_name", ["quantity", "unit_cost"])
+def test_add_line_invalid_numeric_strings_fail_cleanly_and_roll_back(
+    business_context,
+    draft_purchase_order,
+    purchasable_variant,
+    invalid_value,
+    field_name,
+):
+    values = {"quantity": "1.0000", "unit_cost": "2.0000"}
+    values[field_name] = invalid_value
+    audit_count = AuditEntry.objects.count()
+
+    with pytest.raises(ValidationError) as exc_info:
+        add_purchase_order_line(
+            business_context,
+            order_id=draft_purchase_order.id,
+            product_variant_id=purchasable_variant.id,
+            **values,
+        )
+
+    assert field_name in exc_info.value.message_dict
+    assert not PurchaseOrderLine.objects.exists()
+    assert AuditEntry.objects.count() == audit_count
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("invalid_value", ["NaN", "Infinity", "-Infinity", "not-a-number"])
+@pytest.mark.parametrize("field_name", ["quantity", "unit_cost"])
+def test_update_line_invalid_numeric_strings_fail_cleanly_and_roll_back(
+    business_context, purchase_line, invalid_value, field_name
+):
+    original = (
+        purchase_line.product_variant_id,
+        purchase_line.sku_snapshot,
+        purchase_line.name_snapshot,
+        purchase_line.description_snapshot,
+        purchase_line.quantity,
+        purchase_line.unit_cost,
+    )
+    values = {"quantity": "2.5000", "unit_cost": "12.7500"}
+    values[field_name] = invalid_value
+    audit_count = AuditEntry.objects.count()
+
+    with pytest.raises(ValidationError) as exc_info:
+        update_purchase_order_line(
+            business_context,
+            line_id=purchase_line.id,
+            product_variant_id=purchase_line.product_variant_id,
+            description="Must roll back",
+            **values,
+        )
+
+    assert field_name in exc_info.value.message_dict
+    purchase_line.refresh_from_db()
+    assert (
+        purchase_line.product_variant_id,
+        purchase_line.sku_snapshot,
+        purchase_line.name_snapshot,
+        purchase_line.description_snapshot,
+        purchase_line.quantity,
+        purchase_line.unit_cost,
+    ) == original
+    assert AuditEntry.objects.count() == audit_count
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("invalid_value", ["NaN", "Infinity", "-Infinity", "not-a-number"])
+@pytest.mark.parametrize("field_name", ["quantity", "unit_cost"])
+def test_direct_new_line_invalid_numeric_strings_raise_validation_error(
+    draft_purchase_order, purchasable_variant, invalid_value, field_name
+):
+    values = {"quantity": "1.0000", "unit_cost": "2.0000"}
+    values[field_name] = invalid_value
+    line = PurchaseOrderLine(
+        company=draft_purchase_order.company,
+        purchase_order=draft_purchase_order,
+        product_variant=purchasable_variant,
+        sku_snapshot=purchasable_variant.sku,
+        name_snapshot=purchasable_variant.product.name,
+        description_snapshot="Direct validation",
+        position=99,
+        **values,
+    )
+
+    with pytest.raises(ValidationError) as exc_info:
+        line.save()
+
+    assert field_name in exc_info.value.message_dict
+    assert not PurchaseOrderLine.objects.filter(pk=line.pk).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("invalid_value", ["NaN", "Infinity", "-Infinity", "not-a-number"])
+@pytest.mark.parametrize("field_name", ["quantity", "unit_cost"])
+def test_direct_existing_line_invalid_numeric_strings_preserve_persisted_row(
+    purchase_line, invalid_value, field_name
+):
+    original = (purchase_line.quantity, purchase_line.unit_cost)
+    setattr(purchase_line, field_name, invalid_value)
+
+    with pytest.raises(ValidationError) as exc_info:
+        purchase_line.save()
+
+    assert field_name in exc_info.value.message_dict
+    purchase_line.refresh_from_db()
+    assert (purchase_line.quantity, purchase_line.unit_cost) == original
+
+
+@pytest.mark.django_db
+def test_public_line_services_accept_and_normalize_valid_numeric_strings(
+    business_context, draft_purchase_order, purchasable_variant
+):
+    line = add_purchase_order_line(
+        business_context,
+        order_id=draft_purchase_order.id,
+        product_variant_id=purchasable_variant.id,
+        quantity="2.5000",
+        unit_cost="12.7500",
+    )
+    line.refresh_from_db()
+    assert line.quantity == Decimal("2.5000")
+    assert line.unit_cost == Decimal("12.7500")
+
+    updated = update_purchase_order_line(
+        business_context,
+        line_id=line.id,
+        product_variant_id=purchasable_variant.id,
+        quantity="3.2500",
+        unit_cost="13.5000",
+        description=line.description_snapshot,
+    )
+    updated.refresh_from_db()
+    assert updated.quantity == Decimal("3.2500")
+    assert updated.unit_cost == Decimal("13.5000")

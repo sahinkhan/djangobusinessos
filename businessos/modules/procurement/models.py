@@ -289,6 +289,17 @@ class PurchaseOrderLine(UUIDTimestampedModel):
 
     def clean(self):
         super().clean()
+        for field_name in ("quantity", "unit_cost"):
+            field = self._meta.get_field(field_name)
+            raw_value = getattr(self, field_name)
+            if isinstance(raw_value, Decimal) and not raw_value.is_finite():
+                label = "Quantity" if field_name == "quantity" else "Unit cost"
+                raise ValidationError({field_name: f"{label} must be finite."})
+            try:
+                normalized_value = field.to_python(raw_value)
+            except ValidationError as exc:
+                raise ValidationError({field_name: exc.messages}) from exc
+            setattr(self, field_name, normalized_value)
         self.sku_snapshot = self.sku_snapshot.strip().upper()
         self.name_snapshot = self.name_snapshot.strip()
         self.description_snapshot = self.description_snapshot.strip()
