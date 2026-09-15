@@ -19,8 +19,10 @@ Gate 3 is closed. Gate 4A Sales and Gate 4B Procurement are accepted, adopted, a
 hosted CI #60 with 410 PostgreSQL tests and independent re-audit returned FINAL PASS.
 Documentation-only acceptance checkpoint `eb2f52afc53fd8c36249bc6a1e61c15dba9effe8` passed
 branch CI #61, was adopted into canonical `main` by normal fast-forward, and passed exact-head
-main CI #62. Gate 4C is accepted, adopted, and closed. Billing, Accounting, integrations, and
-deployment remain unauthorized; full Phase 2 is not complete.
+main CI #62. Gate 4C is accepted, adopted, and closed. A later Sales post-closure audit returned
+REVISE; narrow Sales-local remediation is implemented at
+`f9092cebe2f27504c0f3dfc772524645e25c1f91` and awaits independent corrective re-audit. Billing,
+Accounting, integrations, and deployment remain unauthorized; full Phase 2 is not complete.
 
 That administrative closure remains historical evidence at
 `60f879a036e0fd21eada1375fa695f32adc7dc91`. A post-closure correctness audit later returned
@@ -854,8 +856,12 @@ ACCEPTED at checkpoint `35663e4f6b4112903838e0a8069f47885c83f7ce`, adopted into 
 by normal fast-forward, and passed exact-head main CI #71
 ([run 34957834165](https://github.com/sahinkhan/djangobusinessos/actions/runs/34957834165)). The Gate
 4C post-closure corrective cycle is CLOSED, while the original historical closure remains recorded.
-Sales post-closure audit is REVISE and remediation remains unauthorized. Billing, Accounting,
-integrations, and production deployment remain unauthorized.
+Sales post-closure audit is REVISE. Remediation
+`f9092cebe2f27504c0f3dfc772524645e25c1f91` closes the historical-line deletion bypass,
+snapshot-audit omission, boundary-value document overflow, and non-finite Decimal validation gaps
+without changing the historical Gate 4A record. It awaits independent Sales corrective re-audit
+and has not been accepted, adopted, or re-closed. Billing, Accounting, integrations, and
+production deployment remain unauthorized.
 
 ---
 

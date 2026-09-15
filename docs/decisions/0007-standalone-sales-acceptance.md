@@ -1,6 +1,6 @@
 # ADR 0007 — Standalone Sales Acceptance
 
-Status: Accepted — historical standalone and canonical Gate 4A adoption closed
+Status: Accepted — historical closure preserved; post-closure remediation awaits re-audit
 
 Date: 2026-09-14
 
@@ -65,3 +65,27 @@ that exact adopted checkpoint. Gate 4A is accepted, adopted, and closed.
 Procurement and Inventory adoption, Billing, Accounting, and optional integrations remain
 unauthorized. This closure changes no reviewed Sales business code, tests, migrations,
 configuration, or frontend assets.
+
+## Post-closure corrective status
+
+An independent adversarial audit after the historical Gate 4A closure returned REVISE for four
+narrow findings:
+
+- a persisted confirmed/cancelled line could be deleted after substituting a different draft
+  parent only on the mutable in-memory instance;
+- SKU/name-only snapshot refreshes could change the Sales document without recording the
+  canonical `sales.order.updated` audit action;
+- a valid unbroken customer name or maximum supported total could overflow the Sales detail
+  document;
+- non-finite quantity or unit-price Decimal values could escape canonical field-specific
+  `ValidationError` handling.
+
+Post-closure corrective implementation `f9092cebe2f27504c0f3dfc772524645e25c1f91` derives line
+deletion authority from persisted ownership under the aggregate lock, compares every mutable
+business snapshot field for audit purposes, adds Sales-local document containment, and rejects
+non-finite quantities/prices before ordering comparisons. The remediation is isolated on
+`gate4a-sales-postclosure-remediation` and awaits independent Sales corrective re-audit.
+
+The historical standalone and Gate 4A acceptance/adoption/closure records remain valid evidence.
+This corrective candidate is not yet accepted, adopted into `main`, or re-closed. Procurement,
+Billing, Accounting, integrations, and deployment are outside this corrective scope.

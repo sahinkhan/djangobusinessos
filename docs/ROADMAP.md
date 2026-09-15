@@ -148,8 +148,17 @@ accepted at checkpoint `35663e4f6b4112903838e0a8069f47885c83f7ce`, adopted into 
 by normal fast-forward, and passed exact-head main CI #71
 ([run 34957834165](https://github.com/sahinkhan/djangobusinessos/actions/runs/34957834165)). The Gate
 4C post-closure corrective audit cycle is FINAL PASS, formally accepted, adopted, and closed; the
-original historical closure remains preserved. Sales post-closure audit is REVISE and its
-remediation remains unauthorized. Billing, Accounting, and integrations remain unauthorized.
+original historical closure remains preserved.
+
+An independent Sales post-closure audit returned REVISE for four narrow findings: mutable
+in-memory parent substitution could bypass historical line deletion protection; SKU/name-only
+snapshot refreshes could persist without `sales.order.updated` evidence; long customer names and
+maximum supported totals could overflow the order document; and non-finite Decimal inputs could
+escape canonical validation. Sales-local remediation is implemented at
+`f9092cebe2f27504c0f3dfc772524645e25c1f91` on
+`gate4a-sales-postclosure-remediation`. It preserves the historical Gate 4A closure and awaits an
+independent Sales corrective re-audit; it is not accepted, adopted, or re-closed. Billing,
+Accounting, and integrations remain unauthorized.
 
 Gate 4C original implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
 

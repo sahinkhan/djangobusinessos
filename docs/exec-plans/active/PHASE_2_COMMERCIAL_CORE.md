@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — GATE 4C POST-CLOSURE CORRECTION AWAITS INDEPENDENT RE-AUDIT
+Status: IN PROGRESS — SALES POST-CLOSURE REMEDIATION AWAITS INDEPENDENT RE-AUDIT
 
 Canonical Gate 4 base: `f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb`
 
@@ -42,8 +42,9 @@ Do not silently change these architecture contracts.
 The listed branches below record the historical standalone-development strategy. Canonical Gate 4
 adoption is sequential and separately authorized: Sales first, then Procurement, then Inventory.
 Gate 4A and Gate 4B are accepted, adopted, and closed.
-Gate 4C's historical adoption is followed by an isolated post-closure correction awaiting
-independent re-audit. Billing, Accounting, and integrations remain unauthorized.
+Gate 4C's historical adoption and post-closure correction are accepted, adopted, and closed.
+Sales now has an isolated post-closure remediation awaiting independent corrective re-audit.
+Billing, Accounting, and integrations remain unauthorized.
 
 Recommended branches:
 
@@ -96,6 +97,26 @@ that layout. Hosted CI run 25 passed on that exact commit.
 The first canonical adoption implementation is `28c8028950be1997b4f3d0816b1ec04764222068`; its initial audit/documentation head is `fc609bcd81916c13921c2d1cc7b6a59eda1c1e19`. Independent audit blocked acceptance pending explicit module-gating reconciliation, Sales-local ORM bulk-write/delete protection, transition-vs-edit/delete PostgreSQL regressions, and restoration of these canonical Phase 2 records. Remediation implementation `d62c34e36f0a8b11f59bfdb058143e27f5231c5d` closed those findings. Independent re-audit gave candidate `23338f1cfed11d21d4fa8fd7e92f8de120450977` FINAL PASS, and exact-head hosted CI #48 succeeded with 283 PostgreSQL tests and all required checks passing. Documentation-only acceptance commit `e0c848f34da0bce9b9c6e010a396026ac5889cf4` was adopted into canonical `main` by normal fast-forward, and exact-head main CI #50 succeeded. Gate 4A is accepted, adopted, and closed.
 
 The authoritative module-gating contract remains: `BusinessModule.is_enabled` controls navigation and HTTP availability only. Installed non-HTTP Python services remain callable and require valid `BusinessContext` plus the exact BusinessOS RBAC permission.
+
+## Gate 4A post-closure corrective status
+
+An independent adversarial audit after the canonical Gate 4A closure returned REVISE for exactly
+four narrow findings: persisted historical-line deletion could trust a substituted in-memory
+parent; SKU/name snapshot-only refreshes could omit `sales.order.updated`; valid long customer
+names and maximum totals could overflow the detail document; and non-finite Decimal values could
+escape canonical validation.
+
+Sales-local remediation `f9092cebe2f27504c0f3dfc772524645e25c1f91` starts from canonical
+`main` at `cac7817a403be9c84d06d07127f927931ea4a3fc`. It revalidates persisted line ownership after
+locking the authoritative aggregate, includes product variant/SKU/name/description/quantity/price
+in update-audit comparison, contains the Sales document while retaining local table scrolling,
+and rejects NaN and both infinities for quantity and unit price. Local verification passed 437
+PostgreSQL tests, 98 Sales PostgreSQL tests, eight focused concurrency/revocation tests, and 341
+SQLite tests with 96 expected PostgreSQL-only skips. Real-browser checks passed at 390x844 and
+1280x720. No migration, generated CSS, shared module, or integration change was introduced.
+
+The historical Gate 4A acceptance/adoption/closure remains preserved. This post-closure candidate
+awaits independent Sales corrective re-audit and is not accepted, adopted, or re-closed.
 
 ## Canonical Gate 4B adoption closure
 
@@ -388,8 +409,10 @@ behavior and is formally ACCEPTED at checkpoint
 normal fast-forward and passed exact-head main CI #71
 ([run 34957834165](https://github.com/sahinkhan/djangobusinessos/actions/runs/34957834165)). The Gate
 4C post-closure corrective cycle is CLOSED; the original historical closure remains preserved.
-Sales post-closure audit is REVISE and Sales remediation remains unauthorized. Billing,
-Accounting, integrations, and production deployment remain unauthorized.
+Sales post-closure audit is REVISE. Sales-local remediation
+`f9092cebe2f27504c0f3dfc772524645e25c1f91` is implemented and awaits independent corrective
+re-audit; it is not accepted, adopted, or re-closed. Billing, Accounting, integrations, and
+production deployment remain unauthorized.
 
 Phase 2 minimum models:
 
@@ -994,7 +1017,7 @@ Inventory corrective candidate     23a12ae; independent corrective re-audit REVI
 Inventory precision candidate      d7fc63c; independent corrective re-audit REVISE
 Inventory final corrective         09794e92; FINAL PASS
 Inventory corrective adoption      35663e4f; accepted, adopted, and closed
-Sales post-closure audit            REVISE; remediation not authorized
+Sales post-closure remediation      f9092ceb; awaiting independent corrective re-audit
 Billing / Accounting              not authorized
 Optional integrations             not authorized
 ```
