@@ -323,16 +323,11 @@ def _validate_posting_line(context, movement, line):
         )
     if not line.uom.is_active:
         raise ValidationError(f"{variant.sku} requires an active unit of measure before posting.")
-    historic_uoms = (
-        StockMovementLine.objects.filter(
-            company_id=context.company_id,
-            product_variant_id=variant.id,
-            movement__status=StockMovement.Status.POSTED,
-        )
-        .values_list("uom_id", flat=True)
-        .distinct()
-    )
-    if any(uom_id != line.uom_id for uom_id in historic_uoms):
+    if StockMovementLine.objects.filter(
+        company_id=context.company_id,
+        product_variant_id=variant.id,
+        movement__status=StockMovement.Status.POSTED,
+    ).exclude(uom_id=line.uom_id).exists():
         raise ValidationError(
             f"{variant.sku} conflicts with the unit of measure in posted stock history."
         )

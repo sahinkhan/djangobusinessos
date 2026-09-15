@@ -6,6 +6,7 @@ from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
 
 from businessos.core.access.context import business_context_from_request
+from businessos.core.access.policies import has_permission, require_permission
 from businessos.core.modules.decorators import module_required
 
 from .forms import (
@@ -16,6 +17,7 @@ from .forms import (
     MovementForm,
     MovementLineForm,
 )
+from .manifest import CREATE_MOVEMENTS, POST_MOVEMENTS, UPDATE_MOVEMENTS
 from .models import StockMovement
 from .selectors import (
     balances_for_warehouse,
@@ -65,6 +67,7 @@ def movement_list(request):
             ),
             "types": StockMovement.Type.choices,
             "statuses": StockMovement.Status.choices,
+            "can_create": has_permission(context, CREATE_MOVEMENTS),
         },
     )
 
@@ -73,6 +76,7 @@ def movement_list(request):
 @module_required("inventory")
 def movement_create(request):
     context = business_context_from_request(request)
+    require_permission(context, CREATE_MOVEMENTS)
     form = MovementCreateForm(request.POST or None, company_id=context.company_id)
     if request.method == "POST" and form.is_valid():
         try:
@@ -91,6 +95,7 @@ def movement_create(request):
 @module_required("inventory")
 def movement_edit(request, movement_id):
     context = business_context_from_request(request)
+    require_permission(context, UPDATE_MOVEMENTS)
     movement = _movement(context, movement_id)
     if movement.status != StockMovement.Status.DRAFT:
         raise Http404
@@ -125,6 +130,8 @@ def movement_detail_view(request, movement_id):
         {
             "movement": movement,
             "action_form": MovementActionForm(company_id=context.company_id),
+            "can_update": has_permission(context, UPDATE_MOVEMENTS),
+            "can_post": has_permission(context, POST_MOVEMENTS),
         },
     )
 
@@ -141,6 +148,7 @@ def _line_data(cleaned):
 @module_required("inventory")
 def line_create(request, movement_id):
     context = business_context_from_request(request)
+    require_permission(context, UPDATE_MOVEMENTS)
     movement = _movement(context, movement_id)
     if movement.status != StockMovement.Status.DRAFT:
         raise Http404
@@ -168,6 +176,7 @@ def line_create(request, movement_id):
 @module_required("inventory")
 def line_edit(request, movement_id, line_id):
     context = business_context_from_request(request)
+    require_permission(context, UPDATE_MOVEMENTS)
     movement = _movement(context, movement_id)
     if movement.status != StockMovement.Status.DRAFT:
         raise Http404
@@ -209,6 +218,7 @@ def line_edit(request, movement_id, line_id):
 @require_POST
 def line_remove(request, movement_id, line_id):
     context = business_context_from_request(request)
+    require_permission(context, UPDATE_MOVEMENTS)
     form = MovementActionForm(request.POST, company_id=context.company_id)
     if not form.is_valid():
         messages.error(request, "; ".join(form.non_field_errors()))
@@ -227,6 +237,7 @@ def line_remove(request, movement_id, line_id):
 @require_POST
 def movement_post(request, movement_id):
     context = business_context_from_request(request)
+    require_permission(context, POST_MOVEMENTS)
     form = MovementActionForm(request.POST, company_id=context.company_id)
     if not form.is_valid():
         messages.error(request, "; ".join(form.non_field_errors()))

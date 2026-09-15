@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from decimal import Decimal
 
-from django.core.exceptions import PermissionDenied
+from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Q
 
 from businessos.core.access.policies import require_permission
@@ -74,7 +74,14 @@ def stock_balance(context: BusinessContext, *, warehouse_id, product_variant_id)
         company_id=context.company_id,
         product_variant=variant,
         movement__status=StockMovement.Status.POSTED,
-    ).filter(Q(source_warehouse=warehouse) | Q(destination_warehouse=warehouse))
+    )
+    posted_uom_ids = set(lines.values_list("uom_id", flat=True).distinct())
+    if len(posted_uom_ids) > 1:
+        raise ValidationError(
+            "Posted stock history contains incompatible units of measure; "
+            "a balance cannot be derived without conversion."
+        )
+    lines = lines.filter(Q(source_warehouse=warehouse) | Q(destination_warehouse=warehouse))
     quantity = Decimal("0")
     for line in lines:
         if line.destination_warehouse_id == warehouse.id:
@@ -94,6 +101,19 @@ def balances_for_warehouse(context: BusinessContext, *, warehouse_id):
         .filter(Q(source_warehouse=warehouse) | Q(destination_warehouse=warehouse))
         .select_related("product_variant__product", "uom")
     )
+    variant_ids = set(lines.values_list("product_variant_id", flat=True))
+    uoms_by_variant = {}
+    for variant_id, uom_id in StockMovementLine.objects.filter(
+        company_id=context.company_id,
+        product_variant_id__in=variant_ids,
+        movement__status=StockMovement.Status.POSTED,
+    ).values_list("product_variant_id", "uom_id").distinct():
+        uoms_by_variant.setdefault(variant_id, set()).add(uom_id)
+    if any(len(uom_ids) > 1 for uom_ids in uoms_by_variant.values()):
+        raise ValidationError(
+            "Posted stock history contains incompatible units of measure; "
+            "balances cannot be derived without conversion."
+        )
     grouped = {}
     for line in lines:
         key = (line.product_variant_id, line.uom_id)

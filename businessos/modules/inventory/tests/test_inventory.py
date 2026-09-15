@@ -4,6 +4,7 @@ from uuid import uuid4
 
 import pytest
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.db import models
 from django.urls import reverse
 from django.utils import timezone
 
@@ -18,9 +19,10 @@ from businessos.core.access.models import (
 from businessos.core.audit.models import AuditEntry
 from businessos.core.modules.models import BusinessModule
 from businessos.core.modules.services import register_manifest
-from businessos.core.organization.models import Warehouse
-from businessos.modules.catalog.models import Product
-from businessos.modules.catalog.services import create_simple_product
+from businessos.core.organization.models import Company, Warehouse
+from businessos.core.reference.models import UnitOfMeasure
+from businessos.modules.catalog.models import Product, ProductVariant
+from businessos.modules.catalog.services import create_simple_product, update_product
 from businessos.modules.inventory import services
 from businessos.modules.inventory.manifest import (
     CREATE_MOVEMENTS,
@@ -396,6 +398,61 @@ def test_uom_snapshot_history_and_inactive_rules(
 
 
 @pytest.mark.django_db
+def test_post_rejects_new_uom_when_variant_has_posted_history(
+    business_context, draft_receipt, stockable_variant, warehouse, uom
+):
+    add_receipt_line(business_context, draft_receipt, stockable_variant, warehouse, "10")
+    services.post_stock_movement(business_context, movement_id=draft_receipt.id)
+
+    kilograms = UnitOfMeasure.objects.create(code="KG", name="Kilogram", symbol="kg")
+    update_product(
+        business_context,
+        product_id=stockable_variant.product_id,
+        default_uom_id=kilograms.id,
+    )
+    conflicting = make_movement(business_context)
+    add_receipt_line(business_context, conflicting, stockable_variant, warehouse, "5")
+
+    with pytest.raises(ValidationError, match="posted stock history"):
+        services.post_stock_movement(business_context, movement_id=conflicting.id)
+
+    conflicting.refresh_from_db()
+    assert conflicting.status == StockMovement.Status.DRAFT
+    assert stock_balance(
+        business_context,
+        warehouse_id=warehouse.id,
+        product_variant_id=stockable_variant.id,
+    ) == Decimal("10")
+
+
+@pytest.mark.django_db
+def test_balance_selectors_fail_closed_for_mixed_uom_history(
+    business_context, stockable_variant, warehouse
+):
+    first = make_movement(business_context)
+    add_receipt_line(business_context, first, stockable_variant, warehouse, "10")
+    services.post_stock_movement(business_context, movement_id=first.id)
+    second = make_movement(business_context)
+    second_line = add_receipt_line(
+        business_context, second, stockable_variant, warehouse, "5"
+    )
+    services.post_stock_movement(business_context, movement_id=second.id)
+    kilograms = UnitOfMeasure.objects.create(code="KG", name="Kilogram", symbol="kg")
+    models.QuerySet.update(
+        StockMovementLine.objects.filter(pk=second_line.pk), uom_id=kilograms.id
+    )
+
+    with pytest.raises(ValidationError, match="incompatible units"):
+        stock_balance(
+            business_context,
+            warehouse_id=warehouse.id,
+            product_variant_id=stockable_variant.id,
+        )
+    with pytest.raises(ValidationError, match="incompatible units"):
+        balances_for_warehouse(business_context, warehouse_id=warehouse.id)
+
+
+@pytest.mark.django_db
 def test_idempotency_source_and_number_contract(business_context):
     source_id = uuid4()
     first = make_movement(
@@ -473,6 +530,174 @@ def test_module_gating_and_stale_company_forms(client, operator, company):
     )
     assert response.status_code == 200
     assert b"Company scope changed" in response.content
+
+
+@pytest.mark.django_db
+def test_http_mutation_forms_require_their_action_permissions(
+    client,
+    operator,
+    company,
+    business_context,
+    inventory_permissions,
+    draft_receipt,
+    stockable_variant,
+    warehouse,
+):
+    register_manifest(MODULE, enabled=True)
+    line = add_receipt_line(
+        business_context, draft_receipt, stockable_variant, warehouse
+    )
+    client.force_login(operator)
+    session = client.session
+    session[SESSION_COMPANY_KEY] = str(company.id)
+    session.save()
+    RolePermission.objects.filter(role=inventory_permissions).exclude(
+        permission__code=VIEW_MOVEMENTS
+    ).delete()
+
+    movement_list = client.get(reverse("inventory:list"))
+    detail = client.get(reverse("inventory:detail", args=[draft_receipt.id]))
+    assert movement_list.status_code == 200
+    assert b"Create movement" not in movement_list.content
+    assert detail.status_code == 200
+    assert b">Edit<" not in detail.content
+    assert b">Add line<" not in detail.content
+    assert b">Post movement<" not in detail.content
+    assert client.get(reverse("inventory:create")).status_code == 403
+    assert client.get(reverse("inventory:edit", args=[draft_receipt.id])).status_code == 403
+    assert (
+        client.get(reverse("inventory:line_create", args=[draft_receipt.id])).status_code
+        == 403
+    )
+    assert (
+        client.get(
+            reverse("inventory:line_edit", args=[draft_receipt.id, line.id])
+        ).status_code
+        == 403
+    )
+    assert (
+        client.post(
+            reverse("inventory:line_remove", args=[draft_receipt.id, line.id]),
+            {"scope_company_id": company.id},
+        ).status_code
+        == 403
+    )
+    assert (
+        client.post(
+            reverse("inventory:post", args=[draft_receipt.id]),
+            {"scope_company_id": company.id},
+        ).status_code
+        == 403
+    )
+
+
+@pytest.mark.django_db
+def test_stale_company_http_matrix_preserves_movement_and_line(
+    client,
+    operator,
+    company,
+    currency,
+    country,
+    language,
+    business_context,
+    draft_receipt,
+    stockable_variant,
+    warehouse,
+):
+    register_manifest(MODULE, enabled=True)
+    line = add_receipt_line(
+        business_context, draft_receipt, stockable_variant, warehouse
+    )
+    client.force_login(operator)
+    session = client.session
+    session[SESSION_COMPANY_KEY] = str(company.id)
+    session.save()
+    assert client.get(reverse("inventory:create")).status_code == 200
+    assert client.get(reverse("inventory:edit", args=[draft_receipt.id])).status_code == 200
+    assert (
+        client.get(reverse("inventory:line_create", args=[draft_receipt.id])).status_code
+        == 200
+    )
+    assert (
+        client.get(
+            reverse("inventory:line_edit", args=[draft_receipt.id, line.id])
+        ).status_code
+        == 200
+    )
+
+    switched = Company.objects.create(
+        code="SWITCHED",
+        name="Switched Company",
+        base_currency=currency,
+        country=country,
+        default_language=language,
+    )
+    UserCompanyAccess.objects.create(user=operator, company=switched)
+    switched_role = Role.objects.create(
+        company=switched, code="INVENTORY", name="Inventory"
+    )
+    for permission in Permission.objects.filter(code__in=MODULE["permissions"]):
+        RolePermission.objects.create(role=switched_role, permission=permission)
+    UserRoleAssignment.objects.create(
+        user=operator, company=switched, role=switched_role
+    )
+    session = client.session
+    session[SESSION_COMPANY_KEY] = str(switched.id)
+    session.save()
+
+    stale_scope = str(company.id)
+    create_response = client.post(
+        reverse("inventory:create"),
+        {
+            "scope_company_id": stale_scope,
+            "movement_type": StockMovement.Type.RECEIPT,
+            "effective_at": (timezone.now() - timedelta(minutes=1)).strftime(
+                "%Y-%m-%dT%H:%M"
+            ),
+        },
+    )
+    assert create_response.status_code == 200
+    assert b"Company scope changed" in create_response.content
+    assert (
+        client.post(
+            reverse("inventory:edit", args=[draft_receipt.id]),
+            {"scope_company_id": stale_scope},
+        ).status_code
+        == 404
+    )
+    assert (
+        client.post(
+            reverse("inventory:line_create", args=[draft_receipt.id]),
+            {"scope_company_id": stale_scope},
+        ).status_code
+        == 404
+    )
+    assert (
+        client.post(
+            reverse("inventory:line_edit", args=[draft_receipt.id, line.id]),
+            {"scope_company_id": stale_scope},
+        ).status_code
+        == 404
+    )
+    assert (
+        client.post(
+            reverse("inventory:line_remove", args=[draft_receipt.id, line.id]),
+            {"scope_company_id": stale_scope},
+        ).status_code
+        == 302
+    )
+    assert (
+        client.post(
+            reverse("inventory:post", args=[draft_receipt.id]),
+            {"scope_company_id": stale_scope},
+        ).status_code
+        == 302
+    )
+    draft_receipt.refresh_from_db()
+    line.refresh_from_db()
+    assert draft_receipt.status == StockMovement.Status.DRAFT
+    assert draft_receipt.notes == ""
+    assert line.quantity == Decimal("2")
 
 
 @pytest.mark.django_db
@@ -557,7 +782,7 @@ def test_malformed_cross_company_role_assignment_cannot_authorize(
 
 @pytest.mark.django_db
 def test_no_authoritative_stock_field():
-    for model in (Product, StockMovement, StockMovementLine, Warehouse):
+    for model in (Product, ProductVariant, StockMovement, StockMovementLine, Warehouse):
         assert "stock" not in {field.name for field in model._meta.fields}
 
 

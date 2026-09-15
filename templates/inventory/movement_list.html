@@ -2,7 +2,7 @@
 {% load tz %}
 {% block title %}Inventory · BusinessOS{% endblock %}
 {% block breadcrumbs %}{% include "components/breadcrumbs.html" with current="Inventory" %}{% endblock %}
-{% block page_header %}<div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">{% include "components/page_heading.html" with heading="Stock movements" description="Posted receipt, issue, and transfer lines are the authoritative stock ledger." %}<a class="btn-primary" href="{% url 'inventory:create' %}">Create movement</a></div>{% endblock %}
+{% block page_header %}<div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">{% include "components/page_heading.html" with heading="Stock movements" description="Posted receipt, issue, and transfer lines are the authoritative stock ledger." %}{% if can_create %}<a class="btn-primary" href="{% url 'inventory:create' %}">Create movement</a>{% endif %}</div>{% endblock %}
 {% block content %}
 <div class="min-w-0 max-w-full overflow-x-hidden">
   <div class="mb-5 flex flex-wrap gap-3"><a class="btn-secondary" href="{% url 'inventory:balances' %}">Balances</a><a class="btn-secondary" href="{% url 'inventory:history' %}">History</a></div>
