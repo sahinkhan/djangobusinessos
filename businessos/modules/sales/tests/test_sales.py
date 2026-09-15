@@ -9,6 +9,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import close_old_connections, connection
 
 from businessos.core.access.models import UserCompanyAccess
+from businessos.core.audit.models import AuditEntry
 from businessos.core.common.context import BusinessContext
 from businessos.core.organization.models import Company
 from businessos.modules.catalog.models import Product, ProductVariant
@@ -430,6 +431,236 @@ def test_stale_draft_instance_cannot_delete_confirmed_order(
 
     assert SalesOrder.objects.filter(id=draft_order.id).exists()
     assert SalesOrderLine.objects.filter(id=line.id).exists()
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("final_status", [SalesOrder.Status.CONFIRMED, SalesOrder.Status.CANCELLED])
+def test_historical_line_delete_rejects_in_memory_parent_substitution(
+    business_context, draft_order, variant, customer, currency, final_status
+):
+    line = add_sales_order_line(
+        business_context,
+        order_id=draft_order.id,
+        product_variant_id=variant.id,
+        quantity=Decimal("2.5000"),
+        unit_price=Decimal("12.0000"),
+    )
+    confirm_sales_order(business_context, order_id=draft_order.id)
+    if final_status == SalesOrder.Status.CANCELLED:
+        cancel_sales_order(business_context, order_id=draft_order.id)
+    other_draft = create_sales_order(
+        business_context,
+        customer_id=customer.id,
+        order_date=date(2026, 9, 14),
+        currency_id=currency.id,
+    )
+    stale_line = SalesOrderLine.objects.get(pk=line.pk)
+    original_total = sales_order_total(business_context, order_id=draft_order.id)
+    stale_line.sales_order_id = other_draft.id
+
+    with pytest.raises(ValidationError, match="ownership cannot be reassigned"):
+        stale_line.delete()
+
+    assert SalesOrderLine.objects.filter(pk=line.pk, sales_order=draft_order).exists()
+    assert draft_order.lines.count() == 1
+    assert sales_order_total(business_context, order_id=draft_order.id) == original_total
+
+
+@pytest.mark.django_db
+def test_draft_line_delete_rejects_in_memory_parent_substitution(
+    business_context, draft_order, variant, customer, currency
+):
+    line = add_sales_order_line(
+        business_context,
+        order_id=draft_order.id,
+        product_variant_id=variant.id,
+        quantity=Decimal("1.0000"),
+        unit_price=Decimal("9.0000"),
+    )
+    other_draft = create_sales_order(
+        business_context,
+        customer_id=customer.id,
+        order_date=date(2026, 9, 14),
+        currency_id=currency.id,
+    )
+    stale_line = SalesOrderLine.objects.get(pk=line.pk)
+    original_total = sales_order_total(business_context, order_id=draft_order.id)
+    stale_line.sales_order_id = other_draft.id
+
+    with pytest.raises(ValidationError, match="ownership cannot be reassigned"):
+        stale_line.delete()
+
+    assert SalesOrderLine.objects.filter(pk=line.pk, sales_order=draft_order).exists()
+    assert draft_order.lines.count() == 1
+    assert other_draft.lines.count() == 0
+    assert sales_order_total(business_context, order_id=draft_order.id) == original_total
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "catalog_changes, expected_sku, expected_name",
+    [
+        ({"sku": "REFRESH-SKU"}, "REFRESH-SKU", "Consulting"),
+        ({"name": "Renamed consulting"}, "CONSULT-001", "Renamed consulting"),
+        (
+            {"sku": "REFRESH-BOTH", "name": "Renamed together"},
+            "REFRESH-BOTH",
+            "Renamed together",
+        ),
+    ],
+    ids=["sku-only", "name-only", "sku-and-name"],
+)
+def test_snapshot_only_line_refresh_records_one_update_audit(
+    business_context,
+    draft_order,
+    variant,
+    catalog_changes,
+    expected_sku,
+    expected_name,
+):
+    line = add_sales_order_line(
+        business_context,
+        order_id=draft_order.id,
+        product_variant_id=variant.id,
+        quantity=Decimal("1.0000"),
+        unit_price=Decimal("25.0000"),
+    )
+    before = AuditEntry.objects.filter(
+        action="sales.order.updated", object_id=str(draft_order.id)
+    ).count()
+    update_product(business_context, product_id=variant.product_id, **catalog_changes)
+
+    update_sales_order_line(
+        business_context,
+        line_id=line.id,
+        product_variant_id=variant.id,
+        quantity=line.quantity,
+        unit_price=line.unit_price,
+        description=line.description_snapshot,
+    )
+
+    line.refresh_from_db()
+    assert line.sku_snapshot == expected_sku
+    assert line.name_snapshot == expected_name
+    assert AuditEntry.objects.filter(
+        action="sales.order.updated", object_id=str(draft_order.id)
+    ).count() == before + 1
+
+
+@pytest.mark.django_db
+def test_true_noop_line_update_does_not_record_audit(
+    business_context, draft_order, variant
+):
+    line = add_sales_order_line(
+        business_context,
+        order_id=draft_order.id,
+        product_variant_id=variant.id,
+        quantity=Decimal("1.0000"),
+        unit_price=Decimal("25.0000"),
+    )
+    before = AuditEntry.objects.filter(
+        action="sales.order.updated", object_id=str(draft_order.id)
+    ).count()
+
+    update_sales_order_line(
+        business_context,
+        line_id=line.id,
+        product_variant_id=variant.id,
+        quantity=line.quantity,
+        unit_price=line.unit_price,
+        description=line.description_snapshot,
+    )
+
+    assert AuditEntry.objects.filter(
+        action="sales.order.updated", object_id=str(draft_order.id)
+    ).count() == before
+
+
+@pytest.mark.django_db
+def test_snapshot_refresh_rolls_back_when_audit_fails(
+    business_context, draft_order, variant, monkeypatch
+):
+    line = add_sales_order_line(
+        business_context,
+        order_id=draft_order.id,
+        product_variant_id=variant.id,
+        quantity=Decimal("1.0000"),
+        unit_price=Decimal("25.0000"),
+    )
+    original = (
+        line.product_variant_id,
+        line.sku_snapshot,
+        line.name_snapshot,
+        line.description_snapshot,
+        line.quantity,
+        line.unit_price,
+    )
+    update_product(
+        business_context,
+        product_id=variant.product_id,
+        sku="ROLLBACK-SKU",
+        name="Rollback name",
+    )
+    audit_count = AuditEntry.objects.count()
+
+    def unavailable_audit(**kwargs):
+        raise RuntimeError("audit unavailable")
+
+    monkeypatch.setattr(sales_services, "record_audit_entry", unavailable_audit)
+    with pytest.raises(RuntimeError, match="audit unavailable"):
+        update_sales_order_line(
+            business_context,
+            line_id=line.id,
+            product_variant_id=variant.id,
+            quantity=line.quantity,
+            unit_price=line.unit_price,
+            description=line.description_snapshot,
+        )
+
+    line.refresh_from_db()
+    assert (
+        line.product_variant_id,
+        line.sku_snapshot,
+        line.name_snapshot,
+        line.description_snapshot,
+        line.quantity,
+        line.unit_price,
+    ) == original
+    assert AuditEntry.objects.count() == audit_count
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("non_finite", [Decimal("NaN"), Decimal("Infinity"), Decimal("-Infinity")])
+@pytest.mark.parametrize("field_name", ["quantity", "unit_price"])
+def test_non_finite_line_values_fail_with_validation_error_and_roll_back(
+    business_context, draft_order, variant, non_finite, field_name
+):
+    line = add_sales_order_line(
+        business_context,
+        order_id=draft_order.id,
+        product_variant_id=variant.id,
+        quantity=Decimal("1.0000"),
+        unit_price=Decimal("25.0000"),
+    )
+    original = (line.quantity, line.unit_price)
+    audit_count = AuditEntry.objects.count()
+    values = {"quantity": line.quantity, "unit_price": line.unit_price}
+    values[field_name] = non_finite
+
+    with pytest.raises(ValidationError) as exc_info:
+        update_sales_order_line(
+            business_context,
+            line_id=line.id,
+            product_variant_id=variant.id,
+            description=line.description_snapshot,
+            **values,
+        )
+
+    assert field_name in exc_info.value.message_dict
+    assert any("finite" in message for message in exc_info.value.message_dict[field_name])
+    line.refresh_from_db()
+    assert (line.quantity, line.unit_price) == original
+    assert AuditEntry.objects.count() == audit_count
 
 
 @pytest.mark.django_db

@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from django.core.exceptions import ValidationError
 from django.db import models, transaction
 
@@ -297,8 +299,12 @@ class SalesOrderLine(UUIDTimestampedModel):
             raise ValidationError({"sku_snapshot": "SKU snapshot is required."})
         if not self.name_snapshot:
             raise ValidationError({"name_snapshot": "Product name snapshot is required."})
+        if isinstance(self.quantity, Decimal) and not self.quantity.is_finite():
+            raise ValidationError({"quantity": "Quantity must be finite."})
         if self.quantity is not None and self.quantity <= 0:
             raise ValidationError({"quantity": "Quantity must be greater than zero."})
+        if isinstance(self.unit_price, Decimal) and not self.unit_price.is_finite():
+            raise ValidationError({"unit_price": "Unit price must be finite."})
         if self.unit_price is not None and self.unit_price < 0:
             raise ValidationError({"unit_price": "Unit price cannot be negative."})
         if self.position is not None and self.position <= 0:
@@ -315,13 +321,40 @@ class SalesOrderLine(UUIDTimestampedModel):
 
     def delete(self, *args, **kwargs):
         with transaction.atomic():
-            persisted_status = (
-                SalesOrder.objects.select_for_update()
-                .filter(id=self.sales_order_id)
-                .values_list("status", flat=True)
+            persisted_ownership = (
+                type(self)
+                .objects.filter(pk=self.pk)
+                .values("company_id", "sales_order_id")
                 .first()
             )
-            if persisted_status != SalesOrder.Status.DRAFT:
+            if persisted_ownership is None:
+                raise ValidationError("The Sales Order Line no longer exists.")
+
+            persisted_order = (
+                SalesOrder.objects.select_for_update()
+                .filter(pk=persisted_ownership["sales_order_id"])
+                .values("id", "company_id", "status")
+                .first()
+            )
+            locked_ownership = (
+                type(self)
+                .objects.select_for_update()
+                .filter(pk=self.pk)
+                .values("company_id", "sales_order_id")
+                .first()
+            )
+            if persisted_order is None or locked_ownership is None:
+                raise ValidationError("The Sales Order Line no longer exists.")
+            if locked_ownership != persisted_ownership:
+                raise ValidationError("Sales Order Line ownership changed concurrently.")
+            if persisted_order["company_id"] != locked_ownership["company_id"]:
+                raise ValidationError("Sales Order Line ownership is invalid.")
+            if (
+                self.sales_order_id != locked_ownership["sales_order_id"]
+                or self.company_id != locked_ownership["company_id"]
+            ):
+                raise ValidationError("Sales Order Line ownership cannot be reassigned.")
+            if persisted_order["status"] != SalesOrder.Status.DRAFT:
                 raise ValidationError("Lines may only be removed while the Sales Order is draft.")
             return super().delete(*args, **kwargs)
 

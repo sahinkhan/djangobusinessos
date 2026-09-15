@@ -3,6 +3,7 @@ from decimal import Decimal
 
 import pytest
 from django.core.exceptions import ValidationError
+from django.db import connection
 from django.urls import reverse
 
 from businessos.core.access.context import SESSION_COMPANY_KEY
@@ -249,8 +250,11 @@ def test_sales_ui_preserves_unit_price_and_currency_precision(
     assert b"USD 0.0049" in low_price_page.content
     assert b"USD 0.49" in low_price_page.content
     assert b"overflow-wrap: anywhere" in low_price_page.content
-    assert b"min-w-0 font-medium text-slate-700" in low_price_page.content
-    assert b"card min-w-0 lg:col-span-2" in low_price_page.content
+    assert b"data-sales-document-boundary" in low_price_page.content
+    assert b"data-sales-summary" in low_price_page.content
+    assert b"data-sales-lines-scroll" in low_price_page.content
+    assert b"overflow-x-hidden" in low_price_page.content
+    assert b"overflow-x-auto" in low_price_page.content
 
     three_decimal_currency = Currency.objects.create(
         code="TDC", name="Three decimal currency", decimal_places=3
@@ -277,3 +281,51 @@ def test_sales_ui_preserves_unit_price_and_currency_precision(
     assert b"TDC 1.234" in detail_page.content
     assert b"TDC 1.234" in list_page.content
     assert currency_amount(Decimal("1.2345"), 3) == "1.235"
+
+
+@pytest.mark.django_db
+def test_sales_detail_contains_boundary_value_layout_protection(
+    sales_client, business_context, company, currency, uom
+):
+    register_manifest(SALES_MANIFEST, enabled=True)
+    customer = create_party(
+        business_context,
+        party_type=Party.Type.ORGANIZATION,
+        display_name="C" * 168,
+        is_customer=True,
+    )
+    variant = create_simple_product(
+        business_context,
+        name="Boundary Service",
+        sku="BOUNDARY-1",
+        product_type=Product.Type.SERVICE,
+        default_uom_id=uom.id,
+    ).variants.get()
+    order = create_sales_order(
+        business_context,
+        customer_id=customer.id,
+        order_date=date.today(),
+        currency_id=currency.id,
+        notes="N" * 168,
+    )
+    boundary_value = Decimal(
+        "99999999999999.9999"
+        if connection.vendor == "postgresql"
+        else "9999999999.9999"
+    )
+    add_sales_order_line(
+        business_context,
+        order_id=order.id,
+        product_variant_id=variant.id,
+        quantity=boundary_value,
+        unit_price=boundary_value,
+    )
+
+    response = sales_client.get(reverse("sales:order_detail", args=[order.id]))
+
+    assert response.status_code == 200
+    assert b'data-sales-document-boundary' in response.content
+    assert b'data-sales-summary' in response.content
+    assert b'data-sales-lines-scroll' in response.content
+    assert response.content.count(b"overflow-wrap: anywhere") >= 4
+    assert str(boundary_value).encode() in response.content
