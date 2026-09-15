@@ -19,4 +19,5 @@
   <thead><tr><th>Product</th><th>Type</th><th>Structure</th><th>SKU identity</th></tr></thead>
   <tbody>{% for product in products %}<tr><td><a class="font-semibold text-indigo-700" href="{% url 'catalog:product_detail' product.id %}" data-app-nav>{{ product.name }}</a></td><td>{{ product.get_product_type_display }}</td><td>{{ product.get_structure_display }}</td><td>{% if product.structure == "simple" %}{{ product.variants.first.sku }}{% else %}{{ product.variants.count }} variants{% endif %}</td></tr>{% empty %}<tr><td colspan="4">No products match this company scope.</td></tr>{% endfor %}</tbody>
 </table></div></section>
+{% include "components/pagination.html" %}
 {% endblock %}

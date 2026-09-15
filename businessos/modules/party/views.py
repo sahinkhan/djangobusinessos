@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import redirect, render
 
@@ -35,10 +36,13 @@ def _add_service_error(form, error):
 def party_list(request):
     context = business_context_from_request(request)
     search = request.GET.get("q", "")
+    page_obj = Paginator(parties_for_company(context, search=search), 50).get_page(
+        request.GET.get("page")
+    )
     return render(
         request,
         "party/party_list.html",
-        {"parties": parties_for_company(context, search=search), "search": search},
+        {"parties": page_obj.object_list, "page_obj": page_obj, "search": search},
     )
 
 

@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
@@ -58,11 +59,15 @@ def order_list(request):
     form.is_valid()
     search = form.cleaned_data.get("q", "")
     status = form.cleaned_data.get("status", "")
+    page_obj = Paginator(
+        sales_orders_for_company(context, search=search, status=status), 50
+    ).get_page(request.GET.get("page"))
     return render(
         request,
         "sales/order_list.html",
         {
-            "orders": sales_orders_for_company(context, search=search, status=status),
+            "orders": page_obj.object_list,
+            "page_obj": page_obj,
             "filter_form": form,
             "can_create": has_permission(context, CREATE_ORDERS),
         },

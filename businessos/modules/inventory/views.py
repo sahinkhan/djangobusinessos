@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
@@ -55,16 +56,19 @@ def _movement(context, movement_id):
 @module_required("inventory")
 def movement_list(request):
     context = business_context_from_request(request)
+    movements = movements_for_company(
+        context,
+        search=request.GET.get("q", ""),
+        movement_type=request.GET.get("type", ""),
+        status=request.GET.get("status", ""),
+    )
+    page_obj = Paginator(movements, 50).get_page(request.GET.get("page"))
     return render(
         request,
         "inventory/movement_list.html",
         {
-            "movements": movements_for_company(
-                context,
-                search=request.GET.get("q", ""),
-                movement_type=request.GET.get("type", ""),
-                status=request.GET.get("status", ""),
-            ),
+            "movements": page_obj.object_list,
+            "page_obj": page_obj,
             "types": StockMovement.Type.choices,
             "statuses": StockMovement.Status.choices,
             "can_create": has_permission(context, CREATE_MOVEMENTS),
@@ -284,4 +288,9 @@ def history(request):
             warehouse_id=warehouse.id if warehouse else None,
             product_variant_id=variant.id if variant else None,
         )
-    return render(request, "inventory/history.html", {"form": form, "movements": rows})
+    page_obj = Paginator(rows, 50).get_page(request.GET.get("page"))
+    return render(
+        request,
+        "inventory/history.html",
+        {"form": form, "movements": page_obj.object_list, "page_obj": page_obj},
+    )

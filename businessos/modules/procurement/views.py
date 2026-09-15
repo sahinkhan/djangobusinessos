@@ -3,6 +3,7 @@ from uuid import UUID
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import redirect, render
 from django.views.decorators.http import require_POST
@@ -94,15 +95,18 @@ def order_list(request):
     context = business_context_from_request(request)
     form = PurchaseOrderFilterForm(request.GET)
     form.is_valid()
+    orders = purchase_orders_for_company(
+        context,
+        search=form.cleaned_data.get("q", ""),
+        status=form.cleaned_data.get("status", ""),
+    )
+    page_obj = Paginator(orders, 50).get_page(request.GET.get("page"))
     return render(
         request,
         "procurement/order_list.html",
         {
-            "orders": purchase_orders_for_company(
-                context,
-                search=form.cleaned_data.get("q", ""),
-                status=form.cleaned_data.get("status", ""),
-            ),
+            "orders": page_obj.object_list,
+            "page_obj": page_obj,
             "filter_form": form,
             "can_create": has_permission(context, CREATE_ORDERS),
         },

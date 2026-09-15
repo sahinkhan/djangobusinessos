@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import ValidationError
+from django.core.paginator import Paginator
 from django.http import Http404
 from django.shortcuts import redirect, render
 
@@ -60,13 +61,15 @@ def product_list(request):
     context = business_context_from_request(request)
     search = request.GET.get("q", "")
     product_type = request.GET.get("type", "")
+    page_obj = Paginator(
+        products_for_company(context, search=search, product_type=product_type), 50
+    ).get_page(request.GET.get("page"))
     return render(
         request,
         "catalog/product_list.html",
         {
-            "products": products_for_company(
-                context, search=search, product_type=product_type
-            ),
+            "products": page_obj.object_list,
+            "page_obj": page_obj,
             "search": search,
             "selected_type": product_type,
             "product_types": Product.Type.choices,
