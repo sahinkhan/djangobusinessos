@@ -126,6 +126,14 @@ accepted, adopted, and closed. Billing, Accounting, integrations, and
 Procurement/Sales-to-Inventory automation remain unauthorized; full Phase 2 is not complete and
 production deployment is not approved.
 
+The closure at `60f879a036e0fd21eada1375fa695f32adc7dc91` remains historical administrative
+evidence. A post-closure correctness audit subsequently returned REVISE for four narrow
+Inventory findings covering company-local datetime/DST handling, same-line combined history
+filters, snapshot/UoM update auditing, and initial balance/history page RBAC. Corrective
+implementation `343c413bff7f7e520a5a031f92f461a8058db3cc` is isolated on
+`gate4c-inventory-postclosure-remediation` and awaits independent corrective re-audit. It is not
+adopted into `main`; Billing, Accounting, and integrations remain unauthorized.
+
 Gate 4C original implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
 
 Historical Gate 4A record: independent audit BLOCKED the initial Sales adoption implementation

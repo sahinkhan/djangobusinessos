@@ -22,6 +22,15 @@ branch CI #61, was adopted into canonical `main` by normal fast-forward, and pas
 main CI #62. Gate 4C is accepted, adopted, and closed. Billing, Accounting, integrations, and
 deployment remain unauthorized; full Phase 2 is not complete.
 
+That administrative closure remains historical evidence at
+`60f879a036e0fd21eada1375fa695f32adc7dc91`. A post-closure correctness audit later returned
+REVISE for four narrow Inventory P2 findings. Corrective implementation
+`343c413bff7f7e520a5a031f92f461a8058db3cc` addresses company-local datetime/DST handling,
+same-line combined history filtering, complete line snapshot/UoM audit detection, and early
+balance/history HTTP RBAC. It is isolated from canonical `main`, adds no migration or integration,
+and is IMPLEMENTED / AWAITING INDEPENDENT GATE 4C CORRECTIVE RE-AUDIT. Billing, Accounting, and
+integrations remain unauthorized.
+
 Remediation covers the four reproduced findings:
 
 - all 11 scoped Access mutation services lock Company before authorization and mutation;
@@ -826,6 +835,13 @@ canonical `main` by normal fast-forward, and passed exact-head main CI #62. Gate
 adopted, and closed. Billing, Accounting, Procurement-to-Inventory, Sales-to-Inventory, and other
 integrations remain unauthorized; full Phase 2 is not complete and production deployment is not
 approved.
+
+Post-closure audit later returned REVISE for company-local datetime/DST handling, same-line
+combined history filtering, snapshot/UoM audit change detection, and early balance/history HTTP
+RBAC. Corrective implementation `343c413bff7f7e520a5a031f92f461a8058db3cc` is isolated on
+`gate4c-inventory-postclosure-remediation` and is IMPLEMENTED / AWAITING INDEPENDENT GATE 4C
+CORRECTIVE RE-AUDIT. The historical closure remains recorded; the correction is not adopted into
+canonical `main` and is not yet a new FINAL PASS or re-closure.
 
 ---
 

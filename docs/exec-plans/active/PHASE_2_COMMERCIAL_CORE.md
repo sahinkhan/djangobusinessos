@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — GATE 4A/4B/4C ACCEPTED, ADOPTED, AND CLOSED
+Status: IN PROGRESS — GATE 4C POST-CLOSURE CORRECTION AWAITS INDEPENDENT RE-AUDIT
 
 Canonical Gate 4 base: `f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb`
 
@@ -42,8 +42,8 @@ Do not silently change these architecture contracts.
 The listed branches below record the historical standalone-development strategy. Canonical Gate 4
 adoption is sequential and separately authorized: Sales first, then Procurement, then Inventory.
 Gate 4A and Gate 4B are accepted, adopted, and closed.
-Gate 4C is authorized only as an isolated candidate awaiting independent audit. Billing,
-Accounting, and integrations remain unauthorized.
+Gate 4C's historical adoption is followed by an isolated post-closure correction awaiting
+independent re-audit. Billing, Accounting, and integrations remain unauthorized.
 
 Recommended branches:
 
@@ -363,6 +363,16 @@ re-audit returned FINAL PASS. Documentation-only acceptance checkpoint
 accepted, adopted, and closed. Billing, Accounting, Procurement-to-Inventory,
 Sales-to-Inventory, and other integrations remain unauthorized. Full Phase 2 is not complete and
 production deployment is not approved.
+
+The closure checkpoint `60f879a036e0fd21eada1375fa695f32adc7dc91` remains historical
+administrative evidence. A post-closure independent audit later returned REVISE for four P2
+correctness findings: company-local `effective_at` render/parse and DST validation, combined
+history filters matching different movement lines, incomplete snapshot/UoM audit detection, and
+late balance/history HTTP permission checks. Narrow corrective implementation
+`343c413bff7f7e520a5a031f92f461a8058db3cc` addresses only those findings on
+`gate4c-inventory-postclosure-remediation`, without migrations or cross-module behavior. Current
+status is IMPLEMENTED / AWAITING INDEPENDENT GATE 4C CORRECTIVE RE-AUDIT. It is not adopted into
+canonical `main` and must not be described as a new FINAL PASS or re-closure.
 
 Phase 2 minimum models:
 
@@ -958,11 +968,12 @@ Phase 3 must not begin automatically.
 Historical standalone Sales       accepted at a79cb95d031bb38719bcdccfb5b14670cc76cd17
 Canonical Gate 4A adoption        accepted, adopted, and closed
 Sales adoption checkpoint         e0c848f34da0bce9b9c6e010a396026ac5889cf4
-Canonical main                    eb2f52afc53fd8c36249bc6a1e61c15dba9effe8
+Canonical main                    60f879a036e0fd21eada1375fa695f32adc7dc91
 Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9
 Procurement adoption checkpoint   e4ea1791f0b2c7d1209ea574de3689970e1fc398; closed
-Inventory accepted candidate      8b522709; FINAL PASS
-Inventory adoption checkpoint     eb2f52af; accepted, adopted, and closed
+Inventory accepted candidate      8b522709; historical FINAL PASS
+Inventory adoption checkpoint     60f879a0; historically accepted, adopted, and closed
+Inventory post-closure correction 343c413b; awaiting independent corrective re-audit
 Billing / Accounting              not authorized
 Optional integrations             not authorized
 ```

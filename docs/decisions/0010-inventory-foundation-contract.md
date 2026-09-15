@@ -1,6 +1,6 @@
 # ADR 0010 — Inventory Foundation Contract
 
-Status: Accepted — canonical Gate 4C adopted and closed
+Status: Accepted historical closure — post-closure corrective re-audit pending
 
 Date: 2026-09-15
 
@@ -103,3 +103,19 @@ into canonical `main` by normal fast-forward, and exact-head main
 4C is accepted, adopted, and closed. Billing, Accounting, Procurement-to-Inventory,
 Sales-to-Inventory, other integrations, and production deployment remain unauthorized. Full
 Phase 2 is not complete.
+
+## Post-closure correctness remediation
+
+The administrative acceptance/adoption/closure at
+`60f879a036e0fd21eada1375fa695f32adc7dc91` remains part of the historical record. A later
+independent correctness audit returned REVISE for four narrow P2 findings: company-local
+`effective_at` render/parse and DST handling, combined movement-history filters matching
+different lines, incomplete snapshot/UoM audit change detection, and balance/history page RBAC
+occurring after filter construction.
+
+Remediation `343c413bff7f7e520a5a031f92f461a8058db3cc` uses one explicit Company timezone for datetime
+rendering and Django form parsing, requires combined history filters to match one line, compares
+all persisted business-significant line fields for update audit decisions, and enforces
+`inventory.balance.view` before HTTP filter construction. It adds no migration or cross-module
+behavior. Status is IMPLEMENTED / AWAITING INDEPENDENT GATE 4C CORRECTIVE RE-AUDIT; this record
+does not claim a new FINAL PASS or re-closure.
