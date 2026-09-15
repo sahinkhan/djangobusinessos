@@ -838,12 +838,13 @@ def test_movement_edit_renders_and_preserves_company_local_effective_time(
             "movement_type": StockMovement.Type.RECEIPT,
             "effective_at": "2026-09-15T08:30",
             "reference": "",
-            "notes": "",
+            "notes": "Only notes changed",
         },
     )
     assert response.status_code == 302
     movement.refresh_from_db()
     assert movement.effective_at == instant
+    assert movement.notes == "Only notes changed"
 
 
 @pytest.mark.django_db
@@ -1002,6 +1003,50 @@ def test_line_snapshot_and_uom_refresh_is_audited_but_true_noop_is_not(
             if entry.metadata.get("change") == "line_updated"
         ]
     ) == 1
+
+
+@pytest.mark.django_db
+def test_line_snapshot_and_uom_refresh_rolls_back_when_audit_fails(
+    business_context, draft_receipt, stockable_variant, warehouse, monkeypatch
+):
+    line = add_receipt_line(
+        business_context, draft_receipt, stockable_variant, warehouse, "10"
+    )
+    original = (
+        line.sku_snapshot,
+        line.product_name_snapshot,
+        line.uom_id,
+        line.quantity,
+    )
+    kilograms = UnitOfMeasure.objects.create(code="KGR", name="Kilogram", symbol="kg")
+    update_product(
+        business_context,
+        product_id=stockable_variant.product_id,
+        name="Changed after draft",
+        sku="STOCK-CHANGED",
+        default_uom_id=kilograms.id,
+    )
+
+    def unavailable(**kwargs):
+        raise RuntimeError("audit unavailable")
+
+    monkeypatch.setattr(services, "record_audit_entry", unavailable)
+    with pytest.raises(RuntimeError, match="audit unavailable"):
+        services.update_stock_movement_line(
+            business_context,
+            movement_id=draft_receipt.id,
+            line_id=line.id,
+            product_variant_id=stockable_variant.id,
+            quantity="10",
+            destination_warehouse_id=warehouse.id,
+        )
+    line.refresh_from_db()
+    assert (
+        line.sku_snapshot,
+        line.product_name_snapshot,
+        line.uom_id,
+        line.quantity,
+    ) == original
 
 
 @pytest.mark.django_db
