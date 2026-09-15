@@ -341,7 +341,8 @@ paths, exact UoM/quantity rules, and deterministic PostgreSQL concurrency tests.
 
 The candidate preserves a standalone posted movement ledger and creates no Sales, Procurement,
 Billing, or Accounting effects. It is awaiting independent Gate 4C audit and is not accepted,
-adopted, closed, or merged into `main`.
+adopted, closed, or merged into `main`. The implementation candidate is
+`e1e94307bd96b2834f677eb02b91d27b87843f21`.
 
 Phase 2 minimum models:
 
@@ -940,7 +941,7 @@ Sales adoption checkpoint         e0c848f34da0bce9b9c6e010a396026ac5889cf4
 Canonical main                    8d5a41f83c3f796fa31e7d3f8598c54f7dfc5b95
 Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9
 Procurement adoption checkpoint   e4ea1791f0b2c7d1209ea574de3689970e1fc398; closed
-Inventory adoption candidate      implemented; awaiting independent audit; not merged
+Inventory adoption candidate      e1e94307; awaiting independent audit; not merged
 Billing / Accounting              not authorized
 Optional integrations             not authorized
 ```

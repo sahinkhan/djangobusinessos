@@ -810,7 +810,8 @@ while preserving a standalone posted movement ledger and no cross-module effects
 
 Status: implementation candidate awaiting independent Gate 4C audit. It is not accepted,
 adopted, closed, or merged. Gate 4C formal acceptance, Billing, Accounting, and integrations
-remain unauthorized.
+remain unauthorized. Implementation candidate:
+`e1e94307bd96b2834f677eb02b91d27b87843f21`.
 
 ---
 

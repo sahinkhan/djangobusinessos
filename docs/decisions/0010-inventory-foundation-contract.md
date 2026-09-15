@@ -87,6 +87,6 @@ only status, posted time, and update time.
 
 ## Gate status
 
-The `gate4c-inventory-adoption` implementation is an isolated candidate. This ADR does not mark
-Gate 4C accepted, adopted, closed, or merged. Independent audit and separate formal adoption
-authorization remain required.
+The `gate4c-inventory-adoption` implementation candidate is
+`e1e94307bd96b2834f677eb02b91d27b87843f21`. This ADR does not mark Gate 4C accepted, adopted,
+closed, or merged. Independent audit and separate formal adoption authorization remain required.

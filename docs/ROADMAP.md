@@ -116,6 +116,8 @@ RBAC/audit/company-lock contracts, derived balances, and HTTP-only module gating
 independent Gate 4C audit and is not accepted, adopted, closed, or merged. Billing, Accounting,
 integrations, and Procurement/Sales-to-Inventory automation remain unauthorized.
 
+Gate 4C implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
+
 Historical Gate 4A record: independent audit BLOCKED the initial Sales adoption implementation
 `28c8028950be1997b4f3d0816b1ec04764222068` at audit head
 `fc609bcd81916c13921c2d1cc7b6a59eda1c1e19`. Remediation at
