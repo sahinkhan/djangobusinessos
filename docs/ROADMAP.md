@@ -118,10 +118,13 @@ PostgreSQL tests, but independent audit BLOCKED acceptance on mixed-UoM balance 
 mutation-form RBAC, stale-company HTTP evidence, and a missing ProductVariant stock-field
 assertion. Narrow remediation `78ba3ae92366da9b2136b260cc9a380e22587e08` closed those findings at
 final candidate `8b52270959a2f6623de225e08dc081aea8d1630b`. Hosted CI #60 passed that exact
-head with 410 PostgreSQL tests, and independent re-audit returned FINAL PASS. Gate 4C is formally
-accepted at that candidate; canonical adoption and closure are pending this controlled execution.
-Billing, Accounting, integrations, and Procurement/Sales-to-Inventory automation remain
-unauthorized.
+head with 410 PostgreSQL tests, and independent re-audit returned FINAL PASS. Documentation-only
+acceptance checkpoint `eb2f52afc53fd8c36249bc6a1e61c15dba9effe8` passed branch CI #61, was
+adopted into canonical `main` by normal fast-forward, and passed exact-head main
+[CI #62](https://github.com/sahinkhan/djangobusinessos/actions/runs/34931069346). Gate 4C is
+accepted, adopted, and closed. Billing, Accounting, integrations, and
+Procurement/Sales-to-Inventory automation remain unauthorized; full Phase 2 is not complete and
+production deployment is not approved.
 
 Gate 4C original implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
 

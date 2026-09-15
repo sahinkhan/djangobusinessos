@@ -16,9 +16,11 @@ CI #42 successful at the exact SHA. Gate 3B canonical `main` cutover received in
 at `29d6c12913145bd1b64f572b5bc94c1f53d9987a`; hosted main CI #45 succeeded at that exact SHA.
 Gate 3 is closed. Gate 4A Sales and Gate 4B Procurement are accepted, adopted, and closed. Gate
 4C Inventory final candidate `8b52270959a2f6623de225e08dc081aea8d1630b` passed exact-head
-hosted CI #60 with 410 PostgreSQL tests and independent re-audit returned FINAL PASS. Gate 4C is
-formally accepted; canonical adoption and closure are pending this controlled execution. Billing,
-Accounting, integrations, and deployment remain unauthorized.
+hosted CI #60 with 410 PostgreSQL tests and independent re-audit returned FINAL PASS.
+Documentation-only acceptance checkpoint `eb2f52afc53fd8c36249bc6a1e61c15dba9effe8` passed
+branch CI #61, was adopted into canonical `main` by normal fast-forward, and passed exact-head
+main CI #62. Gate 4C is accepted, adopted, and closed. Billing, Accounting, integrations, and
+deployment remain unauthorized; full Phase 2 is not complete.
 
 Remediation covers the four reproduced findings:
 
@@ -818,9 +820,12 @@ tests, but independent audit BLOCKED acceptance on mixed-UoM balance safety, HTT
 RBAC, stale-company HTTP evidence, and a missing ProductVariant stock-field assertion. Narrow
 remediation `78ba3ae92366da9b2136b260cc9a380e22587e08` closed those findings at final
 candidate `8b52270959a2f6623de225e08dc081aea8d1630b`. Exact-head CI #60 passed with 410
-PostgreSQL tests and independent re-audit returned FINAL PASS. Gate 4C is formally accepted;
-canonical adoption and closure are pending this controlled execution. Billing, Accounting, and
-integrations remain unauthorized.
+PostgreSQL tests and independent re-audit returned FINAL PASS. Documentation-only acceptance
+checkpoint `eb2f52afc53fd8c36249bc6a1e61c15dba9effe8` passed branch CI #61, was adopted into
+canonical `main` by normal fast-forward, and passed exact-head main CI #62. Gate 4C is accepted,
+adopted, and closed. Billing, Accounting, Procurement-to-Inventory, Sales-to-Inventory, and other
+integrations remain unauthorized; full Phase 2 is not complete and production deployment is not
+approved.
 
 ---
 

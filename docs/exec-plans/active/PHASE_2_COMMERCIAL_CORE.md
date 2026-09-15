@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — GATE 4A/4B CLOSED; GATE 4C FORMALLY ACCEPTED, ADOPTION PENDING
+Status: IN PROGRESS — GATE 4A/4B/4C ACCEPTED, ADOPTED, AND CLOSED
 
 Canonical Gate 4 base: `f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb`
 
@@ -356,8 +356,13 @@ forms, completes the stale-company matrix, and covers ProductVariant. Local veri
 PostgreSQL Inventory suite, fresh PostgreSQL bootstrap, Ruff, Django checks, migration drift, and
 Tailwind reproducibility. Hosted CI #60 passed exact final candidate
 `8b52270959a2f6623de225e08dc081aea8d1630b` with 410 PostgreSQL tests, and independent
-re-audit returned FINAL PASS. Gate 4C is formally accepted at that candidate. Canonical adoption
-and closure are pending this controlled execution; it remains unmerged at this acceptance stage.
+re-audit returned FINAL PASS. Documentation-only acceptance checkpoint
+`eb2f52afc53fd8c36249bc6a1e61c15dba9effe8` passed branch CI #61, was adopted into canonical
+`main` by normal fast-forward, and passed exact-head main
+[CI #62](https://github.com/sahinkhan/djangobusinessos/actions/runs/34931069346). Gate 4C is
+accepted, adopted, and closed. Billing, Accounting, Procurement-to-Inventory,
+Sales-to-Inventory, and other integrations remain unauthorized. Full Phase 2 is not complete and
+production deployment is not approved.
 
 Phase 2 minimum models:
 
@@ -953,10 +958,11 @@ Phase 3 must not begin automatically.
 Historical standalone Sales       accepted at a79cb95d031bb38719bcdccfb5b14670cc76cd17
 Canonical Gate 4A adoption        accepted, adopted, and closed
 Sales adoption checkpoint         e0c848f34da0bce9b9c6e010a396026ac5889cf4
-Canonical main                    8d5a41f83c3f796fa31e7d3f8598c54f7dfc5b95
+Canonical main                    eb2f52afc53fd8c36249bc6a1e61c15dba9effe8
 Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9
 Procurement adoption checkpoint   e4ea1791f0b2c7d1209ea574de3689970e1fc398; closed
-Inventory accepted candidate      8b522709; adoption/closure pending; not merged
+Inventory accepted candidate      8b522709; FINAL PASS
+Inventory adoption checkpoint     eb2f52af; accepted, adopted, and closed
 Billing / Accounting              not authorized
 Optional integrations             not authorized
 ```

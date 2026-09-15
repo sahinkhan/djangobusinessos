@@ -1,6 +1,6 @@
 # ADR 0010 — Inventory Foundation Contract
 
-Status: Accepted — Gate 4C technical candidate accepted; canonical adoption pending
+Status: Accepted — canonical Gate 4C adopted and closed
 
 Date: 2026-09-15
 
@@ -96,6 +96,10 @@ ProductVariant stock-field assertion. Narrow remediation
 `8b52270959a2f6623de225e08dc081aea8d1630b`. Hosted CI
 [run #60](https://github.com/sahinkhan/djangobusinessos/actions/runs/34925582449) passed that exact
 head with 410 PostgreSQL tests and all standard checks. Independent re-audit returned FINAL PASS.
-The candidate is formally accepted. Canonical adoption and Gate 4C closure remain pending this
-controlled execution; Billing, Accounting, integrations, and production deployment remain
-unauthorized.
+The candidate was formally accepted in documentation-only checkpoint
+`eb2f52afc53fd8c36249bc6a1e61c15dba9effe8`; branch CI #61 passed, the checkpoint was adopted
+into canonical `main` by normal fast-forward, and exact-head main
+[CI #62](https://github.com/sahinkhan/djangobusinessos/actions/runs/34931069346) succeeded. Gate
+4C is accepted, adopted, and closed. Billing, Accounting, Procurement-to-Inventory,
+Sales-to-Inventory, other integrations, and production deployment remain unauthorized. Full
+Phase 2 is not complete.
