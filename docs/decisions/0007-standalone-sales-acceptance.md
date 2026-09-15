@@ -1,6 +1,6 @@
 # ADR 0007 — Standalone Sales Acceptance
 
-Status: Accepted — historical closure preserved; post-closure remediation formally accepted
+Status: Accepted — historical closure preserved; post-closure corrective cycle closed
 
 Date: 2026-09-14
 
@@ -92,8 +92,13 @@ Independent Sales corrective re-audit returned FINAL PASS.
 
 The historical standalone and Gate 4A acceptance/adoption/closure records remain valid evidence,
 including historical closure `fb9028bbbec5dfc56e7d579c3c351abcde764833` and the later REVISE
-finding sequence. The corrective candidate is formally accepted but is not yet adopted into
-`main` or re-closed. The current frozen Sales foundation scope is complete. Future Sales
+finding sequence. Documentation-only corrective acceptance checkpoint
+`5ccada2bdb8f28bbc031e25aae72a88f7f454e09` was adopted into canonical `main` by normal
+fast-forward. Exact-head main
+[#76](https://github.com/sahinkhan/djangobusinessos/actions/runs/34966070313) (run ID
+`34966070313`) succeeded. Corrective acceptance and canonical adoption are complete, and this
+documentation closes the post-closure corrective cycle. The current frozen Sales foundation scope
+is canonically complete. Future Sales
 extensions—including quotation, tax, discounts/promotions, shipment/delivery, returns/RMA,
 credit notes, commissions, CRM, Inventory reservation, Billing, and POS/E-commerce integration—
 remain open and separately governed. Procurement, Billing, Accounting, integrations, and

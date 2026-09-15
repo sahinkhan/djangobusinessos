@@ -23,9 +23,11 @@ main CI #62. Gate 4C is accepted, adopted, and closed. A later Sales post-closur
 REVISE; narrow Sales-local remediation is implemented at
 `f9092cebe2f27504c0f3dfc772524645e25c1f91`. Final candidate
 `b34a98a1f47c7d0c526fa4dbd60207d5123f9fe3` passed CI #74 with 437 PostgreSQL tests and
-independent corrective re-audit returned FINAL PASS. The corrective candidate is formally
-accepted; canonical adoption and re-closure remain pending. Billing, Accounting, integrations,
-and deployment remain unauthorized; full Phase 2 is not complete.
+independent corrective re-audit returned FINAL PASS. Documentation-only corrective acceptance
+checkpoint `5ccada2bdb8f28bbc031e25aae72a88f7f454e09` was adopted into canonical `main` by normal
+fast-forward and passed exact-head main CI #76 (run `34966070313`). Corrective acceptance and
+adoption are complete; the post-closure corrective cycle is closed. Billing, Accounting,
+integrations, and deployment remain unauthorized; full Phase 2 is not complete.
 
 That administrative closure remains historical evidence at
 `60f879a036e0fd21eada1375fa695f32adc7dc91`. A post-closure correctness audit later returned
@@ -864,10 +866,14 @@ Sales post-closure audit has the preserved historical verdict REVISE. Remediatio
 snapshot-audit omission, boundary-value document overflow, and non-finite Decimal validation gaps
 without changing the historical Gate 4A record. Final candidate
 `b34a98a1f47c7d0c526fa4dbd60207d5123f9fe3` passed exact-head CI #74 with 437 PostgreSQL tests,
-and independent Sales corrective re-audit returned FINAL PASS. It is formally accepted but has
-not yet been adopted or re-closed. The current frozen Sales foundation scope is complete; future
-Sales extensions remain open and separately governed. Billing, Accounting, integrations, and
-production deployment remain unauthorized.
+and independent Sales corrective re-audit returned FINAL PASS. Documentation-only acceptance
+checkpoint `5ccada2bdb8f28bbc031e25aae72a88f7f454e09` was adopted into canonical `main` by normal
+fast-forward and passed exact-head main CI #76
+([run 34966070313](https://github.com/sahinkhan/djangobusinessos/actions/runs/34966070313)). Corrective
+acceptance and adoption are complete, and this documentation closes the post-closure corrective
+cycle. The current frozen Sales foundation scope is canonically complete; future Sales extensions
+remain open and separately governed. Billing, Accounting, integrations, and production deployment
+remain unauthorized.
 
 ---
 

@@ -43,8 +43,8 @@ The listed branches below record the historical standalone-development strategy.
 adoption is sequential and separately authorized: Sales first, then Procurement, then Inventory.
 Gate 4A and Gate 4B are accepted, adopted, and closed.
 Gate 4C's historical adoption and post-closure correction are accepted, adopted, and closed.
-Sales post-closure remediation has independent FINAL PASS and formal corrective acceptance;
-canonical adoption and re-closure remain pending.
+Sales post-closure remediation has independent FINAL PASS, formal corrective acceptance, and
+canonical adoption; the post-closure corrective cycle is closed.
 Billing, Accounting, and integrations remain unauthorized.
 
 Recommended branches:
@@ -121,8 +121,13 @@ The historical Gate 4A acceptance/adoption/closure remains preserved, including 
 `b34a98a1f47c7d0c526fa4dbd60207d5123f9fe3` passed exact-head hosted CI
 [#74](https://github.com/sahinkhan/djangobusinessos/actions/runs/34961977826) with 437 PostgreSQL
 tests and all required checks; independent corrective re-audit returned FINAL PASS. The candidate
-is formally accepted but has not yet been adopted or re-closed. The current frozen Sales
-foundation scope is complete. Future Sales extensions remain open and separately governed.
+was formally accepted at documentation-only checkpoint
+`5ccada2bdb8f28bbc031e25aae72a88f7f454e09`, adopted into canonical `main` by normal
+fast-forward, and passed exact-head main CI #76
+([run 34966070313](https://github.com/sahinkhan/djangobusinessos/actions/runs/34966070313)). Corrective
+acceptance and canonical adoption are complete; this documentation closes the cycle. The current
+frozen Sales foundation scope is canonically complete. Future Sales extensions remain open and
+separately governed.
 
 ## Canonical Gate 4B adoption closure
 
@@ -418,8 +423,9 @@ normal fast-forward and passed exact-head main CI #71
 Sales post-closure audit retains the historical REVISE result. Sales-local remediation
 `f9092cebe2f27504c0f3dfc772524645e25c1f91` and final candidate
 `b34a98a1f47c7d0c526fa4dbd60207d5123f9fe3` received independent corrective FINAL PASS and formal
-acceptance. Canonical adoption and re-closure remain pending. Billing, Accounting, integrations,
-and production deployment remain unauthorized.
+acceptance. Acceptance checkpoint `5ccada2bdb8f28bbc031e25aae72a88f7f454e09` was adopted into
+canonical `main` and passed exact-head main CI #76. The corrective cycle is closed. Billing,
+Accounting, integrations, and production deployment remain unauthorized.
 
 Phase 2 minimum models:
 
@@ -1024,7 +1030,7 @@ Inventory corrective candidate     23a12ae; independent corrective re-audit REVI
 Inventory precision candidate      d7fc63c; independent corrective re-audit REVISE
 Inventory final corrective         09794e92; FINAL PASS
 Inventory corrective adoption      35663e4f; accepted, adopted, and closed
-Sales post-closure remediation      b34a98a1; FINAL PASS / accepted; adoption pending
+Sales post-closure remediation      b34a98a1; FINAL PASS / accepted / adopted / closed
 Billing / Accounting              not authorized
 Optional integrations             not authorized
 ```
