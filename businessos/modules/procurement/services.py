@@ -325,6 +325,8 @@ def update_purchase_order_line(
     variant = _variant(context, product_variant_id)
     before = (
         line.product_variant_id,
+        line.sku_snapshot,
+        line.name_snapshot,
         line.description_snapshot,
         line.quantity,
         line.unit_cost,
@@ -338,6 +340,8 @@ def update_purchase_order_line(
     line.save()
     after = (
         line.product_variant_id,
+        line.sku_snapshot,
+        line.name_snapshot,
         line.description_snapshot,
         line.quantity,
         line.unit_cost,

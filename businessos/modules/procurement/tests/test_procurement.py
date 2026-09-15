@@ -5,9 +5,11 @@ import pytest
 from django.core.exceptions import PermissionDenied, ValidationError
 
 from businessos.core.audit.models import AuditEntry
+from businessos.modules.catalog.services import update_product
 from businessos.modules.procurement import services as procurement_services
 from businessos.modules.procurement.models import (
     PurchaseOrder,
+    PurchaseOrderLine,
     PurchaseReceipt,
     PurchaseReceiptLine,
 )
@@ -21,6 +23,7 @@ from businessos.modules.procurement.services import (
     add_purchase_order_line,
     cancel_purchase_order,
     confirm_purchase_order,
+    create_purchase_order,
     receive_purchase_order,
     update_purchase_order,
     update_purchase_order_line,
@@ -293,3 +296,239 @@ def test_receipt_audit_metadata_and_duplicate_line_rejection(
         "purchase_order_id": str(confirmed_purchase_order.id),
         "idempotency_key": "receipt-1",
     }
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "final_status", [PurchaseOrder.Status.CONFIRMED, PurchaseOrder.Status.CANCELLED]
+)
+def test_historical_line_delete_rejects_in_memory_parent_substitution(
+    business_context,
+    draft_purchase_order,
+    purchase_line,
+    supplier,
+    currency,
+    final_status,
+):
+    confirm_purchase_order(business_context, order_id=draft_purchase_order.id)
+    if final_status == PurchaseOrder.Status.CANCELLED:
+        cancel_purchase_order(business_context, order_id=draft_purchase_order.id)
+    other_draft = create_purchase_order(
+        business_context,
+        supplier_id=supplier.id,
+        order_date=date(2026, 9, 15),
+        currency_id=currency.id,
+    )
+    stale_line = PurchaseOrderLine.objects.get(pk=purchase_line.pk)
+    original_total = purchase_order_total(business_context, order_id=draft_purchase_order.id)
+    stale_line.purchase_order_id = other_draft.id
+
+    with pytest.raises(ValidationError, match="ownership cannot be reassigned"):
+        stale_line.delete()
+
+    assert PurchaseOrderLine.objects.filter(
+        pk=purchase_line.pk, purchase_order=draft_purchase_order
+    ).exists()
+    assert draft_purchase_order.lines.count() == 1
+    assert (
+        purchase_order_total(business_context, order_id=draft_purchase_order.id) == original_total
+    )
+
+
+@pytest.mark.django_db
+def test_partially_received_order_line_delete_rejects_parent_substitution(
+    business_context, draft_purchase_order, purchase_line, purchasable_variant, supplier, currency
+):
+    other_line = add_purchase_order_line(
+        business_context,
+        order_id=draft_purchase_order.id,
+        product_variant_id=purchasable_variant.id,
+        quantity=Decimal("3"),
+        unit_cost=Decimal("4"),
+    )
+    confirm_purchase_order(business_context, order_id=draft_purchase_order.id)
+    _receipt(business_context, draft_purchase_order, purchase_line, quantity="1")
+    other_draft = create_purchase_order(
+        business_context,
+        supplier_id=supplier.id,
+        order_date=date(2026, 9, 15),
+        currency_id=currency.id,
+    )
+    stale_line = PurchaseOrderLine.objects.get(pk=other_line.pk)
+    original_total = purchase_order_total(business_context, order_id=draft_purchase_order.id)
+    stale_line.purchase_order_id = other_draft.id
+
+    with pytest.raises(ValidationError, match="ownership cannot be reassigned"):
+        stale_line.delete()
+
+    assert PurchaseOrderLine.objects.filter(
+        pk=other_line.pk, purchase_order=draft_purchase_order
+    ).exists()
+    assert (
+        purchase_order_total(business_context, order_id=draft_purchase_order.id) == original_total
+    )
+
+
+@pytest.mark.django_db
+def test_draft_line_delete_rejects_in_memory_parent_substitution(
+    business_context, draft_purchase_order, purchase_line, supplier, currency
+):
+    other_draft = create_purchase_order(
+        business_context,
+        supplier_id=supplier.id,
+        order_date=date(2026, 9, 15),
+        currency_id=currency.id,
+    )
+    stale_line = PurchaseOrderLine.objects.get(pk=purchase_line.pk)
+    original_total = purchase_order_total(business_context, order_id=draft_purchase_order.id)
+    stale_line.purchase_order_id = other_draft.id
+
+    with pytest.raises(ValidationError, match="ownership cannot be reassigned"):
+        stale_line.delete()
+
+    assert PurchaseOrderLine.objects.filter(
+        pk=purchase_line.pk, purchase_order=draft_purchase_order
+    ).exists()
+    assert other_draft.lines.count() == 0
+    assert (
+        purchase_order_total(business_context, order_id=draft_purchase_order.id) == original_total
+    )
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "catalog_changes, expected_sku, expected_name",
+    [
+        ({"sku": "REFRESH-SKU"}, "REFRESH-SKU", "Purchased consulting"),
+        ({"name": "Renamed purchase"}, "BUY-001", "Renamed purchase"),
+        ({"sku": "REFRESH-BOTH", "name": "Renamed together"}, "REFRESH-BOTH", "Renamed together"),
+    ],
+    ids=["sku-only", "name-only", "sku-and-name"],
+)
+def test_snapshot_only_line_refresh_records_one_update_audit(
+    business_context,
+    draft_purchase_order,
+    purchase_line,
+    catalog_changes,
+    expected_sku,
+    expected_name,
+):
+    before = AuditEntry.objects.filter(
+        action="procurement.order.updated", object_id=str(draft_purchase_order.id)
+    ).count()
+    update_product(
+        business_context, product_id=purchase_line.product_variant.product_id, **catalog_changes
+    )
+
+    update_purchase_order_line(
+        business_context,
+        line_id=purchase_line.id,
+        product_variant_id=purchase_line.product_variant_id,
+        quantity=purchase_line.quantity,
+        unit_cost=purchase_line.unit_cost,
+        description=purchase_line.description_snapshot,
+    )
+
+    purchase_line.refresh_from_db()
+    assert purchase_line.sku_snapshot == expected_sku
+    assert purchase_line.name_snapshot == expected_name
+    assert (
+        AuditEntry.objects.filter(
+            action="procurement.order.updated", object_id=str(draft_purchase_order.id)
+        ).count()
+        == before + 1
+    )
+
+
+@pytest.mark.django_db
+def test_true_noop_line_update_does_not_record_audit(
+    business_context, draft_purchase_order, purchase_line
+):
+    before = AuditEntry.objects.filter(
+        action="procurement.order.updated", object_id=str(draft_purchase_order.id)
+    ).count()
+    update_purchase_order_line(
+        business_context,
+        line_id=purchase_line.id,
+        product_variant_id=purchase_line.product_variant_id,
+        quantity=purchase_line.quantity,
+        unit_cost=purchase_line.unit_cost,
+        description=purchase_line.description_snapshot,
+    )
+    assert (
+        AuditEntry.objects.filter(
+            action="procurement.order.updated", object_id=str(draft_purchase_order.id)
+        ).count()
+        == before
+    )
+
+
+@pytest.mark.django_db
+def test_snapshot_refresh_rolls_back_when_audit_fails(business_context, purchase_line, monkeypatch):
+    original = (
+        purchase_line.product_variant_id,
+        purchase_line.sku_snapshot,
+        purchase_line.name_snapshot,
+        purchase_line.description_snapshot,
+        purchase_line.quantity,
+        purchase_line.unit_cost,
+    )
+    update_product(
+        business_context,
+        product_id=purchase_line.product_variant.product_id,
+        sku="ROLLBACK-SKU",
+        name="Rollback name",
+    )
+    audit_count = AuditEntry.objects.count()
+
+    def unavailable_audit(**kwargs):
+        raise RuntimeError("audit unavailable")
+
+    monkeypatch.setattr(procurement_services, "record_audit_entry", unavailable_audit)
+    with pytest.raises(RuntimeError, match="audit unavailable"):
+        update_purchase_order_line(
+            business_context,
+            line_id=purchase_line.id,
+            product_variant_id=purchase_line.product_variant_id,
+            quantity=purchase_line.quantity,
+            unit_cost=purchase_line.unit_cost,
+            description=purchase_line.description_snapshot,
+        )
+
+    purchase_line.refresh_from_db()
+    assert (
+        purchase_line.product_variant_id,
+        purchase_line.sku_snapshot,
+        purchase_line.name_snapshot,
+        purchase_line.description_snapshot,
+        purchase_line.quantity,
+        purchase_line.unit_cost,
+    ) == original
+    assert AuditEntry.objects.count() == audit_count
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("non_finite", [Decimal("NaN"), Decimal("Infinity"), Decimal("-Infinity")])
+@pytest.mark.parametrize("field_name", ["quantity", "unit_cost"])
+def test_non_finite_line_values_fail_with_validation_error_and_roll_back(
+    business_context, purchase_line, non_finite, field_name
+):
+    original = (purchase_line.quantity, purchase_line.unit_cost)
+    audit_count = AuditEntry.objects.count()
+    values = {"quantity": purchase_line.quantity, "unit_cost": purchase_line.unit_cost}
+    values[field_name] = non_finite
+
+    with pytest.raises(ValidationError) as exc_info:
+        update_purchase_order_line(
+            business_context,
+            line_id=purchase_line.id,
+            product_variant_id=purchase_line.product_variant_id,
+            description=purchase_line.description_snapshot,
+            **values,
+        )
+
+    assert field_name in exc_info.value.message_dict
+    assert any("finite" in message for message in exc_info.value.message_dict[field_name])
+    purchase_line.refresh_from_db()
+    assert (purchase_line.quantity, purchase_line.unit_cost) == original
+    assert AuditEntry.objects.count() == audit_count

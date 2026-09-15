@@ -67,13 +67,24 @@ def _line_data(cleaned_data):
 
 def _submitted_receipt_line_ids(data):
     submitted = set()
-    for field_name in data:
+    for field_name, values in data.lists():
         if not field_name.startswith("line_"):
             continue
+        if len(values) != 1:
+            raise ValidationError(
+                "Each Purchase Order line quantity must be submitted exactly once."
+            )
         try:
-            submitted.add(UUID(field_name.removeprefix("line_")))
+            line_id = UUID(field_name.removeprefix("line_"))
         except ValueError as exc:
             raise ValidationError("The receipt contains an invalid Purchase Order line.") from exc
+        if field_name != f"line_{line_id}":
+            raise ValidationError(
+                "Receipt line fields must use canonical lowercase hyphenated UUIDs."
+            )
+        if line_id in submitted:
+            raise ValidationError("A Purchase Order line may appear only once in a receipt.")
+        submitted.add(line_id)
     return submitted
 
 
