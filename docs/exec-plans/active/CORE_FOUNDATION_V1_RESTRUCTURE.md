@@ -777,7 +777,7 @@ into canonical `main` by normal fast-forward; exact-head main CI run #50 succeed
 accepted, adopted, and closed. Gate 4B Procurement, Gate 4C Inventory, Billing, Accounting, and
 integrations remain unauthorized.
 
-## Gate 4B Procurement adoption candidate
+## Gate 4B Procurement adoption closure
 
 Gate 4B starts from canonical `main` at
 `fb9028bbbec5dfc56e7d579c3c351abcde764833` and uses historical Procurement closure
@@ -792,9 +792,11 @@ Completion review then BLOCKED acceptance on missing authorization-revocation an
 confirmation-versus-mutation PostgreSQL coverage. Narrow test-only remediation
 `b8c49e1fb5b62f9169038b59e35b6d4e7adfb8e0` closes those gaps at final candidate
 `1eabb0e9806342cc2ba71f1468eb18af120cddb9`. Hosted CI #54 passed that exact head with 342
-PostgreSQL tests, and independent Gate 4B re-audit returned FINAL PASS. Gate 4B is formally
-accepted; canonical `main` adoption remains pending this controlled execution. Procurement
-creates no Inventory, Billing, or Accounting effects. Gate 4C and later work remain unauthorized.
+PostgreSQL tests, and independent Gate 4B re-audit returned FINAL PASS. Documentation-only
+acceptance commit `e4ea1791f0b2c7d1209ea574de3689970e1fc398` passed exact-head branch CI #55,
+was adopted into canonical `main` by normal fast-forward, and passed exact-head main CI #56. Gate
+4B is accepted, adopted, and closed. Procurement creates no Inventory, Billing, or Accounting
+effects. Gate 4C and later work remain unauthorized.
 
 ---
 

@@ -1,6 +1,6 @@
 # ADR 0008 — Standalone Procurement Acceptance
 
-Status: Accepted — historical standalone and canonical Gate 4B; canonical adoption pending
+Status: Accepted — historical standalone and canonical Gate 4B adopted/closed
 
 Date: 2026-09-14
 
@@ -20,8 +20,9 @@ confirmation-versus-mutation concurrency matrix. Narrow test remediation
 `b8c49e1fb5b62f9169038b59e35b6d4e7adfb8e0` closes those coverage gaps without changing
 production code or migrations. Hosted CI #54 passed exact remediation head
 `1eabb0e9806342cc2ba71f1468eb18af120cddb9` with 342 PostgreSQL tests, and independent Gate 4B
-re-audit gave that candidate FINAL PASS. Gate 4B is formally accepted but has not yet been adopted
-into canonical `main`.
+re-audit gave that candidate FINAL PASS. Documentation-only acceptance commit
+`e4ea1791f0b2c7d1209ea574de3689970e1fc398` passed exact-head branch CI #55, was adopted into
+canonical `main` by normal fast-forward, and passed exact-head main CI #56.
 
 ## Decision
 
@@ -103,7 +104,6 @@ exact head `1eabb0e...`, and independent Gate 4B re-audit returned FINAL PASS.
 
 ## Consequences
 
-Gate 4B is formally accepted at candidate `1eabb0e...`. Its canonical `main` adoption remains
-pending this controlled execution. Gate 4C Inventory, Billing, Accounting, optional integrations,
-Procurement-to-Inventory posting, production launch, and full Phase 2 completion remain outside
-this decision.
+Gate 4B is formally accepted at candidate `1eabb0e...`, adopted at checkpoint `e4ea179...`, and
+closed. Gate 4C Inventory, Billing, Accounting, optional integrations, Procurement-to-Inventory
+posting, production launch, and full Phase 2 completion remain outside this decision.

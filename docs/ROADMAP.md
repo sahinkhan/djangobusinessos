@@ -102,9 +102,10 @@ passed hosted CI #53 but completion review BLOCKED on missing authorization-revo
 confirmation-versus-mutation PostgreSQL coverage. Narrow test remediation
 `b8c49e1fb5b62f9169038b59e35b6d4e7adfb8e0` closes those gaps without production changes and is
 published at final candidate `1eabb0e9806342cc2ba71f1468eb18af120cddb9`. Hosted CI #54 passed
-with 342 PostgreSQL tests, and independent re-audit returned FINAL PASS. Gate 4B is formally
-accepted; canonical `main` adoption remains pending this controlled execution. It is not yet
-closed.
+with 342 PostgreSQL tests, and independent re-audit returned FINAL PASS. Documentation-only
+acceptance commit `e4ea1791f0b2c7d1209ea574de3689970e1fc398` passed branch CI #55, was
+adopted into canonical `main` by normal fast-forward, and passed exact-head main CI #56. Gate 4B
+is accepted, adopted, and closed.
 
 Historical Gate 4A record: independent audit BLOCKED the initial Sales adoption implementation
 `28c8028950be1997b4f3d0816b1ec04764222068` at audit head
@@ -113,10 +114,9 @@ Historical Gate 4A record: independent audit BLOCKED the initial Sales adoption 
 FINAL PASS to candidate `23338f1cfed11d21d4fa8fd7e92f8de120450977`; exact-head hosted CI #48
 also passed. Documentation-only acceptance commit `e0c848f34da0bce9b9c6e010a396026ac5889cf4`
 was adopted into canonical `main` by normal fast-forward, and exact-head main CI #50 passed. Gate
-4A Sales is accepted, adopted, and closed. Gate 4B candidate work is isolated on
-`gate4b-procurement-adoption`; Inventory adoption, Billing, Accounting, integrations, and any
-Procurement-to-Inventory write remain unauthorized. Preserved historical branches remain
-unchanged.
+4A Sales is accepted, adopted, and closed. Gate 4B Procurement is also accepted, adopted, and
+closed. Inventory adoption, Billing, Accounting, integrations, and any Procurement-to-Inventory
+write remain unauthorized. Preserved historical branches remain unchanged.
 
 Standalone modules are parallelizable after the Phase 1 contract freeze. Optional cross-module integrations are implemented only after the standalone module contracts pass review.
 

@@ -41,7 +41,7 @@ Do not silently change these architecture contracts.
 
 The listed branches below record the historical standalone-development strategy. Canonical Gate 4
 adoption is sequential and separately authorized: Sales first, then Procurement, then Inventory.
-Gate 4A is closed, and Gate 4B is formally accepted with controlled canonical adoption pending.
+Gate 4A and Gate 4B are accepted, adopted, and closed.
 Gate 4C, Billing, Accounting, and integrations remain unauthorized.
 
 Recommended branches:
@@ -96,7 +96,7 @@ The first canonical adoption implementation is `28c8028950be1997b4f3d0816b1ec047
 
 The authoritative module-gating contract remains: `BusinessModule.is_enabled` controls navigation and HTTP availability only. Installed non-HTTP Python services remain callable and require valid `BusinessContext` plus the exact BusinessOS RBAC permission.
 
-## Canonical Gate 4B adoption candidate
+## Canonical Gate 4B adoption closure
 
 Gate 4B reconstructs historical standalone Procurement behavior from accepted implementation
 `09ee59db53ee1f6f90faa1f31170e50098a0a9ec` onto canonical main
@@ -118,12 +118,15 @@ versus header edit, line edit/removal, and stale instance deletion. Remediation
 code or migrations. Local remediation verification passed 342 PostgreSQL tests, including 27
 Procurement concurrency cases, and 270 SQLite tests with 72 expected PostgreSQL-only skips.
 
-Status: formal acceptance recorded; canonical adoption pending. Gate 4B is not yet merged to
-`main` or closed. Hosted CI
+Hosted CI
 [run #54](https://github.com/sahinkhan/djangobusinessos/actions/runs/34881374281) passed exact final
 candidate `1eabb0e9806342cc2ba71f1468eb18af120cddb9` with 342 PostgreSQL tests, and independent
-Gate 4B re-audit returned FINAL PASS. Gate 4B is formally accepted; canonical adoption remains
-pending this controlled execution. Gate 4C and all later Phase 2 work remain unauthorized.
+Gate 4B re-audit returned FINAL PASS. Documentation-only acceptance commit
+`e4ea1791f0b2c7d1209ea574de3689970e1fc398` passed exact-head branch
+[CI #55](https://github.com/sahinkhan/djangobusinessos/actions/runs/34919248812), was adopted into
+canonical `main` by normal fast-forward, and passed exact-head main
+[CI #56](https://github.com/sahinkhan/djangobusinessos/actions/runs/34919503196). Gate 4B is
+accepted, adopted, and closed. Gate 4C and all later Phase 2 work remain unauthorized.
 
 ## Ownership
 
@@ -918,8 +921,9 @@ Phase 3 must not begin automatically.
 Historical standalone Sales       accepted at a79cb95d031bb38719bcdccfb5b14670cc76cd17
 Canonical Gate 4A adoption        accepted, adopted, and closed
 Sales adoption checkpoint         e0c848f34da0bce9b9c6e010a396026ac5889cf4
-Canonical main                    Gate 4A closure commit following e0c848f3
-Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9; adoption pending
+Canonical main                    Gate 4B closure follows e4ea1791
+Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9
+Procurement adoption checkpoint   e4ea1791f0b2c7d1209ea574de3689970e1fc398; closed
 Inventory adoption                not authorized
 Billing / Accounting              not authorized
 Optional integrations             not authorized
