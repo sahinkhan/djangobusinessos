@@ -369,10 +369,15 @@ administrative evidence. A post-closure independent audit later returned REVISE 
 correctness findings: company-local `effective_at` render/parse and DST validation, combined
 history filters matching different movement lines, incomplete snapshot/UoM audit detection, and
 late balance/history HTTP permission checks. Narrow corrective implementation
-`343c413bff7f7e520a5a031f92f461a8058db3cc` addresses only those findings on
-`gate4c-inventory-postclosure-remediation`, without migrations or cross-module behavior. Current
-status is IMPLEMENTED / AWAITING INDEPENDENT GATE 4C CORRECTIVE RE-AUDIT. It is not adopted into
-canonical `main` and must not be described as a new FINAL PASS or re-closure.
+`343c413bff7f7e520a5a031f92f461a8058db3cc` addressed those findings and was published through
+candidate `23a12ae544be2e611ac3fd5bfa90d62299599648`. Independent corrective re-audit returned REVISE
+for one residual issue: an unchanged minute-granular movement edit could truncate the existing
+seconds and microseconds. Narrow remediation `b33e6faaf931777575292a42af775a1c11986984` preserves the
+trusted original aware instant when the submitted company-local minute is unchanged and keeps the
+validated normalized value when the minute changes. Current status is IMPLEMENTED / AWAITING
+INDEPENDENT GATE 4C CORRECTIVE RE-AUDIT. It is isolated on
+`gate4c-inventory-postclosure-remediation`, has no migration or cross-module behavior, is not
+adopted into canonical `main`, and must not be described as a new FINAL PASS or re-closure.
 
 Phase 2 minimum models:
 
@@ -973,7 +978,8 @@ Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9
 Procurement adoption checkpoint   e4ea1791f0b2c7d1209ea574de3689970e1fc398; closed
 Inventory accepted candidate      8b522709; historical FINAL PASS
 Inventory adoption checkpoint     60f879a0; historically accepted, adopted, and closed
-Inventory post-closure correction 343c413b; awaiting independent corrective re-audit
+Inventory corrective candidate     23a12ae; independent corrective re-audit REVISE
+Inventory precision remediation    b33e6faa; awaiting independent corrective re-audit
 Billing / Accounting              not authorized
 Optional integrations             not authorized
 ```

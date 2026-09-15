@@ -119,3 +119,13 @@ all persisted business-significant line fields for update audit decisions, and e
 `inventory.balance.view` before HTTP filter construction. It adds no migration or cross-module
 behavior. Status is IMPLEMENTED / AWAITING INDEPENDENT GATE 4C CORRECTIVE RE-AUDIT; this record
 does not claim a new FINAL PASS or re-closure.
+
+That correction was published through candidate
+`23a12ae544be2e611ac3fd5bfa90d62299599648`. Independent corrective re-audit returned REVISE for
+one residual form-round-trip issue: submitting the unchanged company-local minute could replace a
+trusted persisted instant with a minute-normalized value and lose seconds and microseconds.
+Remediation `b33e6faaf931777575292a42af775a1c11986984` passes the trusted server-side original timestamp to
+the edit form and preserves it only when its displayed company-local minute is unchanged; an
+explicitly changed minute continues to use the validated parsed value. The Company timezone and DST
+validation contract is unchanged. Status remains IMPLEMENTED / AWAITING INDEPENDENT GATE 4C
+CORRECTIVE RE-AUDIT; this is not a new FINAL PASS, adoption, or re-closure.

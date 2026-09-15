@@ -838,7 +838,11 @@ approved.
 
 Post-closure audit later returned REVISE for company-local datetime/DST handling, same-line
 combined history filtering, snapshot/UoM audit change detection, and early balance/history HTTP
-RBAC. Corrective implementation `343c413bff7f7e520a5a031f92f461a8058db3cc` is isolated on
+RBAC. Corrective implementation `343c413bff7f7e520a5a031f92f461a8058db3cc` was published through
+candidate `23a12ae544be2e611ac3fd5bfa90d62299599648`. Independent corrective re-audit returned REVISE
+for a residual unchanged-minute edit that could truncate persisted seconds and microseconds.
+Narrow remediation `b33e6faaf931777575292a42af775a1c11986984` preserves the trusted original
+instant only when the submitted company-local displayed minute is unchanged. It is isolated on
 `gate4c-inventory-postclosure-remediation` and is IMPLEMENTED / AWAITING INDEPENDENT GATE 4C
 CORRECTIVE RE-AUDIT. The historical closure remains recorded; the correction is not adopted into
 canonical `main` and is not yet a new FINAL PASS or re-closure.

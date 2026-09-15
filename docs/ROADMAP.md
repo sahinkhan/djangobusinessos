@@ -130,9 +130,15 @@ The closure at `60f879a036e0fd21eada1375fa695f32adc7dc91` remains historical adm
 evidence. A post-closure correctness audit subsequently returned REVISE for four narrow
 Inventory findings covering company-local datetime/DST handling, same-line combined history
 filters, snapshot/UoM update auditing, and initial balance/history page RBAC. Corrective
-implementation `343c413bff7f7e520a5a031f92f461a8058db3cc` is isolated on
-`gate4c-inventory-postclosure-remediation` and awaits independent corrective re-audit. It is not
-adopted into `main`; Billing, Accounting, and integrations remain unauthorized.
+implementation `343c413bff7f7e520a5a031f92f461a8058db3cc` was published through candidate
+`23a12ae544be2e611ac3fd5bfa90d62299599648`. Independent corrective re-audit returned REVISE for
+one residual timestamp-precision issue: an unchanged minute-granular edit could truncate the
+trusted persisted seconds and microseconds. Narrow remediation
+`b33e6faaf931777575292a42af775a1c11986984` preserves the original aware instant when the submitted
+company-local minute is unchanged, while a changed minute remains normalized to the submitted
+minute. It is isolated on `gate4c-inventory-postclosure-remediation` and awaits independent Gate 4C
+corrective re-audit. It is not adopted into `main`; Billing, Accounting, and integrations remain
+unauthorized.
 
 Gate 4C original implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
 
