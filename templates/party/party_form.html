@@ -17,6 +17,6 @@
     </div>
   {% endfor %}
   </div>
-  <div class="flex gap-3"><button class="btn-primary" type="submit">Save party</button><a class="btn-secondary" href="{% url 'party:list' %}">Cancel</a></div>
+  <div class="flex gap-3"><button class="btn-primary" type="submit">Save party</button><a class="btn-secondary" data-app-nav href="{% url 'party:list' %}">Cancel</a></div>
 </form>
 {% endblock %}

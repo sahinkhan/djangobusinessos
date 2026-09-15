@@ -11,6 +11,6 @@
   <div class="grid gap-5 sm:grid-cols-2">
     {% for field in form.visible_fields %}<div{% if field.name == "description" or field.name == "product_variant" %} class="sm:col-span-2"{% endif %}><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}</div>{% endfor %}
   </div>
-  <div class="flex gap-3"><button class="btn-primary" type="submit">Save line</button><a class="btn-secondary" href="{% url 'sales:order_detail' order.id %}">Cancel</a></div>
+  <div class="flex gap-3"><button class="btn-primary" type="submit">Save line</button><a class="btn-secondary" href="{% url 'sales:order_detail' order.id %}" data-app-nav>Cancel</a></div>
 </form>
 {% endblock %}

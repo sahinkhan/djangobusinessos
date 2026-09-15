@@ -5,7 +5,7 @@
 {% block page_header %}
 <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
   {% include "components/page_heading.html" with heading="Parties" description="People and organizations shared across commercial modules." %}
-  <a class="btn-primary" href="{% url 'party:create' %}">Create party</a>
+  <a class="btn-primary" data-app-nav href="{% url 'party:create' %}">Create party</a>
 </div>
 {% endblock %}
 
@@ -21,7 +21,7 @@
       <tbody>
       {% for party in parties %}
         <tr>
-          <td><a class="font-semibold text-indigo-700 hover:text-indigo-900" href="{% url 'party:detail' party.id %}">{{ party.display_name }}</a></td>
+          <td><a class="font-semibold text-indigo-700 hover:text-indigo-900" data-app-nav href="{% url 'party:detail' party.id %}">{{ party.display_name }}</a></td>
           <td>{{ party.get_party_type_display }}</td>
           <td>{% if party.is_customer %}Customer{% endif %}{% if party.is_customer and party.is_supplier %} · {% endif %}{% if party.is_supplier %}Supplier{% endif %}{% if not party.is_customer and not party.is_supplier %}—{% endif %}</td>
           <td>{% if party.is_active %}<span class="badge-success">Active</span>{% else %}<span class="badge-neutral">Inactive</span>{% endif %}</td>

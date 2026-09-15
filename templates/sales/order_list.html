@@ -6,7 +6,7 @@
 {% block page_header %}
 <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
   {% include "components/page_heading.html" with heading="Sales Orders" description="Customer orders confirm without creating stock or invoices." %}
-  {% if can_create %}<a class="btn-primary" href="{% url 'sales:order_create' %}">Create order</a>{% endif %}
+  {% if can_create %}<a class="btn-primary" href="{% url 'sales:order_create' %}" data-app-nav>Create order</a>{% endif %}
 </div>
 {% endblock %}
 {% block content %}
@@ -17,6 +17,6 @@
 </form>
 <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div class="overflow-x-auto"><table class="data-table">
   <thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Status</th><th>Total</th></tr></thead>
-  <tbody>{% for order in orders %}<tr><td><a class="font-semibold text-indigo-700" href="{% url 'sales:order_detail' order.id %}">{{ order.number }}</a></td><td>{{ order.customer.display_name }}</td><td>{{ order.order_date }}</td><td><span class="{% if order.status == 'confirmed' %}badge-success{% else %}badge-neutral{% endif %}">{{ order.get_status_display }}</span></td><td>{{ order.currency.code }} {{ order.total|currency_amount:order.currency.decimal_places }}</td></tr>{% empty %}<tr><td colspan="5">No Sales Orders match this company scope.</td></tr>{% endfor %}</tbody>
+  <tbody>{% for order in orders %}<tr><td><a class="font-semibold text-indigo-700" href="{% url 'sales:order_detail' order.id %}" data-app-nav>{{ order.number }}</a></td><td>{{ order.customer.display_name }}</td><td>{{ order.order_date }}</td><td><span class="{% if order.status == 'confirmed' %}badge-success{% else %}badge-neutral{% endif %}">{{ order.get_status_display }}</span></td><td>{{ order.currency.code }} {{ order.total|currency_amount:order.currency.decimal_places }}</td></tr>{% empty %}<tr><td colspan="5">No Sales Orders match this company scope.</td></tr>{% endfor %}</tbody>
 </table></div></section>
 {% endblock %}

@@ -1,5 +1,12 @@
-<nav class="mb-4 flex min-w-0 text-sm text-slate-500" aria-label="Breadcrumb">
-  <a href="{% url 'home' %}" class="hover:text-indigo-600">BusinessOS</a>
-  <span class="mx-2 text-slate-300">/</span>
-  <span class="min-w-0 font-medium text-slate-700" style="overflow-wrap: anywhere;" aria-current="page">{{ current }}</span>
+<nav class="breadcrumbs" aria-label="Breadcrumb">
+  <a href="{% url 'home' %}" data-app-nav>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 13.5V20h6v-5h4v5h6v-6.5M3 11l9-8 9 8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span class="sr-only sm:not-sr-only">BusinessOS</span>
+  </a>
+  {% if parent_label %}
+    <svg class="breadcrumbs-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <a href="{{ parent_url }}" data-app-nav class="min-w-0 truncate">{{ parent_label }}</a>
+  {% endif %}
+  <svg class="breadcrumbs-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  <span class="min-w-0 truncate font-medium text-slate-600" aria-current="page">{{ current }}</span>
 </nav>

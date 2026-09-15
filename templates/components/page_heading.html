@@ -1,7 +1,13 @@
-<div class="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-  <div class="min-w-0">
-    <h1 class="text-2xl font-bold tracking-tight text-slate-950" style="overflow-wrap: anywhere;">{{ heading }}</h1>
-    {% if description %}<p class="mt-1 text-sm text-slate-500">{{ description }}</p>{% endif %}
+<div class="page-heading">
+  <div class="min-w-0 flex-1">
+    {% if eyebrow %}<p class="page-heading-eyebrow">{{ eyebrow }}</p>{% endif %}
+    <h1 class="page-heading-title">{{ heading }}</h1>
+    {% if description %}<p class="page-heading-description">{{ description }}</p>{% endif %}
   </div>
-  {% if action_label %}<a href="{{ action_url }}" class="btn-primary">{{ action_label }}</a>{% endif %}
+  {% if action_label or secondary_action_label %}
+    <div class="page-heading-actions">
+      {% if secondary_action_label %}<a href="{{ secondary_action_url }}" data-app-nav class="btn-secondary">{{ secondary_action_label }}</a>{% endif %}
+      {% if action_label %}<a href="{{ action_url }}" data-app-nav class="btn-primary">{{ action_label }}</a>{% endif %}
+    </div>
+  {% endif %}
 </div>
