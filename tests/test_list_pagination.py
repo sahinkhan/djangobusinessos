@@ -172,6 +172,11 @@ def test_large_company_lists_are_filtered_then_paginated(
         assert response.context["page_obj"].number == 2
         assert response.context["page_obj"].paginator.per_page == PAGE_SIZE
         assert len(response.context[collection_name]) == 1
+        assert b"data-list-filter" in response.content
+        assert b"data-list-results-shell" in response.content
+        assert b'id="list-results"' in response.content
+        assert b"data-list-results-status" in response.content
+        assert b"data-list-page" in response.content
 
     party_page = pagination_client.get(reverse("party:list"), {"q": "Paged Party"})
     assert len(party_page.context["parties"]) == PAGE_SIZE
@@ -185,10 +190,20 @@ def test_large_company_lists_are_filtered_then_paginated(
         b'href="?q=Needle&amp;status=draft&amp;page=2"'
         in filtered_sales.content
     )
+    assert b'data-list-page aria-controls="list-results"' in filtered_sales.content
     assert (
         b'class="btn-secondary" data-app-nav href="?q=Needle'
         not in filtered_sales.content
     )
+
+    htmx_sales = pagination_client.get(
+        reverse("sales:order_list"),
+        {"q": "Needle", "status": SalesOrder.Status.DRAFT, "page": "2"},
+        HTTP_HX_REQUEST="true",
+    )
+    assert b"<!doctype html>" in htmx_sales.content
+    assert b'id="app-content"' in htmx_sales.content
+    assert b'id="list-results"' in htmx_sales.content
 
     empty_page = pagination_client.get(reverse("party:list"), {"q": "No such party"})
     assert empty_page.status_code == 200

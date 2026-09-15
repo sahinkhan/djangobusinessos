@@ -10,14 +10,19 @@
 </div>
 {% endblock %}
 {% block content %}
-<form method="get" class="mb-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto]" role="search">
+<form method="get" class="mb-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto]" role="search" data-list-filter aria-controls="list-results">
   <input name="q" value="{{ filter_form.q.value|default:'' }}" placeholder="Search number or customer" aria-label="Search Sales Orders">
   {{ filter_form.status }}
   <button class="btn-secondary" type="submit">Filter</button>
 </form>
-<section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div class="overflow-x-auto"><table class="data-table">
-  <thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Status</th><th>Total</th></tr></thead>
-  <tbody>{% for order in orders %}<tr><td><a class="font-semibold text-indigo-700" href="{% url 'sales:order_detail' order.id %}" data-app-nav>{{ order.number }}</a></td><td>{{ order.customer.display_name }}</td><td>{{ order.order_date }}</td><td><span class="{% if order.status == 'confirmed' %}badge-success{% else %}badge-neutral{% endif %}">{{ order.get_status_display }}</span></td><td>{{ order.currency.code }} {{ order.total|currency_amount:order.currency.decimal_places }}</td></tr>{% empty %}<tr><td colspan="5">No Sales Orders match this company scope.</td></tr>{% endfor %}</tbody>
-</table></div></section>
-{% include "components/pagination.html" %}
+<div class="list-results-shell" data-list-results-shell>
+  {% include "components/list_results_status.html" %}
+  <div id="list-results" data-list-results aria-live="polite" aria-busy="false" tabindex="-1">
+    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div class="overflow-x-auto"><table class="data-table">
+      <thead><tr><th>Order</th><th>Customer</th><th>Date</th><th>Status</th><th>Total</th></tr></thead>
+      <tbody>{% for order in orders %}<tr><td><a class="font-semibold text-indigo-700" href="{% url 'sales:order_detail' order.id %}" data-app-nav>{{ order.number }}</a></td><td>{{ order.customer.display_name }}</td><td>{{ order.order_date }}</td><td><span class="{% if order.status == 'confirmed' %}badge-success{% else %}badge-neutral{% endif %}">{{ order.get_status_display }}</span></td><td>{{ order.currency.code }} {{ order.total|currency_amount:order.currency.decimal_places }}</td></tr>{% empty %}<tr><td colspan="5">No Sales Orders match this company scope.</td></tr>{% endfor %}</tbody>
+    </table></div></section>
+    {% include "components/pagination.html" %}
+  </div>
+</div>
 {% endblock %}
