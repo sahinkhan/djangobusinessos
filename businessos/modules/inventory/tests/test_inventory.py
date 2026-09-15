@@ -914,19 +914,33 @@ def test_combined_history_filters_require_one_matching_line(
     add_receipt_line(business_context, split_match, other_variant, warehouse)
     services.post_stock_movement(business_context, movement_id=split_match.id)
 
-    exact_match = make_movement(business_context)
-    add_receipt_line(business_context, exact_match, stockable_variant, warehouse)
-    services.post_stock_movement(business_context, movement_id=exact_match.id)
+    def result_ids(*, warehouse_id=None, product_variant_id=None):
+        return set(
+            movement_history(
+                business_context,
+                warehouse_id=warehouse_id,
+                product_variant_id=product_variant_id,
+            ).values_list("id", flat=True)
+        )
 
-    result_ids = set(
-        movement_history(
-            business_context,
-            warehouse_id=warehouse.id,
-            product_variant_id=stockable_variant.id,
-        ).values_list("id", flat=True)
+    assert split_match.id in result_ids(
+        warehouse_id=other_warehouse.id,
+        product_variant_id=stockable_variant.id,
     )
-    assert exact_match.id in result_ids
-    assert split_match.id not in result_ids
+    assert split_match.id in result_ids(
+        warehouse_id=warehouse.id,
+        product_variant_id=other_variant.id,
+    )
+    assert split_match.id not in result_ids(
+        warehouse_id=other_warehouse.id,
+        product_variant_id=other_variant.id,
+    )
+    assert split_match.id not in result_ids(
+        warehouse_id=warehouse.id,
+        product_variant_id=stockable_variant.id,
+    )
+    assert split_match.id in result_ids(warehouse_id=other_warehouse.id)
+    assert split_match.id in result_ids(product_variant_id=other_variant.id)
 
 
 @pytest.mark.django_db
@@ -997,11 +1011,14 @@ def test_balance_http_permission_is_checked_before_form_construction(
     from businessos.modules.inventory import views
 
     register_manifest(MODULE, enabled=True)
-    _drop(inventory_permissions, VIEW_BALANCES)
     client.force_login(operator)
     session = client.session
     session[SESSION_COMPANY_KEY] = str(company.id)
     session.save()
+    assert client.get(reverse("inventory:balances")).status_code == 200
+    assert client.get(reverse("inventory:history")).status_code == 200
+
+    _drop(inventory_permissions, VIEW_BALANCES)
 
     def unexpected_form_construction(*args, **kwargs):
         raise AssertionError("The filter form was constructed before balance authorization.")
