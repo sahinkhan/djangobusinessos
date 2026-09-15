@@ -1,6 +1,6 @@
 # ADR 0008 — Standalone Procurement Acceptance
 
-Status: Accepted (historical standalone contract); canonical Gate 4B adoption awaiting audit
+Status: Accepted — historical standalone and canonical Gate 4B; canonical adoption pending
 
 Date: 2026-09-14
 
@@ -12,13 +12,16 @@ head is `a99377ca55355a2e4cdebd64ff73cf29fd3eff83`.
 
 Gate 4B replays that behavior onto canonical Core Foundation v1 and the adopted Party, Catalog,
 and Sales baseline. The implementation candidate is
-`395da2ad874fc2efb72219da71316b9a6d8f73bf` on `gate4b-procurement-adoption`. It is not merged,
-formally accepted, or closed. Candidate documentation head
+`395da2ad874fc2efb72219da71316b9a6d8f73bf` on `gate4b-procurement-adoption`. At initial candidate
+publication it was not merged, formally accepted, or closed. Candidate documentation head
 `12d1a1f90689979048cdf3b4f59836b026dd153f` passed hosted CI #53, but completion review blocked
 acceptance because its PostgreSQL suite did not yet cover the full authorization-revocation and
 confirmation-versus-mutation concurrency matrix. Narrow test remediation
 `b8c49e1fb5b62f9169038b59e35b6d4e7adfb8e0` closes those coverage gaps without changing
-production code or migrations. Independent Gate 4B re-audit remains mandatory.
+production code or migrations. Hosted CI #54 passed exact remediation head
+`1eabb0e9806342cc2ba71f1468eb18af120cddb9` with 342 PostgreSQL tests, and independent Gate 4B
+re-audit gave that candidate FINAL PASS. Gate 4B is formally accepted but has not yet been adopted
+into canonical `main`.
 
 ## Decision
 
@@ -94,10 +97,13 @@ revocation across order update, confirmation, cancellation, and receipt posting.
 the confirmation-versus-draft-mutation ordering and stale instance deletion are covered, with
 atomic mutation/audit assertions. Local remediation verification passed 342 PostgreSQL tests,
 including all 27 Procurement concurrency cases, plus 270 SQLite tests with 72 explicit
-PostgreSQL-only skips. Exact-head hosted CI and independent Gate 4B re-audit remain pending.
+PostgreSQL-only skips. Hosted CI
+[run #54](https://github.com/sahinkhan/djangobusinessos/actions/runs/34881374281) succeeded against
+exact head `1eabb0e...`, and independent Gate 4B re-audit returned FINAL PASS.
 
 ## Consequences
 
-Gate 4B may be accepted and adopted only through a later separately authorized operation after
-independent audit. `main`, Gate 4C Inventory, Billing, Accounting, optional integrations, and
-Procurement-to-Inventory posting remain outside this decision.
+Gate 4B is formally accepted at candidate `1eabb0e...`. Its canonical `main` adoption remains
+pending this controlled execution. Gate 4C Inventory, Billing, Accounting, optional integrations,
+Procurement-to-Inventory posting, production launch, and full Phase 2 completion remain outside
+this decision.

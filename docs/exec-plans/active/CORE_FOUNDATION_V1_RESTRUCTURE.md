@@ -786,13 +786,15 @@ Gate 4B starts from canonical `main` at
 semantics while adopting Foundation v1 RBAC, Company locking, audit, business time, and the
 canonical HTTP-only module-gating contract.
 
-The candidate remains isolated on `gate4b-procurement-adoption`, is not merged or formally
-accepted, and candidate head `12d1a1f90689979048cdf3b4f59836b026dd153f` passed hosted CI #53.
+The candidate remains isolated on `gate4b-procurement-adoption`; candidate head
+`12d1a1f90689979048cdf3b4f59836b026dd153f` passed hosted CI #53.
 Completion review then BLOCKED acceptance on missing authorization-revocation and
 confirmation-versus-mutation PostgreSQL coverage. Narrow test-only remediation
-`b8c49e1fb5b62f9169038b59e35b6d4e7adfb8e0` closes those gaps and awaits exact-head CI plus
-independent Gate 4B re-audit. Procurement creates no Inventory, Billing, or Accounting effects.
-Gate 4C and later work remain unauthorized.
+`b8c49e1fb5b62f9169038b59e35b6d4e7adfb8e0` closes those gaps at final candidate
+`1eabb0e9806342cc2ba71f1468eb18af120cddb9`. Hosted CI #54 passed that exact head with 342
+PostgreSQL tests, and independent Gate 4B re-audit returned FINAL PASS. Gate 4B is formally
+accepted; canonical `main` adoption remains pending this controlled execution. Procurement
+creates no Inventory, Billing, or Accounting effects. Gate 4C and later work remain unauthorized.
 
 ---
 

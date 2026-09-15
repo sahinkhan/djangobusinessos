@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — HISTORICAL STANDALONE SALES ACCEPTED; CANONICAL GATE 4A UNDER REMEDIATION
+Status: IN PROGRESS — GATE 4A CLOSED; GATE 4B FORMALLY ACCEPTED, CANONICAL ADOPTION PENDING
 
 Canonical Gate 4 base: `f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb`
 
@@ -39,7 +39,10 @@ Do not silently change these architecture contracts.
 
 # Parallelization strategy
 
-The listed branches below record the historical standalone-development strategy. Canonical Gate 4 adoption is now sequential and separately authorized: Sales first, then Procurement, then Inventory. Gate 4B, Gate 4C, Billing, Accounting, and integrations are not authorized by the current Gate 4A remediation.
+The listed branches below record the historical standalone-development strategy. Canonical Gate 4
+adoption is sequential and separately authorized: Sales first, then Procurement, then Inventory.
+Gate 4A is closed, and Gate 4B is formally accepted with controlled canonical adoption pending.
+Gate 4C, Billing, Accounting, and integrations remain unauthorized.
 
 Recommended branches:
 
@@ -115,9 +118,12 @@ versus header edit, line edit/removal, and stale instance deletion. Remediation
 code or migrations. Local remediation verification passed 342 PostgreSQL tests, including 27
 Procurement concurrency cases, and 270 SQLite tests with 72 expected PostgreSQL-only skips.
 
-Status: remediation awaiting exact-head hosted CI and independent Gate 4B re-audit. It is not
-merged to `main`, formally accepted, or closed. Gate 4C and all later Phase 2 work remain
-unauthorized.
+Status: formal acceptance recorded; canonical adoption pending. Gate 4B is not yet merged to
+`main` or closed. Hosted CI
+[run #54](https://github.com/sahinkhan/djangobusinessos/actions/runs/34881374281) passed exact final
+candidate `1eabb0e9806342cc2ba71f1468eb18af120cddb9` with 342 PostgreSQL tests, and independent
+Gate 4B re-audit returned FINAL PASS. Gate 4B is formally accepted; canonical adoption remains
+pending this controlled execution. Gate 4C and all later Phase 2 work remain unauthorized.
 
 ## Ownership
 
@@ -913,7 +919,7 @@ Historical standalone Sales       accepted at a79cb95d031bb38719bcdccfb5b14670cc
 Canonical Gate 4A adoption        accepted, adopted, and closed
 Sales adoption checkpoint         e0c848f34da0bce9b9c6e010a396026ac5889cf4
 Canonical main                    Gate 4A closure commit following e0c848f3
-Procurement adoption candidate    395da2ad874fc2efb72219da71316b9a6d8f73bf; audit pending
+Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9; adoption pending
 Inventory adoption                not authorized
 Billing / Accounting              not authorized
 Optional integrations             not authorized

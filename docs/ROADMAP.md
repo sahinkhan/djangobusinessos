@@ -101,7 +101,9 @@ contract onto Core Foundation v1. Candidate head `12d1a1f90689979048cdf3b4f59836
 passed hosted CI #53 but completion review BLOCKED on missing authorization-revocation and
 confirmation-versus-mutation PostgreSQL coverage. Narrow test remediation
 `b8c49e1fb5b62f9169038b59e35b6d4e7adfb8e0` closes those gaps without production changes and is
-awaiting exact-head CI plus independent Gate 4B re-audit. Gate 4B is not merged, accepted, or
+published at final candidate `1eabb0e9806342cc2ba71f1468eb18af120cddb9`. Hosted CI #54 passed
+with 342 PostgreSQL tests, and independent re-audit returned FINAL PASS. Gate 4B is formally
+accepted; canonical `main` adoption remains pending this controlled execution. It is not yet
 closed.
 
 Historical Gate 4A record: independent audit BLOCKED the initial Sales adoption implementation
