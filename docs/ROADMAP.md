@@ -107,6 +107,15 @@ acceptance commit `e4ea1791f0b2c7d1209ea574de3689970e1fc398` passed branch CI #5
 adopted into canonical `main` by normal fast-forward, and passed exact-head main CI #56. Gate 4B
 is accepted, adopted, and closed.
 
+Gate 4C Inventory is now implemented only as an isolated canonical adoption candidate on
+`gate4c-inventory-adoption`, reconstructed from canonical `main` at
+`8d5a41f83c3f796fa31e7d3f8598c54f7dfc5b95`. Historical `phase2-inventory` at
+`f45afdfea33d3fd03d469e6a0cd63d0e5358f38c` remains remediation/reference evidence only and was
+not merged or cherry-picked. The candidate implements the posted movement ledger, Foundation v1
+RBAC/audit/company-lock contracts, derived balances, and HTTP-only module gating. It is awaiting
+independent Gate 4C audit and is not accepted, adopted, closed, or merged. Billing, Accounting,
+integrations, and Procurement/Sales-to-Inventory automation remain unauthorized.
+
 Historical Gate 4A record: independent audit BLOCKED the initial Sales adoption implementation
 `28c8028950be1997b4f3d0816b1ec04764222068` at audit head
 `fc609bcd81916c13921c2d1cc7b6a59eda1c1e19`. Remediation at

@@ -796,7 +796,21 @@ PostgreSQL tests, and independent Gate 4B re-audit returned FINAL PASS. Document
 acceptance commit `e4ea1791f0b2c7d1209ea574de3689970e1fc398` passed exact-head branch CI #55,
 was adopted into canonical `main` by normal fast-forward, and passed exact-head main CI #56. Gate
 4B is accepted, adopted, and closed. Procurement creates no Inventory, Billing, or Accounting
-effects. Gate 4C and later work remain unauthorized.
+effects. At that checkpoint Gate 4C and later work remained unauthorized; Gate 4C subsequently
+received candidate-only authorization recorded below.
+
+## Gate 4C Inventory adoption candidate
+
+Gate 4C is implemented in isolation from canonical `main` at
+`8d5a41f83c3f796fa31e7d3f8598c54f7dfc5b95`. Historical Inventory remediation
+`f45afdfea33d3fd03d469e6a0cd63d0e5358f38c` remains read-only reference evidence and is not an
+accepted or merged baseline. The candidate adopts Foundation v1 BusinessContext, RBAC,
+Company-lock ordering, atomic audit, HTTP-only module gating, and Inventory-local ORM hardening
+while preserving a standalone posted movement ledger and no cross-module effects.
+
+Status: implementation candidate awaiting independent Gate 4C audit. It is not accepted,
+adopted, closed, or merged. Gate 4C formal acceptance, Billing, Accounting, and integrations
+remain unauthorized.
 
 ---
 

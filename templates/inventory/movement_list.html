@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% load tz %}
+{% block title %}Inventory · BusinessOS{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with current="Inventory" %}{% endblock %}
+{% block page_header %}<div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">{% include "components/page_heading.html" with heading="Stock movements" description="Posted receipt, issue, and transfer lines are the authoritative stock ledger." %}<a class="btn-primary" href="{% url 'inventory:create' %}">Create movement</a></div>{% endblock %}
+{% block content %}
+<div class="min-w-0 max-w-full overflow-x-hidden">
+  <div class="mb-5 flex flex-wrap gap-3"><a class="btn-secondary" href="{% url 'inventory:balances' %}">Balances</a><a class="btn-secondary" href="{% url 'inventory:history' %}">History</a></div>
+  <form method="get" class="mb-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem_10rem_auto]"><input name="q" value="{{ request.GET.q }}" placeholder="Number or reference"><select name="type"><option value="">All types</option>{% for value,label in types %}<option value="{{ value }}"{% if request.GET.type == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select><select name="status"><option value="">All statuses</option>{% for value,label in statuses %}<option value="{{ value }}"{% if request.GET.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="btn-secondary">Filter</button></form>
+  <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm"><div class="overflow-x-auto"><table class="data-table"><thead><tr><th>Number</th><th>Type</th><th>Status</th><th>Effective</th><th>Reference</th></tr></thead><tbody>{% for movement in movements %}<tr><td><a class="font-semibold text-indigo-700 break-all" href="{% url 'inventory:detail' movement.id %}">{{ movement.number }}</a></td><td>{{ movement.get_movement_type_display }}</td><td>{{ movement.get_status_display }}</td><td>{% timezone movement.company.timezone %}{{ movement.effective_at }}{% endtimezone %}</td><td class="max-w-xs break-words">{{ movement.reference|default:"—" }}</td></tr>{% empty %}<tr><td colspan="5">No movements in this company scope.</td></tr>{% endfor %}</tbody></table></div></section>
+</div>
+{% endblock %}

@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — GATE 4A CLOSED; GATE 4B FORMALLY ACCEPTED, CANONICAL ADOPTION PENDING
+Status: IN PROGRESS — GATE 4A/4B CLOSED; GATE 4C CANDIDATE AWAITING INDEPENDENT AUDIT
 
 Canonical Gate 4 base: `f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb`
 
@@ -42,7 +42,8 @@ Do not silently change these architecture contracts.
 The listed branches below record the historical standalone-development strategy. Canonical Gate 4
 adoption is sequential and separately authorized: Sales first, then Procurement, then Inventory.
 Gate 4A and Gate 4B are accepted, adopted, and closed.
-Gate 4C, Billing, Accounting, and integrations remain unauthorized.
+Gate 4C is authorized only as an isolated candidate awaiting independent audit. Billing,
+Accounting, and integrations remain unauthorized.
 
 Recommended branches:
 
@@ -126,7 +127,8 @@ Gate 4B re-audit returned FINAL PASS. Documentation-only acceptance commit
 [CI #55](https://github.com/sahinkhan/djangobusinessos/actions/runs/34919248812), was adopted into
 canonical `main` by normal fast-forward, and passed exact-head main
 [CI #56](https://github.com/sahinkhan/djangobusinessos/actions/runs/34919503196). Gate 4B is
-accepted, adopted, and closed. Gate 4C and all later Phase 2 work remain unauthorized.
+accepted, adopted, and closed. At that checkpoint Gate 4C and later work remained unauthorized;
+Gate 4C subsequently received candidate-only authorization recorded below.
 
 ## Ownership
 
@@ -326,6 +328,20 @@ Phase 2 minimum models:
 ## Ownership
 
 Inventory owns the stock movement ledger.
+
+## Canonical Gate 4C adoption candidate
+
+Gate 4C starts from canonical `main` at
+`8d5a41f83c3f796fa31e7d3f8598c54f7dfc5b95`. Historical `phase2-inventory` at
+`f45afdfea33d3fd03d469e6a0cd63d0e5358f38c` is remediation/reference evidence only; it was not
+accepted canonically and was not merged or cherry-picked. The isolated
+`gate4c-inventory-adoption` branch reconstructs Inventory against Core Foundation v1 with the
+five frozen Inventory permissions, Company-lock-before-RBAC ordering, atomic audit, guarded ORM
+paths, exact UoM/quantity rules, and deterministic PostgreSQL concurrency tests.
+
+The candidate preserves a standalone posted movement ledger and creates no Sales, Procurement,
+Billing, or Accounting effects. It is awaiting independent Gate 4C audit and is not accepted,
+adopted, closed, or merged into `main`.
 
 Phase 2 minimum models:
 
@@ -921,10 +937,10 @@ Phase 3 must not begin automatically.
 Historical standalone Sales       accepted at a79cb95d031bb38719bcdccfb5b14670cc76cd17
 Canonical Gate 4A adoption        accepted, adopted, and closed
 Sales adoption checkpoint         e0c848f34da0bce9b9c6e010a396026ac5889cf4
-Canonical main                    Gate 4B closure follows e4ea1791
+Canonical main                    8d5a41f83c3f796fa31e7d3f8598c54f7dfc5b95
 Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9
 Procurement adoption checkpoint   e4ea1791f0b2c7d1209ea574de3689970e1fc398; closed
-Inventory adoption                not authorized
+Inventory adoption candidate      implemented; awaiting independent audit; not merged
 Billing / Accounting              not authorized
 Optional integrations             not authorized
 ```
