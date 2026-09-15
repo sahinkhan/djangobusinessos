@@ -181,6 +181,13 @@ This corrective candidate is AWAITING INDEPENDENT PROCUREMENT CORRECTIVE RE-AUDI
 accepted, adopted, merged, or re-closed. Billing, Accounting, integrations, and deployment remain
 unauthorized.
 
+The first Procurement corrective re-audit returned REVISE for one residual P3: invalid numeric
+strings on `PurchaseOrderLine.quantity` or `unit_cost` could escape model validation as an
+uncontrolled `TypeError`. Residual remediation `c34daec0d3ad876612c15536f8c94148f7f4664c`
+uses Django DecimalField conversion semantics before finite/business comparisons and adds public
+service plus direct-model regressions. Status: IMPLEMENTED / AWAITING SECOND INDEPENDENT
+PROCUREMENT CORRECTIVE RE-AUDIT. No corrective adoption or re-closure is claimed.
+
 Gate 4C original implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
 
 Historical Gate 4A record: independent audit BLOCKED the initial Sales adoption implementation

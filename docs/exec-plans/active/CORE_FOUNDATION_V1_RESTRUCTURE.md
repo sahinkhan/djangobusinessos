@@ -883,6 +883,13 @@ remediation `1ccaf0bc74816b11035cb33f24e172ff8f902329` is isolated on
 `gate4b-procurement-postclosure-remediation`. It is IMPLEMENTED / AWAITING INDEPENDENT
 PROCUREMENT CORRECTIVE RE-AUDIT and has not been accepted, adopted, merged, or re-closed.
 
+The first corrective re-audit returned REVISE for one residual Procurement P3: raw invalid numeric
+strings could raise `TypeError` during order-line comparison instead of field-specific validation.
+Residual remediation `c34daec0d3ad876612c15536f8c94148f7f4664c` applies Django DecimalField
+normalization before finite/business comparisons and adds add/update/direct-save atomicity
+regressions. It is IMPLEMENTED / AWAITING SECOND INDEPENDENT PROCUREMENT CORRECTIVE RE-AUDIT;
+`main`, historical Gate 4B, corrective adoption, and re-closure remain untouched.
+
 ---
 
 # Final Canonical Product State

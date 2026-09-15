@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — PROCUREMENT POST-CLOSURE REMEDIATION AWAITS INDEPENDENT RE-AUDIT
+Status: IN PROGRESS — PROCUREMENT RESIDUAL P3 REMEDIATION AWAITS SECOND INDEPENDENT RE-AUDIT
 
 Canonical Gate 4 base: `f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb`
 
@@ -434,6 +434,13 @@ SKU/name snapshot audit detection, supported-value UI overflow, and non-finite o
 validation. Procurement-local remediation `1ccaf0bc74816b11035cb33f24e172ff8f902329` is isolated on
 `gate4b-procurement-postclosure-remediation`. Status: IMPLEMENTED / AWAITING INDEPENDENT
 PROCUREMENT CORRECTIVE RE-AUDIT. It is not accepted, adopted into `main`, merged, or re-closed.
+
+The first corrective re-audit returned REVISE for a single residual P3: invalid numeric strings on
+order-line quantity/cost could escape comparison as uncontrolled `TypeError`. Residual remediation
+`c34daec0d3ad876612c15536f8c94148f7f4664c` uses Django DecimalField-compatible normalization
+before finite and business comparisons, with public add/update and direct-save rollback tests.
+Status: IMPLEMENTED / AWAITING SECOND INDEPENDENT PROCUREMENT CORRECTIVE RE-AUDIT. No acceptance,
+adoption, merge, or re-closure is claimed.
 
 Phase 2 minimum models:
 
@@ -1033,6 +1040,7 @@ Canonical corrective adoption     35663e4f6b4112903838e0a8069f47885c83f7ce
 Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9
 Procurement adoption checkpoint   e4ea1791f0b2c7d1209ea574de3689970e1fc398; closed
 Procurement post-closure remediation 1ccaf0bc; awaiting independent corrective re-audit
+Procurement residual P3 remediation c34daec0; awaiting second independent corrective re-audit
 Inventory accepted candidate      8b522709; historical FINAL PASS
 Inventory adoption checkpoint     60f879a0; historically accepted, adopted, and closed
 Inventory corrective candidate     23a12ae; independent corrective re-audit REVISE

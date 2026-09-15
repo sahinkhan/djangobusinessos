@@ -123,3 +123,11 @@ Procurement-local remediation is implemented at
 `gate4b-procurement-postclosure-remediation`. It preserves the historical acceptance record and
 adds no schema, integration, or cross-module behavior. Status: IMPLEMENTED / AWAITING INDEPENDENT
 PROCUREMENT CORRECTIVE RE-AUDIT. It is not yet accepted, adopted into `main`, or re-closed.
+
+That first corrective re-audit returned REVISE for one residual P3: invalid numeric strings could
+reach `PurchaseOrderLine.clean()` comparisons and raise an uncontrolled `TypeError` instead of a
+field-specific `ValidationError`. Residual remediation
+`c34daec0d3ad876612c15536f8c94148f7f4664c` normalizes `quantity` and `unit_cost` through Django's
+DecimalField conversion semantics before finite and business-rule comparisons. Status:
+IMPLEMENTED / AWAITING SECOND INDEPENDENT PROCUREMENT CORRECTIVE RE-AUDIT. Historical acceptance
+remains preserved; corrective adoption and Gate 4B re-closure remain pending and unauthorized.
