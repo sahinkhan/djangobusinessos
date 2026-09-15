@@ -14,7 +14,11 @@ again and Core Foundation v1 is FROZEN at that implementation. Gate 3A reconstru
 independent FINAL PASS at accepted candidate `780144c5560e1d46cc5d545dc29b33522cd2d1f5`, with hosted
 CI #42 successful at the exact SHA. Gate 3B canonical `main` cutover received independent FINAL PASS
 at `29d6c12913145bd1b64f572b5bc94c1f53d9987a`; hosted main CI #45 succeeded at that exact SHA.
-Gate 3 is closed. Phase 2 / Gate 4 remains separately gated and unauthorized.
+Gate 3 is closed. Gate 4A Sales and Gate 4B Procurement are accepted, adopted, and closed. Gate
+4C Inventory final candidate `8b52270959a2f6623de225e08dc081aea8d1630b` passed exact-head
+hosted CI #60 with 410 PostgreSQL tests and independent re-audit returned FINAL PASS. Gate 4C is
+formally accepted; canonical adoption and closure are pending this controlled execution. Billing,
+Accounting, integrations, and deployment remain unauthorized.
 
 Remediation covers the four reproduced findings:
 
@@ -808,10 +812,15 @@ accepted or merged baseline. The candidate adopts Foundation v1 BusinessContext,
 Company-lock ordering, atomic audit, HTTP-only module gating, and Inventory-local ORM hardening
 while preserving a standalone posted movement ledger and no cross-module effects.
 
-Status: implementation candidate awaiting independent Gate 4C audit. It is not accepted,
-adopted, closed, or merged. Gate 4C formal acceptance, Billing, Accounting, and integrations
-remain unauthorized. Implementation candidate:
-`e1e94307bd96b2834f677eb02b91d27b87843f21`.
+Original implementation `e1e94307bd96b2834f677eb02b91d27b87843f21` was published at initial
+candidate `01037fc7f87e546382931a081750bf367bb78232`; CI #59 passed with 406 PostgreSQL
+tests, but independent audit BLOCKED acceptance on mixed-UoM balance safety, HTTP mutation-form
+RBAC, stale-company HTTP evidence, and a missing ProductVariant stock-field assertion. Narrow
+remediation `78ba3ae92366da9b2136b260cc9a380e22587e08` closed those findings at final
+candidate `8b52270959a2f6623de225e08dc081aea8d1630b`. Exact-head CI #60 passed with 410
+PostgreSQL tests and independent re-audit returned FINAL PASS. Gate 4C is formally accepted;
+canonical adoption and closure are pending this controlled execution. Billing, Accounting, and
+integrations remain unauthorized.
 
 ---
 

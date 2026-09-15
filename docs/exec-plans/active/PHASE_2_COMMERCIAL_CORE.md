@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — GATE 4A/4B CLOSED; GATE 4C REMEDIATION AWAITING INDEPENDENT RE-AUDIT
+Status: IN PROGRESS — GATE 4A/4B CLOSED; GATE 4C FORMALLY ACCEPTED, ADOPTION PENDING
 
 Canonical Gate 4 base: `f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb`
 
@@ -354,8 +354,10 @@ rejection, enforces the exact action permission before rendering or executing HT
 forms, completes the stale-company matrix, and covers ProductVariant. Local verification passed
 410 PostgreSQL tests, 314 SQLite tests with 96 expected PostgreSQL-only skips, the 68-test
 PostgreSQL Inventory suite, fresh PostgreSQL bootstrap, Ruff, Django checks, migration drift, and
-Tailwind reproducibility. Gate 4C remains unaccepted, unadopted, unclosed, and unmerged while the
-remediation awaits independent re-audit.
+Tailwind reproducibility. Hosted CI #60 passed exact final candidate
+`8b52270959a2f6623de225e08dc081aea8d1630b` with 410 PostgreSQL tests, and independent
+re-audit returned FINAL PASS. Gate 4C is formally accepted at that candidate. Canonical adoption
+and closure are pending this controlled execution; it remains unmerged at this acceptance stage.
 
 Phase 2 minimum models:
 
@@ -954,7 +956,7 @@ Sales adoption checkpoint         e0c848f34da0bce9b9c6e010a396026ac5889cf4
 Canonical main                    8d5a41f83c3f796fa31e7d3f8598c54f7dfc5b95
 Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9
 Procurement adoption checkpoint   e4ea1791f0b2c7d1209ea574de3689970e1fc398; closed
-Inventory adoption remediation    78ba3ae9; awaiting independent re-audit; not merged
+Inventory accepted candidate      8b522709; adoption/closure pending; not merged
 Billing / Accounting              not authorized
 Optional integrations             not authorized
 ```

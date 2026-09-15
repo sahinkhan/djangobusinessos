@@ -116,8 +116,10 @@ RBAC/audit/company-lock contracts, derived balances, and HTTP-only module gating
 candidate head `01037fc7f87e546382931a081750bf367bb78232` passed hosted CI #59 with 406
 PostgreSQL tests, but independent audit BLOCKED acceptance on mixed-UoM balance safety, HTTP
 mutation-form RBAC, stale-company HTTP evidence, and a missing ProductVariant stock-field
-assertion. Narrow remediation `78ba3ae92366da9b2136b260cc9a380e22587e08` closes those findings and is
-awaiting independent Gate 4C re-audit. Gate 4C is not accepted, adopted, closed, or merged.
+assertion. Narrow remediation `78ba3ae92366da9b2136b260cc9a380e22587e08` closed those findings at
+final candidate `8b52270959a2f6623de225e08dc081aea8d1630b`. Hosted CI #60 passed that exact
+head with 410 PostgreSQL tests, and independent re-audit returned FINAL PASS. Gate 4C is formally
+accepted at that candidate; canonical adoption and closure are pending this controlled execution.
 Billing, Accounting, integrations, and Procurement/Sales-to-Inventory automation remain
 unauthorized.
 

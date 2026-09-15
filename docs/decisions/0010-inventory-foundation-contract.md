@@ -1,6 +1,6 @@
 # ADR 0010 — Inventory Foundation Contract
 
-Status: Proposed — Gate 4C remediation awaiting independent re-audit
+Status: Accepted — Gate 4C technical candidate accepted; canonical adoption pending
 
 Date: 2026-09-15
 
@@ -92,6 +92,10 @@ The original `gate4c-inventory-adoption` implementation candidate is
 `01037fc7f87e546382931a081750bf367bb78232`. Independent audit BLOCKED acceptance on mixed-UoM
 balance safety, HTTP mutation-form RBAC, stale-company HTTP coverage, and a missing
 ProductVariant stock-field assertion. Narrow remediation
-`78ba3ae92366da9b2136b260cc9a380e22587e08` closes those findings and awaits independent
-re-audit. This ADR does not mark Gate 4C accepted, adopted, closed, or merged. Independent
-re-audit and separate formal adoption authorization remain required.
+`78ba3ae92366da9b2136b260cc9a380e22587e08` closed those findings at final candidate
+`8b52270959a2f6623de225e08dc081aea8d1630b`. Hosted CI
+[run #60](https://github.com/sahinkhan/djangobusinessos/actions/runs/34925582449) passed that exact
+head with 410 PostgreSQL tests and all standard checks. Independent re-audit returned FINAL PASS.
+The candidate is formally accepted. Canonical adoption and Gate 4C closure remain pending this
+controlled execution; Billing, Accounting, integrations, and production deployment remain
+unauthorized.
