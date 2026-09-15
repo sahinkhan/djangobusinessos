@@ -191,7 +191,15 @@ service plus direct-model regressions. Final candidate
 corrective re-audit returned FINAL PASS after 493 PostgreSQL tests, 115 Procurement-local tests,
 27 real-lock concurrency tests, focused adversarial probes, SQLite verification, and desktop/mobile
 boundary QA. The corrective remediation is ACCEPTED FOR CONTROLLED ADOPTION; historical findings
-remain recorded, while corrective adoption and re-closure are not yet complete.
+remain recorded. Documentation-only acceptance checkpoint
+`49052c0efd3a63ec55c409e0d38082425ce116c3` passed exact-head branch
+[#81](https://github.com/sahinkhan/djangobusinessos/actions/runs/34992015192), was adopted into
+canonical `main` by normal fast-forward, and passed exact-head main
+[#82](https://github.com/sahinkhan/djangobusinessos/actions/runs/34993306285). Corrective
+acceptance and canonical adoption are complete; this documentation closes the Procurement
+post-closure corrective cycle. The current frozen Procurement foundation scope is canonically
+complete. Future Procurement extensions remain open and separately governed. Billing,
+Accounting, integrations, and deployment remain unauthorized.
 
 Gate 4C original implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
 

@@ -890,8 +890,16 @@ normalization before finite/business comparisons and adds add/update/direct-save
 regressions. Final candidate `ad03000deeae72a1703f6935dd9d4cde46ede5cc` passed exact-head CI #80,
 and the second independent corrective re-audit returned FINAL PASS after PostgreSQL, SQLite,
 real-lock concurrency, adversarial boundary, and responsive UI verification. It is ACCEPTED FOR
-CONTROLLED ADOPTION; `main`, historical Gate 4B, corrective adoption, and re-closure remain
-untouched at this acceptance checkpoint.
+CONTROLLED ADOPTION. Documentation-only acceptance checkpoint
+`49052c0efd3a63ec55c409e0d38082425ce116c3` passed exact-head branch CI #81
+([run 34992015192](https://github.com/sahinkhan/djangobusinessos/actions/runs/34992015192)), was
+adopted into canonical `main` by normal fast-forward, and passed exact-head main CI #82
+([run 34993306285](https://github.com/sahinkhan/djangobusinessos/actions/runs/34993306285)).
+Corrective acceptance and adoption are complete, and this documentation closes the Procurement
+post-closure corrective cycle. The historical Gate 4B closure remains preserved; the current
+frozen Procurement foundation scope is canonically complete. Future Procurement extensions remain
+open and separately governed. Billing, Accounting, integrations, and production deployment remain
+unauthorized.
 
 ---
 

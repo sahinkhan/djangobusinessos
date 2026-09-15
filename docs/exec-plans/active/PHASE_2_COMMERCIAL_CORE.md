@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — PROCUREMENT CORRECTIVE REMEDIATION ACCEPTED FOR CONTROLLED ADOPTION
+Status: IN PROGRESS — PROCUREMENT CORRECTIVE REMEDIATION ACCEPTED / ADOPTED / CLOSED
 
 Canonical Gate 4 base: `f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb`
 
@@ -443,7 +443,13 @@ Final candidate `ad03000deeae72a1703f6935dd9d4cde46ede5cc` passed hosted CI #80 
 head. The second independent corrective re-audit returned FINAL PASS, including 493 PostgreSQL
 tests, 115 Procurement-local tests, 27 real-lock concurrency tests, SQLite verification, focused
 adversarial probes, and desktop/mobile boundary QA. Status: ACCEPTED FOR CONTROLLED ADOPTION.
-Adoption, merge, and re-closure are not yet claimed.
+Documentation-only acceptance checkpoint `49052c0efd3a63ec55c409e0d38082425ce116c3` passed exact-head
+branch [CI #81](https://github.com/sahinkhan/djangobusinessos/actions/runs/34992015192), was adopted
+into canonical `main` by normal fast-forward, and passed exact-head main
+[CI #82](https://github.com/sahinkhan/djangobusinessos/actions/runs/34993306285). Corrective
+acceptance and canonical adoption are complete; this documentation closes the Procurement
+post-closure corrective cycle. The current frozen Procurement foundation scope is canonically
+complete. Future Procurement extensions remain open and separately governed.
 
 Phase 2 minimum models:
 
@@ -1043,7 +1049,8 @@ Canonical corrective adoption     35663e4f6b4112903838e0a8069f47885c83f7ce
 Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9
 Procurement adoption checkpoint   e4ea1791f0b2c7d1209ea574de3689970e1fc398; closed
 Procurement post-closure remediation 1ccaf0bc; first corrective re-audit REVISE
-Procurement residual P3 remediation c34daec0; final candidate ad03000; FINAL PASS / accepted for adoption
+Procurement residual P3 remediation c34daec0; final candidate ad03000; FINAL PASS
+Procurement corrective adoption      49052c0e; accepted / adopted / closed
 Inventory accepted candidate      8b522709; historical FINAL PASS
 Inventory adoption checkpoint     60f879a0; historically accepted, adopted, and closed
 Inventory corrective candidate     23a12ae; independent corrective re-audit REVISE

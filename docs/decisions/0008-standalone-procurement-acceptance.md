@@ -132,5 +132,14 @@ DecimalField conversion semantics before finite and business-rule comparisons. F
 `ad03000deeae72a1703f6935dd9d4cde46ede5cc` passed exact-head hosted CI
 [#80](https://github.com/sahinkhan/djangobusinessos/actions/runs/34987503229), and the second
 independent corrective re-audit returned FINAL PASS with no remaining P1/P2/P3 finding. Status:
-ACCEPTED FOR CONTROLLED ADOPTION. Historical acceptance and both REVISE findings remain preserved;
-corrective adoption and Gate 4B re-closure are not yet complete.
+ACCEPTED FOR CONTROLLED ADOPTION. Historical acceptance and both REVISE findings remain preserved.
+
+Documentation-only corrective acceptance checkpoint
+`49052c0efd3a63ec55c409e0d38082425ce116c3` passed exact-head branch
+[#81](https://github.com/sahinkhan/djangobusinessos/actions/runs/34992015192), was adopted into
+canonical `main` by normal fast-forward, and passed exact-head main
+[#82](https://github.com/sahinkhan/djangobusinessos/actions/runs/34993306285). Corrective
+acceptance and canonical adoption are complete, and this documentation closes the Gate 4B
+post-closure corrective cycle. The historical closure remains preserved, while the current frozen
+Procurement foundation scope is canonically complete. Future Procurement extensions remain open
+and separately governed.
