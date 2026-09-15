@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — PROCUREMENT RESIDUAL P3 REMEDIATION AWAITS SECOND INDEPENDENT RE-AUDIT
+Status: IN PROGRESS — PROCUREMENT CORRECTIVE REMEDIATION ACCEPTED FOR CONTROLLED ADOPTION
 
 Canonical Gate 4 base: `f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb`
 
@@ -439,8 +439,11 @@ The first corrective re-audit returned REVISE for a single residual P3: invalid 
 order-line quantity/cost could escape comparison as uncontrolled `TypeError`. Residual remediation
 `c34daec0d3ad876612c15536f8c94148f7f4664c` uses Django DecimalField-compatible normalization
 before finite and business comparisons, with public add/update and direct-save rollback tests.
-Status: IMPLEMENTED / AWAITING SECOND INDEPENDENT PROCUREMENT CORRECTIVE RE-AUDIT. No acceptance,
-adoption, merge, or re-closure is claimed.
+Final candidate `ad03000deeae72a1703f6935dd9d4cde46ede5cc` passed hosted CI #80 at the exact
+head. The second independent corrective re-audit returned FINAL PASS, including 493 PostgreSQL
+tests, 115 Procurement-local tests, 27 real-lock concurrency tests, SQLite verification, focused
+adversarial probes, and desktop/mobile boundary QA. Status: ACCEPTED FOR CONTROLLED ADOPTION.
+Adoption, merge, and re-closure are not yet claimed.
 
 Phase 2 minimum models:
 
@@ -1039,8 +1042,8 @@ Sales adoption checkpoint         e0c848f34da0bce9b9c6e010a396026ac5889cf4
 Canonical corrective adoption     35663e4f6b4112903838e0a8069f47885c83f7ce
 Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9
 Procurement adoption checkpoint   e4ea1791f0b2c7d1209ea574de3689970e1fc398; closed
-Procurement post-closure remediation 1ccaf0bc; awaiting independent corrective re-audit
-Procurement residual P3 remediation c34daec0; awaiting second independent corrective re-audit
+Procurement post-closure remediation 1ccaf0bc; first corrective re-audit REVISE
+Procurement residual P3 remediation c34daec0; final candidate ad03000; FINAL PASS / accepted for adoption
 Inventory accepted candidate      8b522709; historical FINAL PASS
 Inventory adoption checkpoint     60f879a0; historically accepted, adopted, and closed
 Inventory corrective candidate     23a12ae; independent corrective re-audit REVISE

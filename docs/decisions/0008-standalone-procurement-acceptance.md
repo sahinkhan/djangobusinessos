@@ -128,6 +128,9 @@ That first corrective re-audit returned REVISE for one residual P3: invalid nume
 reach `PurchaseOrderLine.clean()` comparisons and raise an uncontrolled `TypeError` instead of a
 field-specific `ValidationError`. Residual remediation
 `c34daec0d3ad876612c15536f8c94148f7f4664c` normalizes `quantity` and `unit_cost` through Django's
-DecimalField conversion semantics before finite and business-rule comparisons. Status:
-IMPLEMENTED / AWAITING SECOND INDEPENDENT PROCUREMENT CORRECTIVE RE-AUDIT. Historical acceptance
-remains preserved; corrective adoption and Gate 4B re-closure remain pending and unauthorized.
+DecimalField conversion semantics before finite and business-rule comparisons. Final candidate
+`ad03000deeae72a1703f6935dd9d4cde46ede5cc` passed exact-head hosted CI
+[#80](https://github.com/sahinkhan/djangobusinessos/actions/runs/34987503229), and the second
+independent corrective re-audit returned FINAL PASS with no remaining P1/P2/P3 finding. Status:
+ACCEPTED FOR CONTROLLED ADOPTION. Historical acceptance and both REVISE findings remain preserved;
+corrective adoption and Gate 4B re-closure are not yet complete.

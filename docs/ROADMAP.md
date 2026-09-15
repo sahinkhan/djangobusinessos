@@ -185,8 +185,13 @@ The first Procurement corrective re-audit returned REVISE for one residual P3: i
 strings on `PurchaseOrderLine.quantity` or `unit_cost` could escape model validation as an
 uncontrolled `TypeError`. Residual remediation `c34daec0d3ad876612c15536f8c94148f7f4664c`
 uses Django DecimalField conversion semantics before finite/business comparisons and adds public
-service plus direct-model regressions. Status: IMPLEMENTED / AWAITING SECOND INDEPENDENT
-PROCUREMENT CORRECTIVE RE-AUDIT. No corrective adoption or re-closure is claimed.
+service plus direct-model regressions. Final candidate
+`ad03000deeae72a1703f6935dd9d4cde46ede5cc` passed exact-head hosted CI
+[#80](https://github.com/sahinkhan/djangobusinessos/actions/runs/34987503229). The second independent
+corrective re-audit returned FINAL PASS after 493 PostgreSQL tests, 115 Procurement-local tests,
+27 real-lock concurrency tests, focused adversarial probes, SQLite verification, and desktop/mobile
+boundary QA. The corrective remediation is ACCEPTED FOR CONTROLLED ADOPTION; historical findings
+remain recorded, while corrective adoption and re-closure are not yet complete.
 
 Gate 4C original implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
 

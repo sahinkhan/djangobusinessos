@@ -887,8 +887,11 @@ The first corrective re-audit returned REVISE for one residual Procurement P3: r
 strings could raise `TypeError` during order-line comparison instead of field-specific validation.
 Residual remediation `c34daec0d3ad876612c15536f8c94148f7f4664c` applies Django DecimalField
 normalization before finite/business comparisons and adds add/update/direct-save atomicity
-regressions. It is IMPLEMENTED / AWAITING SECOND INDEPENDENT PROCUREMENT CORRECTIVE RE-AUDIT;
-`main`, historical Gate 4B, corrective adoption, and re-closure remain untouched.
+regressions. Final candidate `ad03000deeae72a1703f6935dd9d4cde46ede5cc` passed exact-head CI #80,
+and the second independent corrective re-audit returned FINAL PASS after PostgreSQL, SQLite,
+real-lock concurrency, adversarial boundary, and responsive UI verification. It is ACCEPTED FOR
+CONTROLLED ADOPTION; `main`, historical Gate 4B, corrective adoption, and re-closure remain
+untouched at this acceptance checkpoint.
 
 ---
 
