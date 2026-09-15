@@ -1,6 +1,6 @@
 # ADR 0010 — Inventory Foundation Contract
 
-Status: Proposed — Gate 4C candidate awaiting independent audit
+Status: Proposed — Gate 4C remediation awaiting independent re-audit
 
 Date: 2026-09-15
 
@@ -87,6 +87,11 @@ only status, posted time, and update time.
 
 ## Gate status
 
-The `gate4c-inventory-adoption` implementation candidate is
-`e1e94307bd96b2834f677eb02b91d27b87843f21`. This ADR does not mark Gate 4C accepted, adopted,
-closed, or merged. Independent audit and separate formal adoption authorization remain required.
+The original `gate4c-inventory-adoption` implementation candidate is
+`e1e94307bd96b2834f677eb02b91d27b87843f21`, published at candidate head
+`01037fc7f87e546382931a081750bf367bb78232`. Independent audit BLOCKED acceptance on mixed-UoM
+balance safety, HTTP mutation-form RBAC, stale-company HTTP coverage, and a missing
+ProductVariant stock-field assertion. Narrow remediation
+`78ba3ae92366da9b2136b260cc9a380e22587e08` closes those findings and awaits independent
+re-audit. This ADR does not mark Gate 4C accepted, adopted, closed, or merged. Independent
+re-audit and separate formal adoption authorization remain required.

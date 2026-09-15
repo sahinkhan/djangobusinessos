@@ -112,11 +112,16 @@ Gate 4C Inventory is now implemented only as an isolated canonical adoption cand
 `8d5a41f83c3f796fa31e7d3f8598c54f7dfc5b95`. Historical `phase2-inventory` at
 `f45afdfea33d3fd03d469e6a0cd63d0e5358f38c` remains remediation/reference evidence only and was
 not merged or cherry-picked. The candidate implements the posted movement ledger, Foundation v1
-RBAC/audit/company-lock contracts, derived balances, and HTTP-only module gating. It is awaiting
-independent Gate 4C audit and is not accepted, adopted, closed, or merged. Billing, Accounting,
-integrations, and Procurement/Sales-to-Inventory automation remain unauthorized.
+RBAC/audit/company-lock contracts, derived balances, and HTTP-only module gating. Initial
+candidate head `01037fc7f87e546382931a081750bf367bb78232` passed hosted CI #59 with 406
+PostgreSQL tests, but independent audit BLOCKED acceptance on mixed-UoM balance safety, HTTP
+mutation-form RBAC, stale-company HTTP evidence, and a missing ProductVariant stock-field
+assertion. Narrow remediation `78ba3ae92366da9b2136b260cc9a380e22587e08` closes those findings and is
+awaiting independent Gate 4C re-audit. Gate 4C is not accepted, adopted, closed, or merged.
+Billing, Accounting, integrations, and Procurement/Sales-to-Inventory automation remain
+unauthorized.
 
-Gate 4C implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
+Gate 4C original implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
 
 Historical Gate 4A record: independent audit BLOCKED the initial Sales adoption implementation
 `28c8028950be1997b4f3d0816b1ec04764222068` at audit head

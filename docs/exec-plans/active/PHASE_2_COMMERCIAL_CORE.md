@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — GATE 4A/4B CLOSED; GATE 4C CANDIDATE AWAITING INDEPENDENT AUDIT
+Status: IN PROGRESS — GATE 4A/4B CLOSED; GATE 4C REMEDIATION AWAITING INDEPENDENT RE-AUDIT
 
 Canonical Gate 4 base: `f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb`
 
@@ -340,9 +340,22 @@ five frozen Inventory permissions, Company-lock-before-RBAC ordering, atomic aud
 paths, exact UoM/quantity rules, and deterministic PostgreSQL concurrency tests.
 
 The candidate preserves a standalone posted movement ledger and creates no Sales, Procurement,
-Billing, or Accounting effects. It is awaiting independent Gate 4C audit and is not accepted,
-adopted, closed, or merged into `main`. The implementation candidate is
-`e1e94307bd96b2834f677eb02b91d27b87843f21`.
+Billing, or Accounting effects. Original implementation
+`e1e94307bd96b2834f677eb02b91d27b87843f21` was published at candidate head
+`01037fc7f87e546382931a081750bf367bb78232`; hosted CI #59 passed with 406 PostgreSQL tests.
+Independent audit nevertheless BLOCKED acceptance because mixed-UoM history could be summed by
+`stock_balance()`, mutation forms lacked explicit action-page RBAC, the required stale-company
+HTTP matrix was incomplete, and the no-authoritative-stock-field regression omitted
+ProductVariant.
+
+Narrow remediation `78ba3ae92366da9b2136b260cc9a380e22587e08` makes balance selectors fail
+closed for incompatible posted UoMs, retains and regression-tests posting-time historical-UoM
+rejection, enforces the exact action permission before rendering or executing HTTP mutation
+forms, completes the stale-company matrix, and covers ProductVariant. Local verification passed
+410 PostgreSQL tests, 314 SQLite tests with 96 expected PostgreSQL-only skips, the 68-test
+PostgreSQL Inventory suite, fresh PostgreSQL bootstrap, Ruff, Django checks, migration drift, and
+Tailwind reproducibility. Gate 4C remains unaccepted, unadopted, unclosed, and unmerged while the
+remediation awaits independent re-audit.
 
 Phase 2 minimum models:
 
@@ -941,7 +954,7 @@ Sales adoption checkpoint         e0c848f34da0bce9b9c6e010a396026ac5889cf4
 Canonical main                    8d5a41f83c3f796fa31e7d3f8598c54f7dfc5b95
 Procurement accepted candidate    1eabb0e9806342cc2ba71f1468eb18af120cddb9
 Procurement adoption checkpoint   e4ea1791f0b2c7d1209ea574de3689970e1fc398; closed
-Inventory adoption candidate      e1e94307; awaiting independent audit; not merged
+Inventory adoption remediation    78ba3ae9; awaiting independent re-audit; not merged
 Billing / Accounting              not authorized
 Optional integrations             not authorized
 ```
