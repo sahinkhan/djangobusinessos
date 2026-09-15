@@ -104,7 +104,10 @@ def movement_edit(request, movement_id):
         for field in ("movement_type", "effective_at", "reference", "notes")
     }
     form = MovementForm(
-        request.POST or None, company_id=context.company_id, initial=initial
+        request.POST or None,
+        company_id=context.company_id,
+        original_effective_at=movement.effective_at,
+        initial=initial,
     )
     if request.method == "POST" and form.is_valid():
         try:

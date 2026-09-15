@@ -36,7 +36,7 @@ class MovementForm(CompanyBoundForm):
     reference = forms.CharField(max_length=160, required=False)
     notes = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 3}))
 
-    def __init__(self, *args, company_id, **kwargs):
+    def __init__(self, *args, company_id, original_effective_at=None, **kwargs):
         initial = kwargs.get("initial") or {}
         if initial.get("effective_at"):
             initial = initial.copy()
@@ -46,8 +46,10 @@ class MovementForm(CompanyBoundForm):
             kwargs["initial"] = initial
         super().__init__(*args, company_id=company_id, **kwargs)
         self.company_id = company_id
+        self.original_effective_at = original_effective_at
+        self.business_timezone = company_timezone(company_id)
         self.fields["effective_at"] = CompanyDateTimeField(
-            business_timezone=company_timezone(company_id),
+            business_timezone=self.business_timezone,
             widget=forms.DateTimeInput(
                 attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"
             ),
@@ -57,6 +59,21 @@ class MovementForm(CompanyBoundForm):
             self.initial["effective_at"] = company_local_datetime(company_id).replace(
                 second=0, microsecond=0
             )
+
+    def clean_effective_at(self):
+        value = self.cleaned_data["effective_at"]
+        original = self.original_effective_at
+        if original is None or timezone.is_naive(original):
+            return value
+        submitted_local = timezone.localtime(value, self.business_timezone)
+        original_local = timezone.localtime(original, self.business_timezone)
+        displayed_parts = ("year", "month", "day", "hour", "minute")
+        if all(
+            getattr(submitted_local, part) == getattr(original_local, part)
+            for part in displayed_parts
+        ):
+            return original
+        return value
 
 
 class MovementCreateForm(MovementForm):

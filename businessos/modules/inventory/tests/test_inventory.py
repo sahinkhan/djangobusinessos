@@ -815,7 +815,7 @@ def test_movement_edit_renders_and_preserves_company_local_effective_time(
     company.timezone = "Asia/Dhaka"
     company.save()
     register_manifest(MODULE, enabled=True)
-    instant = datetime(2026, 9, 15, 2, 30, tzinfo=UTC)
+    instant = datetime(2026, 9, 15, 2, 30, 45, 123456, tzinfo=UTC)
     movement = services.create_stock_movement(
         business_context,
         movement_type=StockMovement.Type.RECEIPT,
@@ -844,7 +844,43 @@ def test_movement_edit_renders_and_preserves_company_local_effective_time(
     assert response.status_code == 302
     movement.refresh_from_db()
     assert movement.effective_at == instant
+    assert movement.effective_at.second == 45
+    assert movement.effective_at.microsecond == 123456
     assert movement.notes == "Only notes changed"
+
+
+@pytest.mark.django_db
+def test_movement_edit_changed_minute_does_not_preserve_subminute_precision(
+    client, operator, company, business_context
+):
+    company.timezone = "Asia/Dhaka"
+    company.save()
+    register_manifest(MODULE, enabled=True)
+    movement = services.create_stock_movement(
+        business_context,
+        movement_type=StockMovement.Type.RECEIPT,
+        effective_at=datetime(2026, 9, 15, 2, 30, 45, 123456, tzinfo=UTC),
+    )
+    client.force_login(operator)
+    session = client.session
+    session[SESSION_COMPANY_KEY] = str(company.id)
+    session.save()
+
+    response = client.post(
+        reverse("inventory:edit", args=[movement.id]),
+        {
+            "scope_company_id": company.id,
+            "movement_type": StockMovement.Type.RECEIPT,
+            "effective_at": "2026-09-15T08:31",
+            "reference": "",
+            "notes": "Time changed",
+        },
+    )
+    assert response.status_code == 302
+    movement.refresh_from_db()
+    assert movement.effective_at == datetime(2026, 9, 15, 2, 31, tzinfo=UTC)
+    assert movement.effective_at.second == 0
+    assert movement.effective_at.microsecond == 0
 
 
 @pytest.mark.django_db
