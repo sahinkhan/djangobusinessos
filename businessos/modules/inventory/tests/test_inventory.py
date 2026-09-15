@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from uuid import uuid4
 
@@ -806,3 +806,207 @@ def test_movement_form_interprets_effective_time_in_company_timezone(company):
     effective_at = form.cleaned_data["effective_at"]
     assert effective_at.utcoffset() == timedelta(hours=6)
     assert effective_at.hour == 8
+
+
+@pytest.mark.django_db
+def test_movement_edit_renders_and_preserves_company_local_effective_time(
+    client, operator, company, business_context
+):
+    company.timezone = "Asia/Dhaka"
+    company.save()
+    register_manifest(MODULE, enabled=True)
+    instant = datetime(2026, 9, 15, 2, 30, tzinfo=UTC)
+    movement = services.create_stock_movement(
+        business_context,
+        movement_type=StockMovement.Type.RECEIPT,
+        effective_at=instant,
+    )
+    client.force_login(operator)
+    session = client.session
+    session[SESSION_COMPANY_KEY] = str(company.id)
+    session.save()
+
+    url = reverse("inventory:edit", args=[movement.id])
+    response = client.get(url)
+    assert response.status_code == 200
+    assert b'value="2026-09-15T08:30"' in response.content
+
+    response = client.post(
+        url,
+        {
+            "scope_company_id": company.id,
+            "movement_type": StockMovement.Type.RECEIPT,
+            "effective_at": "2026-09-15T08:30",
+            "reference": "",
+            "notes": "",
+        },
+    )
+    assert response.status_code == 302
+    movement.refresh_from_db()
+    assert movement.effective_at == instant
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("wall_time", ["2026-03-08T02:30", "2026-11-01T01:30"])
+def test_movement_form_rejects_nonexistent_and_ambiguous_company_times(
+    company, wall_time
+):
+    from businessos.modules.inventory.forms import MovementForm
+
+    company.timezone = "America/New_York"
+    company.save()
+    form = MovementForm(
+        {
+            "scope_company_id": company.id,
+            "movement_type": StockMovement.Type.RECEIPT,
+            "effective_at": wall_time,
+            "reference": "",
+            "notes": "",
+        },
+        company_id=company.id,
+    )
+    assert not form.is_valid()
+    assert "effective_at" in form.errors
+    assert "ambiguous or it may not exist" in form.errors["effective_at"][0]
+
+
+@pytest.mark.django_db
+def test_movement_form_accepts_ordinary_new_york_company_time(company):
+    from businessos.modules.inventory.forms import MovementForm
+
+    company.timezone = "America/New_York"
+    company.save()
+    form = MovementForm(
+        {
+            "scope_company_id": company.id,
+            "movement_type": StockMovement.Type.RECEIPT,
+            "effective_at": "2026-03-08T03:30",
+            "reference": "",
+            "notes": "",
+        },
+        company_id=company.id,
+    )
+    assert form.is_valid(), form.errors
+    assert form.cleaned_data["effective_at"].astimezone(UTC) == datetime(
+        2026, 3, 8, 7, 30, tzinfo=UTC
+    )
+
+
+@pytest.mark.django_db
+def test_combined_history_filters_require_one_matching_line(
+    business_context, stockable_variant, warehouse, company, branch, uom
+):
+    other_warehouse = Warehouse.objects.create(
+        company=company, branch=branch, code="SECOND", name="Second warehouse"
+    )
+    other_variant = create_simple_product(
+        business_context,
+        name="Other tracked item",
+        sku="STOCK-002",
+        product_type=Product.Type.STOCKABLE,
+        default_uom_id=uom.id,
+    ).variants.get()
+
+    split_match = make_movement(business_context)
+    add_receipt_line(
+        business_context, split_match, stockable_variant, other_warehouse
+    )
+    add_receipt_line(business_context, split_match, other_variant, warehouse)
+    services.post_stock_movement(business_context, movement_id=split_match.id)
+
+    exact_match = make_movement(business_context)
+    add_receipt_line(business_context, exact_match, stockable_variant, warehouse)
+    services.post_stock_movement(business_context, movement_id=exact_match.id)
+
+    result_ids = set(
+        movement_history(
+            business_context,
+            warehouse_id=warehouse.id,
+            product_variant_id=stockable_variant.id,
+        ).values_list("id", flat=True)
+    )
+    assert exact_match.id in result_ids
+    assert split_match.id not in result_ids
+
+
+@pytest.mark.django_db
+def test_line_snapshot_and_uom_refresh_is_audited_but_true_noop_is_not(
+    business_context, draft_receipt, stockable_variant, warehouse
+):
+    line = add_receipt_line(
+        business_context, draft_receipt, stockable_variant, warehouse
+    )
+    kilograms = UnitOfMeasure.objects.create(code="KGS", name="Kilograms", symbol="kg")
+    update_product(
+        business_context,
+        product_id=stockable_variant.product_id,
+        name="Renamed tracked item",
+        sku="STOCK-RENAMED",
+        default_uom_id=kilograms.id,
+    )
+
+    services.update_stock_movement_line(
+        business_context,
+        movement_id=draft_receipt.id,
+        line_id=line.id,
+        product_variant_id=stockable_variant.id,
+        quantity=line.quantity,
+        destination_warehouse_id=warehouse.id,
+    )
+    line.refresh_from_db()
+    updates = [
+        entry
+        for entry in AuditEntry.objects.filter(
+            action="inventory.movement.updated", object_id=str(draft_receipt.id)
+        )
+        if entry.metadata.get("change") == "line_updated"
+    ]
+    assert len(updates) == 1
+    assert updates[0].metadata["fields"] == [
+        "product_name_snapshot",
+        "sku_snapshot",
+        "uom_id",
+    ]
+    assert line.product_name_snapshot == "Renamed tracked item"
+    assert line.sku_snapshot == "STOCK-RENAMED"
+    assert line.uom_id == kilograms.id
+
+    services.update_stock_movement_line(
+        business_context,
+        movement_id=draft_receipt.id,
+        line_id=line.id,
+        product_variant_id=stockable_variant.id,
+        quantity=line.quantity,
+        destination_warehouse_id=warehouse.id,
+    )
+    assert len(
+        [
+            entry
+            for entry in AuditEntry.objects.filter(
+                action="inventory.movement.updated", object_id=str(draft_receipt.id)
+            )
+            if entry.metadata.get("change") == "line_updated"
+        ]
+    ) == 1
+
+
+@pytest.mark.django_db
+def test_balance_http_permission_is_checked_before_form_construction(
+    client, operator, company, inventory_permissions, monkeypatch
+):
+    from businessos.modules.inventory import views
+
+    register_manifest(MODULE, enabled=True)
+    _drop(inventory_permissions, VIEW_BALANCES)
+    client.force_login(operator)
+    session = client.session
+    session[SESSION_COMPANY_KEY] = str(company.id)
+    session.save()
+
+    def unexpected_form_construction(*args, **kwargs):
+        raise AssertionError("The filter form was constructed before balance authorization.")
+
+    monkeypatch.setattr(views, "BalanceFilterForm", unexpected_form_construction)
+    monkeypatch.setattr(views, "HistoryFilterForm", unexpected_form_construction)
+    assert client.get(reverse("inventory:balances")).status_code == 403
+    assert client.get(reverse("inventory:history")).status_code == 403

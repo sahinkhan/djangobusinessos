@@ -275,23 +275,30 @@ def update_stock_movement_line(context: BusinessContext, *, movement_id, line_id
         )
     except StockMovementLine.DoesNotExist as exc:
         raise PermissionDenied("The Stock Movement Line is outside the selected company.") from exc
-    before = (
-        line.product_variant_id,
-        line.quantity,
-        line.source_warehouse_id,
-        line.destination_warehouse_id,
+    persisted_fields = (
+        "product_variant_id",
+        "sku_snapshot",
+        "product_name_snapshot",
+        "uom_id",
+        "quantity",
+        "source_warehouse_id",
+        "destination_warehouse_id",
     )
+    before = {name: getattr(line, name) for name in persisted_fields}
     for field, value in _line_values(context, movement, **data).items():
         setattr(line, field, value)
     line.save(_inventory_token=_LINE_MUTATION_TOKEN)
-    after = (
-        line.product_variant_id,
-        line.quantity,
-        line.source_warehouse_id,
-        line.destination_warehouse_id,
+    changed_fields = sorted(
+        name for name in persisted_fields if before[name] != getattr(line, name)
     )
-    if before != after:
-        _record_update(context, movement, change="line_updated", line_id=str(line.id))
+    if changed_fields:
+        _record_update(
+            context,
+            movement,
+            change="line_updated",
+            line_id=str(line.id),
+            fields=changed_fields,
+        )
     return line
 
 

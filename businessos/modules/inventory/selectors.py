@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db.models import Q
+from django.db.models import Exists, OuterRef, Q
 
 from businessos.core.access.policies import require_permission
 from businessos.core.common.context import BusinessContext
@@ -138,11 +138,23 @@ def movement_history(context: BusinessContext, *, warehouse_id=None, product_var
     )
     if warehouse_id:
         _scoped_warehouse(context, warehouse_id)
+    if product_variant_id:
+        _scoped_variant(context, product_variant_id)
+    if warehouse_id and product_variant_id:
+        matching_line = StockMovementLine.objects.filter(
+            movement_id=OuterRef("pk"),
+            company_id=context.company_id,
+            product_variant_id=product_variant_id,
+        ).filter(
+            Q(source_warehouse_id=warehouse_id)
+            | Q(destination_warehouse_id=warehouse_id)
+        )
+        queryset = queryset.filter(Exists(matching_line))
+    elif warehouse_id:
         queryset = queryset.filter(
             Q(lines__source_warehouse_id=warehouse_id)
             | Q(lines__destination_warehouse_id=warehouse_id)
         )
-    if product_variant_id:
-        _scoped_variant(context, product_variant_id)
+    elif product_variant_id:
         queryset = queryset.filter(lines__product_variant_id=product_variant_id)
     return queryset.distinct()

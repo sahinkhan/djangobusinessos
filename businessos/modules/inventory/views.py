@@ -17,7 +17,7 @@ from .forms import (
     MovementForm,
     MovementLineForm,
 )
-from .manifest import CREATE_MOVEMENTS, POST_MOVEMENTS, UPDATE_MOVEMENTS
+from .manifest import CREATE_MOVEMENTS, POST_MOVEMENTS, UPDATE_MOVEMENTS, VIEW_BALANCES
 from .models import StockMovement
 from .selectors import (
     balances_for_warehouse,
@@ -255,6 +255,7 @@ def movement_post(request, movement_id):
 @module_required("inventory")
 def balances(request):
     context = business_context_from_request(request)
+    require_permission(context, VIEW_BALANCES)
     form = BalanceFilterForm(request.GET or None, company_id=context.company_id)
     rows, warehouse = [], None
     if form.is_valid():
@@ -269,6 +270,7 @@ def balances(request):
 @module_required("inventory")
 def history(request):
     context = business_context_from_request(request)
+    require_permission(context, VIEW_BALANCES)
     form = HistoryFilterForm(request.GET or None, company_id=context.company_id)
     rows = movement_history(context)
     if form.is_valid():

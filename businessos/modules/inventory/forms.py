@@ -3,6 +3,7 @@ from decimal import Decimal
 
 from django import forms
 from django.db.models import Q
+from django.utils import timezone
 
 from businessos.core.access.forms import CompanyBoundForm
 from businessos.core.organization.models import Warehouse
@@ -12,12 +13,26 @@ from businessos.modules.catalog.models import Product, ProductVariant
 from .models import StockMovement
 
 
+class CompanyDateTimeField(forms.DateTimeField):
+    """Interpret and render naive form values in one explicit company timezone."""
+
+    def __init__(self, *args, business_timezone, **kwargs):
+        self.business_timezone = business_timezone
+        super().__init__(*args, **kwargs)
+
+    def prepare_value(self, value):
+        if isinstance(value, datetime) and timezone.is_aware(value):
+            value = timezone.make_naive(value, self.business_timezone)
+        return super().prepare_value(value)
+
+    def to_python(self, value):
+        with timezone.override(self.business_timezone):
+            return super().to_python(value)
+
+
 class MovementForm(CompanyBoundForm):
     movement_type = forms.ChoiceField(choices=StockMovement.Type.choices)
-    effective_at = forms.DateTimeField(
-        widget=forms.DateTimeInput(attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"),
-        input_formats=["%Y-%m-%dT%H:%M"],
-    )
+    effective_at = forms.DateTimeField()
     reference = forms.CharField(max_length=160, required=False)
     notes = forms.CharField(required=False, widget=forms.Textarea(attrs={"rows": 3}))
 
@@ -31,21 +46,17 @@ class MovementForm(CompanyBoundForm):
             kwargs["initial"] = initial
         super().__init__(*args, company_id=company_id, **kwargs)
         self.company_id = company_id
+        self.fields["effective_at"] = CompanyDateTimeField(
+            business_timezone=company_timezone(company_id),
+            widget=forms.DateTimeInput(
+                attrs={"type": "datetime-local"}, format="%Y-%m-%dT%H:%M"
+            ),
+            input_formats=["%Y-%m-%dT%H:%M"],
+        )
         if not self.is_bound and not self.initial.get("effective_at"):
             self.initial["effective_at"] = company_local_datetime(company_id).replace(
                 second=0, microsecond=0
             )
-
-    def clean_effective_at(self):
-        value = self.cleaned_data["effective_at"]
-        if not self.is_bound:
-            return value
-        raw = self.data.get(self.add_prefix("effective_at"), "")
-        try:
-            local_value = datetime.strptime(raw, "%Y-%m-%dT%H:%M")
-        except (TypeError, ValueError):
-            return value
-        return local_value.replace(tzinfo=company_timezone(self.company_id))
 
 
 class MovementCreateForm(MovementForm):
