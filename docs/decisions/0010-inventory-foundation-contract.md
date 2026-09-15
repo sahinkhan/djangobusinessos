@@ -133,6 +133,8 @@ a persisted instant within a DST fall-back fold was rejected by generic ambiguit
 the trusted-original comparison ran. Final narrow remediation
 `145c9d51a3507aa1df8d6548659e16e506940d1e` compares the raw minute to the persisted instant's
 company-local rendered minute before generic conversion, preserving either fold exactly while
-continuing to reject newly entered ambiguous or nonexistent times. Status is IMPLEMENTED /
-AWAITING INDEPENDENT FINAL GATE 4C CORRECTIVE RE-AUDIT; this is not a new FINAL PASS, adoption, or
-re-closure.
+continuing to reject newly entered ambiguous or nonexistent times. Final corrective candidate
+`09794e9293da78117e5873ebbff9f4b98fa5e1b7` passed CI #69 with 422 PostgreSQL tests, and independent
+final corrective re-audit returned FINAL PASS. The post-closure corrective implementation is
+formally ACCEPTED; canonical adoption and corrective-cycle closure remain pending. The original
+historical Gate 4C closure remains preserved.

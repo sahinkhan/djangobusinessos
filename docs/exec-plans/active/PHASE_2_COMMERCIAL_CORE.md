@@ -380,10 +380,11 @@ because generic ambiguity validation ran before trusted-original preservation fo
 fall-back-fold minutes. Final narrow remediation
 `145c9d51a3507aa1df8d6548659e16e506940d1e` matches the raw submitted minute against the trusted
 persisted instant before generic conversion, while changed/new ambiguous or nonexistent input still
-uses normal Django validation. Current status is IMPLEMENTED / AWAITING INDEPENDENT FINAL GATE 4C
-CORRECTIVE RE-AUDIT. It is isolated on `gate4c-inventory-postclosure-remediation`, has no migration
-or cross-module behavior, is not adopted into canonical `main`, and must not be described as a new
-FINAL PASS or re-closure.
+uses normal Django validation. Final corrective candidate
+`09794e9293da78117e5873ebbff9f4b98fa5e1b7` passed exact-head CI #69 with 422 PostgreSQL tests, and
+independent final corrective re-audit returned FINAL PASS. It has no migration or cross-module
+behavior and is formally ACCEPTED on `gate4c-inventory-postclosure-remediation`; adoption into
+canonical `main` and corrective-cycle closure remain pending.
 
 Phase 2 minimum models:
 
@@ -986,7 +987,7 @@ Inventory accepted candidate      8b522709; historical FINAL PASS
 Inventory adoption checkpoint     60f879a0; historically accepted, adopted, and closed
 Inventory corrective candidate     23a12ae; independent corrective re-audit REVISE
 Inventory precision candidate      d7fc63c; independent corrective re-audit REVISE
-Inventory DST-fold remediation     145c9d51; awaiting independent final corrective re-audit
+Inventory final corrective         09794e92; FINAL PASS and formally accepted, adoption pending
 Billing / Accounting              not authorized
 Optional integrations             not authorized
 ```

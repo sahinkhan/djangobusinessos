@@ -847,9 +847,11 @@ instant only when the submitted company-local displayed minute is unchanged. Can
 because generic parsing rejected trusted persisted DST-fold minutes before preservation. Final
 narrow remediation `145c9d51a3507aa1df8d6548659e16e506940d1e` performs the trusted raw-minute
 match before generic timezone conversion and retains normal ambiguity/gap rejection otherwise. It
-is isolated on `gate4c-inventory-postclosure-remediation` and is IMPLEMENTED / AWAITING INDEPENDENT
-FINAL GATE 4C CORRECTIVE RE-AUDIT. The historical closure remains recorded; the correction is not
-adopted into canonical `main` and is not yet a new FINAL PASS or re-closure.
+is isolated on `gate4c-inventory-postclosure-remediation` at final candidate
+`09794e9293da78117e5873ebbff9f4b98fa5e1b7`. Exact-head CI #69 passed with 422 PostgreSQL tests,
+and independent final corrective re-audit returned FINAL PASS. The correction is formally
+ACCEPTED; adoption into canonical `main` and corrective-cycle closure remain pending. The original
+historical closure remains recorded.
 
 ---
 

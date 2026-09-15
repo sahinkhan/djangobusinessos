@@ -141,8 +141,11 @@ re-audit returned REVISE because a trusted persisted DST fall-back-fold minute w
 generic parsing before preservation. Final narrow remediation
 `145c9d51a3507aa1df8d6548659e16e506940d1e` performs the trusted raw-minute match before generic
 DST conversion while retaining ambiguity/gap rejection for other input. It is isolated on
-`gate4c-inventory-postclosure-remediation` and awaits independent final Gate 4C corrective
-re-audit. It is not adopted into `main`; Billing, Accounting, and integrations remain unauthorized.
+`gate4c-inventory-postclosure-remediation` at final corrective candidate
+`09794e9293da78117e5873ebbff9f4b98fa5e1b7`. CI #69 passed that exact head with 422 PostgreSQL
+tests, and independent final corrective re-audit returned FINAL PASS. The correction is formally
+accepted but is not yet adopted into `main`; Billing, Accounting, integrations, and Sales
+post-closure remediation remain unauthorized.
 
 Gate 4C original implementation candidate: `e1e94307bd96b2834f677eb02b91d27b87843f21`.
 
