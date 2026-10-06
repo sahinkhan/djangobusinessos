@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.template.loader import render_to_string
 from django.urls import reverse
 
 
@@ -57,6 +58,30 @@ def test_login_card_controls_share_the_compact_responsive_container():
     assert "width: 100%" in submit
     assert "max-width:" not in input_control
     assert "max-width:" not in submit
+
+
+@pytest.mark.parametrize("heading", ["Tea", "Organic Green Tea", "Supply " * 28, "W" * 200])
+@pytest.mark.parametrize("action_label", ["", "Edit record"])
+def test_shared_heading_keeps_full_semantic_identity_and_shrink_safe_layout(heading, action_label):
+    root = Path(__file__).resolve().parents[1]
+    styles = (root / "static/css/businessos.css").read_text(encoding="utf-8")
+    html = render_to_string(
+        "components/page_heading.html",
+        {"heading": heading, "action_label": action_label, "action_url": "/edit/"},
+    )
+    assert f'<h1 class="page-heading-title">{heading}</h1>' in html
+    assert 'class="min-w-0 flex-1"' in html
+    assert ".page-heading > div:first-child { min-width: 0; flex: 1 1 auto; }" in styles
+    assert ".page-heading > div:first-child { flex: none; }" not in styles
+    for rule in styles.split(".page-heading-title {")[1:]:
+        assert "white-space: nowrap" not in rule.split("}", 1)[0]
+    assert ".page-heading-title { white-space: normal; overflow-wrap: anywhere; }" in styles
+    assert ".page-heading-actions { display: flex; flex: none;" in styles
+    if action_label:
+        assert 'class="page-heading-actions"' in html
+        assert action_label in html
+    else:
+        assert 'class="page-heading-actions"' not in html
 
 
 @pytest.mark.django_db

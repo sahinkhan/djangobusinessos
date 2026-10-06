@@ -323,8 +323,8 @@ input[type="checkbox"], input[type="radio"] { accent-color: var(--bos-accent); }
 .page-header-region { flex: none; }
 .page-header-region > .flex { flex-direction: row !important; align-items: center !important; gap: .5rem !important; }
 .page-heading { flex-direction: row; align-items: center; gap: .5rem; }
-.page-heading > div:first-child { flex: none; }
-.page-heading-title { font-size: 1rem; font-weight: 700; line-height: 1.5rem; letter-spacing: 0; white-space: nowrap; }
+.page-heading > div:first-child { min-width: 0; flex: 1 1 auto; }
+.page-heading-title { font-size: 1rem; font-weight: 700; line-height: 1.5rem; letter-spacing: 0; white-space: normal; }
 .page-heading-description { display: none; }
 .page-heading-actions { gap: .375rem; }
 .page-heading-actions .btn-primary, .page-heading-actions .btn-secondary,
