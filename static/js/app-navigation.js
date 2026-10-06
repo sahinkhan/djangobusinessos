@@ -6,6 +6,28 @@
   const listPageSelector = "a[data-list-page]";
   let fallbackNavigationStarted = false;
 
+  document.addEventListener("keydown", function (event) {
+    if (event.key !== "Tab") return;
+    const drawer = document.getElementById("mobile-sidebar");
+    if (!drawer?.matches(":modal")) return;
+    const controls = [...drawer.querySelectorAll(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), ' +
+      'textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+    )].filter((control) => control.tabIndex >= 0 && control.getClientRects().length);
+    const first = controls[0];
+    const last = controls[controls.length - 1];
+    if (!first) {
+      event.preventDefault();
+      drawer.focus();
+    } else if (event.shiftKey && document.activeElement === first) {
+      event.preventDefault();
+      last.focus();
+    } else if (!event.shiftKey && document.activeElement === last) {
+      event.preventDefault();
+      first.focus();
+    }
+  });
+
   function linksWithin(root) {
     const links = [];
     if (root instanceof Element && root.matches(safeLinkSelector)) {
@@ -134,17 +156,49 @@
     setListResultsLoading(false);
   }
 
-  function fullNavigationFallback(event) {
+  function navigateSameOrigin(path) {
     finishLoading();
     finishListResultsLoading();
-    if (fallbackNavigationStarted) return;
-    const path = event.detail?.requestConfig?.path;
-    if (!path) return;
-    const url = new URL(path, window.location.href);
+    if (fallbackNavigationStarted || !path) return;
+    let url;
+    try {
+      url = new URL(path, window.location.href);
+    } catch (_) {
+      return;
+    }
     if (url.origin !== window.location.origin) return;
     fallbackNavigationStarted = true;
     window.location.assign(url.href);
   }
+
+  function fullNavigationFallback(event) {
+    // HTMX's effective GET path includes the parameters serialized from the form.
+    // requestConfig.path is only the base action and would discard those parameters.
+    navigateSameOrigin(event.detail?.pathInfo?.finalRequestPath);
+  }
+
+  document.addEventListener("htmx:historyCacheHit", function (event) {
+    // hx-history=false prevents new snapshots, not snapshots left by an older build.
+    // Cancel the documented cache-hit event before any old HTML can be restored.
+    event.preventDefault();
+    navigateSameOrigin(event.detail?.path);
+  });
+
+  document.addEventListener("htmx:beforeSwap", function (event) {
+    const targetId = event.detail.target?.id;
+    if (targetId !== "app-content" && targetId !== "list-results") return;
+    const xhr = event.detail.xhr;
+    if (!xhr || xhr.status < 200 || xhr.status >= 300) return;
+    const response = new DOMParser().parseFromString(
+      event.detail.serverResponse || "", "text/html",
+    );
+    if (response.getElementById("app-content") && response.getElementById(targetId)) return;
+    // A successful redirect may have left the authenticated fragment contract.
+    // Follow the final response URL, never infer authentication from a URL name.
+    event.detail.shouldSwap = false;
+    event.preventDefault();
+    navigateSameOrigin(xhr.responseURL);
+  });
 
   document.addEventListener("DOMContentLoaded", function () {
     configureSafeLinks(document);

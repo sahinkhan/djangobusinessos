@@ -32,7 +32,7 @@ def movements_for_company(context: BusinessContext, *, search="", movement_type=
         queryset = queryset.filter(movement_type=movement_type)
     if status:
         queryset = queryset.filter(status=status)
-    return queryset
+    return queryset.order_by("-effective_at", "-created_at", "id")
 
 
 def movement_detail(context: BusinessContext, *, movement_id):
@@ -157,4 +157,4 @@ def movement_history(context: BusinessContext, *, warehouse_id=None, product_var
         )
     elif product_variant_id:
         queryset = queryset.filter(lines__product_variant_id=product_variant_id)
-    return queryset.distinct()
+    return queryset.order_by("-effective_at", "-created_at", "id").distinct()

@@ -1,4 +1,5 @@
 from datetime import date
+from unittest.mock import patch
 
 import pytest
 from django.urls import reverse
@@ -244,3 +245,106 @@ def test_invalid_and_out_of_range_pages_are_controlled(
     assert response.status_code == 200
     assert response.context["page_obj"].number == expected_page
     assert len(response.context["parties"]) == (1 if expected_page == 3 else 50)
+
+
+def _assert_exact_traversal(client, route, collection, expected_ids, ordering, **filters):
+    first = client.get(reverse(route), filters)
+    paginator = first.context["page_obj"].paginator
+    assert paginator.per_page == PAGE_SIZE
+    assert paginator.object_list.query.order_by == ordering
+    seen = []
+    for page in range(1, paginator.num_pages + 1):
+        response = client.get(reverse(route), {**filters, "page": page}, HTTP_HX_REQUEST="true")
+        assert response.status_code == 200
+        seen.extend(row.pk for row in response.context[collection])
+    assert len(seen) == len(set(seen)) == len(expected_ids)
+    assert set(seen) == set(expected_ids)
+    assert seen == sorted(expected_ids)
+
+
+@pytest.mark.django_db
+def test_duplicate_names_and_timestamps_have_total_pagination_order(
+    pagination_client, business_context, company, currency, country, language, uom, warehouse,
+):
+    parties = Party.objects.bulk_create([
+        Party(company=company, party_type="organization", display_name="Duplicate Party")
+        for _ in range(401)
+    ])
+    outside = Company.objects.create(
+        code="OUTSIDE", name="Outside", base_currency=currency, country=country,
+        default_language=language,
+    )
+    Party.objects.create(company=outside, party_type="organization", display_name="Duplicate Party")
+    _assert_exact_traversal(
+        pagination_client, "party:list", "parties", [p.pk for p in parties],
+        ("display_name", "id"), q="Duplicate Party",
+    )
+    products = [create_simple_product(
+        business_context, name="Duplicate Product", sku=f"DUP-{index}",
+        product_type=Product.Type.SERVICE, default_uom_id=uom.id,
+    ) for index in range(151)]
+    _assert_exact_traversal(
+        pagination_client, "catalog:product_list", "products", [p.pk for p in products],
+        ("name", "id"), q="Duplicate Product", type="service",
+    )
+    customer = Party.objects.create(
+        company=company, party_type="organization", display_name="Duplicate Counterparty",
+        is_customer=True, is_supplier=True,
+    )
+    variant = create_simple_product(
+        business_context, name="Duplicate Stock", sku="DUP-STOCK",
+        product_type=Product.Type.STOCKABLE, default_uom_id=uom.id,
+    ).variants.get()
+    sales, purchases, movements = [], [], []
+    instant = timezone.now()
+    with patch("django.utils.timezone.now", return_value=instant):
+        for index in range(61):
+            sales.append(SalesOrder.objects.create(
+                company=company, number=f"SO-DUP-{index}", customer=customer,
+                order_date=date(2026, 10, 6), currency=currency,
+            ))
+            purchases.append(PurchaseOrder.objects.create(
+                company=company, number=f"PO-DUP-{index}", supplier=customer,
+                order_date=date(2026, 10, 6), currency=currency,
+            ))
+            movement = inventory_services.create_stock_movement(
+                business_context, movement_type="receipt", effective_at=instant,
+                reference="Duplicate Movement",
+            )
+            inventory_services.add_stock_movement_line(
+                business_context, movement_id=movement.id, product_variant_id=variant.id,
+                quantity="1", destination_warehouse_id=warehouse.id,
+            )
+            inventory_services.post_stock_movement(business_context, movement_id=movement.id)
+            movements.append(movement)
+    assert len({row.created_at for row in sales + purchases + movements}) == 1
+    for route, rows in (("sales:order_list", sales), ("procurement:order_list", purchases)):
+        _assert_exact_traversal(
+            pagination_client, route, "orders", [r.pk for r in rows],
+            ("-order_date", "-created_at", "id"), q="Duplicate Counterparty", status="draft",
+        )
+    _assert_exact_traversal(
+        pagination_client, "inventory:list", "movements", [r.pk for r in movements],
+        ("-effective_at", "-created_at", "id"), q="Duplicate Movement",
+        type="receipt", status="posted",
+    )
+    _assert_exact_traversal(
+        pagination_client, "inventory:history", "movements", [r.pk for r in movements],
+        ("-effective_at", "-created_at", "id"), warehouse=str(warehouse.id),
+        product_variant=str(variant.id),
+    )
+
+
+@pytest.mark.django_db
+def test_inventory_filters_are_labelled_and_native_get_preserves_parameters(pagination_client):
+    response = pagination_client.get(reverse("inventory:list"), {
+        "q": "A_ONLY Movement1", "type": "receipt", "status": "posted", "page": "2",
+    })
+    assert response.status_code == 200
+    for field, label in (("type", "Movement type"), ("status", "Movement status")):
+        label_html = f'<label class="sr-only" for="movement-{field}">{label}</label>'
+        assert label_html.encode() in response.content
+        assert f'<select id="movement-{field}" name="{field}">'.encode() in response.content
+    assert b'value="A_ONLY Movement1"' in response.content
+    assert b'value="receipt" selected' in response.content
+    assert b'value="posted" selected' in response.content

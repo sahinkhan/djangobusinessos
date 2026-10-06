@@ -6,7 +6,12 @@
 {% block content %}
 <div class="min-w-0 max-w-full overflow-x-hidden">
   <div class="mb-5 flex flex-wrap gap-3"><a class="btn-secondary" href="{% url 'inventory:balances' %}" data-app-nav>Balances</a><a class="btn-secondary" href="{% url 'inventory:history' %}" data-app-nav>History</a></div>
-  <form method="get" class="mb-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem_10rem_auto]" data-list-filter aria-controls="list-results"><input name="q" value="{{ request.GET.q }}" placeholder="Number or reference"><select name="type"><option value="">All types</option>{% for value,label in types %}<option value="{{ value }}"{% if request.GET.type == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select><select name="status"><option value="">All statuses</option>{% for value,label in statuses %}<option value="{{ value }}"{% if request.GET.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select><button class="btn-secondary">Filter</button></form>
+  <form method="get" class="mb-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_10rem_10rem_auto]" data-list-filter aria-controls="list-results">
+    <div><label class="sr-only" for="movement-search">Number or reference</label><input id="movement-search" name="q" value="{{ request.GET.q }}" placeholder="Number or reference"></div>
+    <div><label class="sr-only" for="movement-type">Movement type</label><select id="movement-type" name="type"><option value="">All types</option>{% for value,label in types %}<option value="{{ value }}"{% if request.GET.type == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <div><label class="sr-only" for="movement-status">Movement status</label><select id="movement-status" name="status"><option value="">All statuses</option>{% for value,label in statuses %}<option value="{{ value }}"{% if request.GET.status == value %} selected{% endif %}>{{ label }}</option>{% endfor %}</select></div>
+    <button class="btn-secondary">Filter</button>
+  </form>
   <div class="list-results-shell" data-list-results-shell>
     {% include "components/list_results_status.html" %}
     <div id="list-results" data-list-results aria-live="polite" aria-busy="false" tabindex="-1">

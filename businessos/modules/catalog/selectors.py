@@ -19,7 +19,7 @@ def products_for_company(context: BusinessContext, *, search: str = "", product_
         ).distinct()
     if product_type:
         queryset = queryset.filter(product_type=product_type)
-    return queryset.order_by("name")
+    return queryset.order_by("name", "id")
 
 
 def active_categories(context: BusinessContext):

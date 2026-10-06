@@ -8,7 +8,7 @@ from .models import Party
 
 def parties_for_company(context: BusinessContext, *, search: str = ""):
     validate_business_context(context)
-    queryset = Party.objects.filter(company_id=context.company_id).order_by("display_name")
+    queryset = Party.objects.filter(company_id=context.company_id).order_by("display_name", "id")
     if search.strip():
         queryset = queryset.filter(
             Q(display_name__icontains=search.strip()) | Q(legal_name__icontains=search.strip())

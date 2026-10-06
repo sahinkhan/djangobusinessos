@@ -52,7 +52,7 @@ def purchase_orders_for_company(context: BusinessContext, *, search: str = "", s
         )
     if status:
         queryset = queryset.filter(status=status)
-    return _with_total(queryset).order_by("-order_date", "-created_at")
+    return _with_total(queryset).order_by("-order_date", "-created_at", "id")
 
 
 def purchase_order_detail(context: BusinessContext, *, order_id) -> PurchaseOrder:

@@ -29,6 +29,18 @@ def test_authenticated_user_sees_application_shell(client):
     assert b"js/app-navigation.js" in response.content
     assert b"data-app-nav" in response.content
     assert f'<form method="post" action="{reverse("logout")}"'.encode() in response.content
+    assert b'hx-history="false"' in response.content
+    assert b'"historyCacheSize":0,"refreshOnHistoryMiss":true' in response.content
+    assert b"$el.showModal()" in response.content
+    assert b"@cancel.prevent=" in response.content
+
+
+@pytest.mark.django_db
+def test_login_also_installs_legacy_history_cache_protection(client):
+    response = client.get(reverse("login"))
+    assert b'hx-history="false"' in response.content
+    assert b"js/app-navigation.js" in response.content
+    assert b'id="app-content"' not in response.content
 
 
 @pytest.mark.django_db

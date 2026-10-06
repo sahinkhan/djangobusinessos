@@ -35,7 +35,7 @@ def sales_orders_for_company(
         )
     if status:
         queryset = queryset.filter(status=status)
-    return _with_total(queryset).order_by("-order_date", "-created_at")
+    return _with_total(queryset).order_by("-order_date", "-created_at", "id")
 
 
 def confirmed_sales_orders(context: BusinessContext):
