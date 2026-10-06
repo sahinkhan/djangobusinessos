@@ -78,6 +78,8 @@ DATABASES = {
     }
 }
 
+DATABASE_ROUTERS = ["businessos.core.database.router.BusinessDatabaseRouter"]
+
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},

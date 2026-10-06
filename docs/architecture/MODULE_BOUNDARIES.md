@@ -15,6 +15,7 @@ Core contains only capabilities that are truly shared infrastructure:
 - access
 - reference data
 - common utilities
+- database execution/alias-aware transaction infrastructure (ADR 0012; single-database mode)
 - module registry
 - company-scoped RBAC and organizational access lifecycle
 - immutable audit foundation
@@ -25,6 +26,10 @@ codes in their manifests and consume `BusinessContext` authorization APIs. They 
 Django model permissions as business authorization.
 
 Core Audit owns append-only audit facts. It does not own or reconstruct business aggregate state.
+
+Core Database owns execution-local connection selection, not tenant registration or company
+authorization. Every new module uses its call/enter-time transaction helpers. BusinessContext and
+company isolation remain unchanged; database routing must never introduce business rules.
 
 Core must not contain Sales, Inventory, Accounting, HR, School, Hospital, Hotel or other business-specific workflows.
 

@@ -1,14 +1,13 @@
 from collections.abc import Mapping
 
-from django.db import transaction
-
 from businessos.core.access.models import Permission
+from businessos.core.database import business_atomic
 
 from .manifest import validate_manifest
 from .models import BusinessModule
 
 
-@transaction.atomic
+@business_atomic
 def register_manifest(value: Mapping, *, enabled: bool | None = None) -> BusinessModule:
     manifest = validate_manifest(value)
     defaults = {

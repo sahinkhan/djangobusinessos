@@ -38,6 +38,11 @@ If a task conflicts with those documents, do not silently expand or change archi
 16. Business services must not accept `HttpRequest`. Convert request/user/session state into a framework-neutral `BusinessContext` first.
 17. Prefer boring, explicit code over speculative abstractions.
 18. Do not fork standard modules for a client.
+19. Business mutation transactions use `businessos.core.database.business_atomic` or
+    `business_atomic_context()`, resolving the execution alias at call/enter time. Do not add
+    implicit-default `transaction.atomic()` or hardcoded default connections. Existing validated
+    explicit `transaction.atomic(using=resolved_alias)` paths remain supported. Database selection
+    is infrastructure, not tenant identity inside `BusinessContext`; see ADR 0012.
 
 ## Module convention
 

@@ -15,6 +15,13 @@ The roadmap is capability-driven, not date-driven. A later phase should not begi
 
 ## Phase 0 — Foundation
 
+Backend infrastructure follow-up: Tenant-Ready Database Execution Foundation is implemented as a
+local, unpushed candidate on `tenant-ready-db-foundation`, based on canonical UI checkpoint
+`65a0e46b51a05aab16de0958e6e0ea5882b3f7fd`. ADR 0012 records the explicitly authorized direction;
+independent architecture/concurrency acceptance is pending. The active execution plan contains the
+database-assumption inventory and local evidence. This is single-database compatibility mode, not
+SaaS activation. No tenant model, schema migration, UI change or Billing resumption is included.
+
 Goal: establish the minimum architecture needed to unblock fast module development.
 
 Current correctness status: COMPLETE. Foundation remediation was accepted at

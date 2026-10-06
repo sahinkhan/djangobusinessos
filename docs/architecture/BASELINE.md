@@ -73,7 +73,28 @@ class BusinessContext:
     warehouse_id: UUID | None = None
 ```
 
-The context may evolve later (for example tenant or locale information), but request-specific framework objects must not leak into business services.
+BusinessContext remains actor/company/branch/warehouse business scope. Tenant/database selection
+is infrastructure above this boundary, not a `tenant_id` field in BusinessContext. Request-specific
+framework objects must not leak into business services.
+
+## Database execution foundation
+
+ADR 0012 introduces a small database execution seam, not an active SaaS runtime. Current deployment
+still has only the `default` database. `database_execution(configured_alias)` scopes a ContextVar;
+without a scope, `current_database_alias()` returns `default`.
+
+New business mutations use `@business_atomic` or `with business_atomic_context():` from
+`businessos.core.database`. They select the transaction alias at call/enter time. Nested operations
+stay on the same alias; switching during a business transaction is rejected. Existing correctly
+resolved explicit atomic blocks remain supported. Lock ordering, authorization, audit and business
+rules are not database-router responsibilities.
+
+The minimal router identifies owned models through installed Core/module namespaces, including
+historical migration models. It makes no migration/relation or Django technical-table placement
+decision. Future tenant provisioning must pair `database_execution(alias)` with
+`call_command("migrate", database=alias)` and seeds inside that scope; existing migrations remain
+immutable. Technical models, actual tenant resolution/provisioning and full SaaS activation require
+a later architecture gate. See the active `TENANT_READY_DATABASE_FOUNDATION.md` execution plan.
 
 ## Module internal pattern
 

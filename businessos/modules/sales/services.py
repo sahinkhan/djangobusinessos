@@ -1,13 +1,13 @@
 from uuid import uuid4
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
 from django.db.models import Max
 from django.utils import timezone
 
 from businessos.core.access.policies import require_permission
 from businessos.core.audit.services import record_audit_entry
 from businessos.core.common.context import BusinessContext
+from businessos.core.database import business_atomic
 from businessos.core.organization.models import Company
 from businessos.core.reference.models import Currency
 from businessos.modules.catalog.models import ProductVariant
@@ -128,7 +128,7 @@ def _record_order_update(context: BusinessContext, order: SalesOrder, **metadata
     )
 
 
-@transaction.atomic
+@business_atomic
 def create_sales_order(
     context: BusinessContext,
     *,
@@ -157,7 +157,7 @@ def create_sales_order(
     return order
 
 
-@transaction.atomic
+@business_atomic
 def update_sales_order(context: BusinessContext, *, order_id, **changes) -> SalesOrder:
     _lock_company_and_authorize(context, UPDATE_ORDERS)
     order = _locked_order(context, order_id)
@@ -189,7 +189,7 @@ def update_sales_order(context: BusinessContext, *, order_id, **changes) -> Sale
     return order
 
 
-@transaction.atomic
+@business_atomic
 def add_sales_order_line(
     context: BusinessContext,
     *,
@@ -228,7 +228,7 @@ def add_sales_order_line(
     return line
 
 
-@transaction.atomic
+@business_atomic
 def update_sales_order_line(
     context: BusinessContext,
     *,
@@ -272,7 +272,7 @@ def update_sales_order_line(
     return line
 
 
-@transaction.atomic
+@business_atomic
 def remove_sales_order_line(context: BusinessContext, *, line_id) -> None:
     _lock_company_and_authorize(context, UPDATE_ORDERS)
     order_id = _line_order_id(context, line_id)
@@ -286,7 +286,7 @@ def remove_sales_order_line(context: BusinessContext, *, line_id) -> None:
     )
 
 
-@transaction.atomic
+@business_atomic
 def confirm_sales_order(context: BusinessContext, *, order_id) -> SalesOrder:
     _lock_company_and_authorize(context, CONFIRM_ORDERS)
     order = _locked_order(context, order_id)
@@ -319,7 +319,7 @@ def confirm_sales_order(context: BusinessContext, *, order_id) -> SalesOrder:
     return order
 
 
-@transaction.atomic
+@business_atomic
 def cancel_sales_order(context: BusinessContext, *, order_id) -> SalesOrder:
     _lock_company_and_authorize(context, CANCEL_ORDERS)
     order = _locked_order(context, order_id)

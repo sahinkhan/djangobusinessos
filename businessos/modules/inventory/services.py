@@ -2,13 +2,14 @@ from decimal import Decimal, InvalidOperation
 from uuid import uuid4
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError
 from django.db.models import Q
 from django.utils import timezone
 
 from businessos.core.access.policies import require_permission
 from businessos.core.audit.services import record_audit_entry
 from businessos.core.common.context import BusinessContext
+from businessos.core.database import business_atomic, business_atomic_context
 from businessos.core.organization.models import Company, Warehouse
 from businessos.modules.catalog.models import Product, ProductVariant
 
@@ -131,7 +132,7 @@ def _record_update(context, movement, **metadata):
     )
 
 
-@transaction.atomic
+@business_atomic
 def create_stock_movement(
     context: BusinessContext,
     *,
@@ -167,7 +168,7 @@ def create_stock_movement(
             source_id=source_id,
         )
         try:
-            with transaction.atomic():
+            with business_atomic_context():
                 movement.save(_inventory_token=_MOVEMENT_MUTATION_TOKEN)
         except IntegrityError as exc:
             if key and StockMovement.objects.filter(
@@ -192,7 +193,7 @@ def create_stock_movement(
     raise ValidationError("A unique Stock Movement number could not be generated.")
 
 
-@transaction.atomic
+@business_atomic
 def update_stock_movement(context: BusinessContext, *, movement_id, **changes) -> StockMovement:
     _lock_company_and_authorize(context, UPDATE_MOVEMENTS)
     movement = _locked_movement(context, movement_id)
@@ -243,7 +244,7 @@ def _line_values(
     }
 
 
-@transaction.atomic
+@business_atomic
 def add_stock_movement_line(context: BusinessContext, *, movement_id, **data):
     _lock_company_and_authorize(context, UPDATE_MOVEMENTS)
     movement = _locked_movement(context, movement_id)
@@ -264,7 +265,7 @@ def add_stock_movement_line(context: BusinessContext, *, movement_id, **data):
     return line
 
 
-@transaction.atomic
+@business_atomic
 def update_stock_movement_line(context: BusinessContext, *, movement_id, line_id, **data):
     _lock_company_and_authorize(context, UPDATE_MOVEMENTS)
     movement = _locked_movement(context, movement_id)
@@ -302,7 +303,7 @@ def update_stock_movement_line(context: BusinessContext, *, movement_id, line_id
     return line
 
 
-@transaction.atomic
+@business_atomic
 def remove_stock_movement_line(context: BusinessContext, *, movement_id, line_id) -> None:
     _lock_company_and_authorize(context, UPDATE_MOVEMENTS)
     movement = _locked_movement(context, movement_id)
@@ -340,7 +341,7 @@ def _validate_posting_line(context, movement, line):
         )
 
 
-@transaction.atomic
+@business_atomic
 def post_stock_movement(context: BusinessContext, *, movement_id) -> StockMovement:
     _lock_company_and_authorize(context, POST_MOVEMENTS)
     movement = _locked_movement(context, movement_id)

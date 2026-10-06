@@ -1,9 +1,10 @@
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
-from django.db import models, transaction
+from django.db import models
 
 from businessos.core.common.models import UUIDTimestampedModel
+from businessos.core.database import business_atomic_context
 
 
 class SalesOrderQuerySet(models.QuerySet):
@@ -48,7 +49,7 @@ class SalesOrderQuerySet(models.QuerySet):
         if target_status == "cancelled" and confirmed_at is not None:
             raise ValidationError("Cancellation cannot replace the confirmation time.")
 
-        with transaction.atomic():
+        with business_atomic_context(using=self.db):
             try:
                 order = self.select_for_update().get(pk=order_id)
             except self.model.DoesNotExist as exc:
@@ -192,14 +193,16 @@ class SalesOrder(UUIDTimestampedModel):
             raise ValidationError("A Sales Order requires at least one line before confirmation.")
 
     def save(self, *args, **kwargs):
-        with transaction.atomic():
+        using = kwargs.get("using") or (args[2] if len(args) > 2 else None)
+        with business_atomic_context(using=using):
             if not self._state.adding and self.pk:
                 type(self).objects.select_for_update().filter(pk=self.pk).exists()
             self.full_clean()
             super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        with transaction.atomic():
+        using = kwargs.get("using") or (args[0] if args else None)
+        with business_atomic_context(using=using):
             persisted_status = (
                 type(self)
                 .objects.select_for_update()
@@ -311,7 +314,8 @@ class SalesOrderLine(UUIDTimestampedModel):
             raise ValidationError({"position": "Position must be greater than zero."})
 
     def save(self, *args, **kwargs):
-        with transaction.atomic():
+        using = kwargs.get("using") or (args[2] if len(args) > 2 else None)
+        with business_atomic_context(using=using):
             if self.sales_order_id:
                 SalesOrder.objects.select_for_update().filter(
                     pk=self.sales_order_id
@@ -320,7 +324,8 @@ class SalesOrderLine(UUIDTimestampedModel):
             super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        with transaction.atomic():
+        using = kwargs.get("using") or (args[0] if args else None)
+        with business_atomic_context(using=using):
             persisted_ownership = (
                 type(self)
                 .objects.filter(pk=self.pk)

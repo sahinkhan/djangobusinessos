@@ -1,9 +1,9 @@
 from django.contrib.auth import get_user_model
 from django.core.management.base import BaseCommand, CommandError
-from django.db import transaction
 
 from businessos.core.access.models import UserCompanyAccess
 from businessos.core.common.context import BusinessContext
+from businessos.core.database import business_atomic
 from businessos.core.modules.services import register_manifest
 from businessos.core.organization.models import Company
 from businessos.core.reference.models import Country, Currency, Language, UnitOfMeasure
@@ -142,7 +142,7 @@ class Command(BaseCommand):
                     self._report(f"Variant {spec['sku']}", True)
         return product
 
-    @transaction.atomic
+    @business_atomic
     def handle(self, *args, **options):
         self._created = 0
         self._existing = 0

@@ -2,10 +2,10 @@ from uuid import UUID
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
 
 from businessos.core.audit.services import record_audit_entry
 from businessos.core.common.context import BusinessContext
+from businessos.core.database import business_atomic
 from businessos.core.organization.models import Branch, Company, Warehouse
 
 from .models import (
@@ -24,7 +24,7 @@ MANAGE_ORGANIZATIONAL_ACCESS = CORE_PERMISSION_DECLARATIONS[0][0]
 MANAGE_ROLES = CORE_PERMISSION_DECLARATIONS[1][0]
 
 
-@transaction.atomic
+@business_atomic
 def register_core_permissions() -> tuple[Permission, ...]:
     registered = []
     for code, name in CORE_PERMISSION_DECLARATIONS:
@@ -65,7 +65,7 @@ def _lock_context_company(context: BusinessContext) -> Company:
     return company
 
 
-@transaction.atomic
+@business_atomic
 def grant_company_access(context: BusinessContext, *, user_id: UUID) -> UserCompanyAccess:
     company = _lock_context_company(context)
     require_permission(context, MANAGE_ORGANIZATIONAL_ACCESS)
@@ -82,7 +82,7 @@ def grant_company_access(context: BusinessContext, *, user_id: UUID) -> UserComp
     return access
 
 
-@transaction.atomic
+@business_atomic
 def revoke_company_access(context: BusinessContext, *, user_id: UUID) -> bool:
     _lock_context_company(context)
     require_permission(context, MANAGE_ORGANIZATIONAL_ACCESS)
@@ -115,7 +115,7 @@ def revoke_company_access(context: BusinessContext, *, user_id: UUID) -> bool:
     return bool(deleted)
 
 
-@transaction.atomic
+@business_atomic
 def grant_branch_access(
     context: BusinessContext, *, user_id: UUID, branch_id: UUID
 ) -> UserBranchAccess:
@@ -143,7 +143,7 @@ def grant_branch_access(
     return access
 
 
-@transaction.atomic
+@business_atomic
 def revoke_branch_access(context: BusinessContext, *, user_id: UUID, branch_id: UUID) -> bool:
     _lock_context_company(context)
     require_permission(context, MANAGE_ORGANIZATIONAL_ACCESS)
@@ -163,7 +163,7 @@ def revoke_branch_access(context: BusinessContext, *, user_id: UUID, branch_id: 
     return bool(deleted)
 
 
-@transaction.atomic
+@business_atomic
 def grant_warehouse_access(
     context: BusinessContext, *, user_id: UUID, warehouse_id: UUID
 ) -> UserWarehouseAccess:
@@ -191,7 +191,7 @@ def grant_warehouse_access(
     return access
 
 
-@transaction.atomic
+@business_atomic
 def revoke_warehouse_access(context: BusinessContext, *, user_id: UUID, warehouse_id: UUID) -> bool:
     _lock_context_company(context)
     require_permission(context, MANAGE_ORGANIZATIONAL_ACCESS)
@@ -211,7 +211,7 @@ def revoke_warehouse_access(context: BusinessContext, *, user_id: UUID, warehous
     return bool(deleted)
 
 
-@transaction.atomic
+@business_atomic
 def create_role(context: BusinessContext, *, code: str, name: str) -> Role:
     _lock_context_company(context)
     require_permission(context, MANAGE_ROLES)
@@ -226,7 +226,7 @@ def create_role(context: BusinessContext, *, code: str, name: str) -> Role:
     return role
 
 
-@transaction.atomic
+@business_atomic
 def grant_role_permission(
     context: BusinessContext, *, role_id: UUID, permission_code: str
 ) -> RolePermission:
@@ -254,7 +254,7 @@ def grant_role_permission(
     return link
 
 
-@transaction.atomic
+@business_atomic
 def revoke_role_permission(
     context: BusinessContext, *, role_id: UUID, permission_code: str
 ) -> bool:
@@ -275,7 +275,7 @@ def revoke_role_permission(
     return bool(deleted)
 
 
-@transaction.atomic
+@business_atomic
 def assign_role(context: BusinessContext, *, user_id: UUID, role_id: UUID) -> UserRoleAssignment:
     _lock_context_company(context)
     require_permission(context, MANAGE_ROLES)
@@ -299,7 +299,7 @@ def assign_role(context: BusinessContext, *, user_id: UUID, role_id: UUID) -> Us
     return assignment
 
 
-@transaction.atomic
+@business_atomic
 def revoke_role(context: BusinessContext, *, user_id: UUID, role_id: UUID) -> bool:
     _lock_context_company(context)
     require_permission(context, MANAGE_ROLES)

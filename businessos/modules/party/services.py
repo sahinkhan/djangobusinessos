@@ -1,8 +1,8 @@
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
 
 from businessos.core.access.policies import validate_business_context
 from businessos.core.common.context import BusinessContext
+from businessos.core.database import business_atomic
 from businessos.core.reference.models import Country
 
 from .models import Address, ContactMethod, Party
@@ -22,7 +22,7 @@ def _related_in_scope(model, context: BusinessContext, object_id, label: str):
         raise PermissionDenied(f"The {label} is outside the selected company.") from exc
 
 
-@transaction.atomic
+@business_atomic
 def create_party(
     context: BusinessContext,
     *,
@@ -47,7 +47,7 @@ def create_party(
     return party
 
 
-@transaction.atomic
+@business_atomic
 def update_party(context: BusinessContext, *, party_id, **changes) -> Party:
     validate_business_context(context)
     party = _party_in_scope(context, party_id)
@@ -68,7 +68,7 @@ def update_party(context: BusinessContext, *, party_id, **changes) -> Party:
     return party
 
 
-@transaction.atomic
+@business_atomic
 def add_contact_method(
     context: BusinessContext,
     *,
@@ -92,7 +92,7 @@ def add_contact_method(
     return contact
 
 
-@transaction.atomic
+@business_atomic
 def update_contact_method(
     context: BusinessContext,
     *,
@@ -112,7 +112,7 @@ def update_contact_method(
     return contact
 
 
-@transaction.atomic
+@business_atomic
 def add_address(
     context: BusinessContext,
     *,
@@ -152,7 +152,7 @@ def add_address(
     return address
 
 
-@transaction.atomic
+@business_atomic
 def update_address(
     context: BusinessContext,
     *,

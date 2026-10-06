@@ -1,10 +1,10 @@
 from collections.abc import Iterable, Mapping
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import transaction
 
 from businessos.core.access.policies import validate_business_context
 from businessos.core.common.context import BusinessContext
+from businessos.core.database import business_atomic
 from businessos.core.reference.models import UnitOfMeasure
 
 from .models import (
@@ -40,7 +40,7 @@ def _uom(uom_id):
         raise ValidationError({"default_uom": "Select an active unit of measure."}) from exc
 
 
-@transaction.atomic
+@business_atomic
 def create_category(
     context: BusinessContext, *, name: str, parent_id=None, is_active: bool = True
 ) -> ProductCategory:
@@ -82,7 +82,7 @@ def _new_product(
     )
 
 
-@transaction.atomic
+@business_atomic
 def create_simple_product(
     context: BusinessContext,
     *,
@@ -121,7 +121,7 @@ def create_simple_product(
     return product
 
 
-@transaction.atomic
+@business_atomic
 def create_variable_product(
     context: BusinessContext,
     *,
@@ -166,7 +166,7 @@ def create_variable_product(
     return product
 
 
-@transaction.atomic
+@business_atomic
 def update_product(context: BusinessContext, *, product_id, **changes) -> Product:
     validate_business_context(context)
     product = _in_scope(Product, context, product_id, "product")
@@ -205,7 +205,7 @@ def update_product(context: BusinessContext, *, product_id, **changes) -> Produc
     return product
 
 
-@transaction.atomic
+@business_atomic
 def create_product_variant(
     context: BusinessContext,
     *,
@@ -229,7 +229,7 @@ def create_product_variant(
     return variant
 
 
-@transaction.atomic
+@business_atomic
 def update_product_variant(
     context: BusinessContext,
     *,
@@ -256,7 +256,7 @@ def update_product_variant(
     return variant
 
 
-@transaction.atomic
+@business_atomic
 def create_attribute(
     context: BusinessContext, *, name: str, is_active: bool = True
 ) -> Attribute:
@@ -266,7 +266,7 @@ def create_attribute(
     return attribute
 
 
-@transaction.atomic
+@business_atomic
 def create_attribute_value(
     context: BusinessContext, *, attribute_id, value: str, is_active: bool = True
 ) -> AttributeValue:
@@ -282,7 +282,7 @@ def create_attribute_value(
     return attribute_value
 
 
-@transaction.atomic
+@business_atomic
 def assign_variant_attribute_values(
     context: BusinessContext, *, variant_id, attribute_value_ids: Iterable
 ) -> ProductVariant:

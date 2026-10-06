@@ -50,6 +50,11 @@ Inventory, Accounting and other capabilities may be composed with these modules 
 
 Core apps may depend on lower-level shared utilities but must not import business modules.
 
+`businessos.core.database` is a lower-level infrastructure utility available to Core and all business
+modules. It imports no module models or services and is not a registered business module or manifest
+dependency. Owned ORM routing follows installed Core/module namespaces. New mutation transactions
+use its alias-aware helpers (ADR 0012); Company remains the business-domain scope.
+
 Core Foundation v1 keeps audit below access: access services may append audit records, while audit
 does not import access. The module registry depends on the Access permission identity only to
 register manifest declarations deterministically.

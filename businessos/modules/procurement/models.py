@@ -1,9 +1,10 @@
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
-from django.db import models, transaction
+from django.db import models
 
 from businessos.core.common.models import UUIDTimestampedModel
+from businessos.core.database import business_atomic_context
 
 _RECEIPT_INSERTION_TOKEN = object()
 
@@ -53,7 +54,7 @@ class PurchaseOrderQuerySet(_ProtectedProcurementQuerySet):
             raise ValidationError("Confirmation time is required when confirming an order.")
         if target_status == "cancelled" and confirmed_at is not None:
             raise ValidationError("Cancellation cannot replace the confirmation time.")
-        with transaction.atomic():
+        with business_atomic_context(using=self.db):
             try:
                 order = self.select_for_update().get(pk=order_id)
             except self.model.DoesNotExist as exc:
@@ -227,14 +228,16 @@ class PurchaseOrder(UUIDTimestampedModel):
             )
 
     def save(self, *args, **kwargs):
-        with transaction.atomic():
+        using = kwargs.get("using") or (args[2] if len(args) > 2 else None)
+        with business_atomic_context(using=using):
             if not self._state.adding and self.pk:
                 type(self).objects.select_for_update().filter(pk=self.pk).exists()
             self.full_clean()
             return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        with transaction.atomic():
+        using = kwargs.get("using") or (args[0] if args else None)
+        with business_atomic_context(using=using):
             persisted = (
                 type(self)
                 .objects.select_for_update()
@@ -367,14 +370,16 @@ class PurchaseOrderLine(UUIDTimestampedModel):
             raise ValidationError({"position": "Position must be greater than zero."})
 
     def save(self, *args, **kwargs):
-        with transaction.atomic():
+        using = kwargs.get("using") or (args[2] if len(args) > 2 else None)
+        with business_atomic_context(using=using):
             if self.purchase_order_id:
                 PurchaseOrder.objects.select_for_update().filter(pk=self.purchase_order_id).exists()
             self.full_clean()
             return super().save(*args, **kwargs)
 
     def delete(self, *args, **kwargs):
-        with transaction.atomic():
+        using = kwargs.get("using") or (args[0] if args else None)
+        with business_atomic_context(using=using):
             persisted_ownership = (
                 type(self)
                 .objects.filter(pk=self.pk)

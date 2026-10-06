@@ -1,8 +1,9 @@
 from django.core.exceptions import ValidationError
-from django.db import models, transaction
+from django.db import models
 from django.db.models import Q
 
 from businessos.core.common.models import UUIDTimestampedModel
+from businessos.core.database import business_atomic_context
 
 _MOVEMENT_MUTATION_TOKEN = object()
 _LINE_MUTATION_TOKEN = object()
@@ -41,7 +42,7 @@ class StockMovementQuerySet(_ProtectedInventoryQuerySet):
     def _post_locked_movement(self, *, movement_id, expected_status, posted_at, token):
         if token is not _POSTING_TOKEN or expected_status != "draft" or posted_at is None:
             raise ValidationError("Unsupported Stock Movement lifecycle transition.")
-        with transaction.atomic():
+        with business_atomic_context(using=self.db):
             try:
                 movement = self.select_for_update().get(pk=movement_id)
             except self.model.DoesNotExist as exc:
@@ -193,7 +194,8 @@ class StockMovement(UUIDTimestampedModel):
     def save(self, *args, _inventory_token=None, **kwargs):
         if _inventory_token is not _MOVEMENT_MUTATION_TOKEN:
             raise ValidationError("Stock Movements must be changed through Inventory services.")
-        with transaction.atomic():
+        using = kwargs.get("using") or (args[2] if len(args) > 2 else None)
+        with business_atomic_context(using=using):
             if not self._state.adding and self.pk:
                 type(self).objects.select_for_update().filter(pk=self.pk).exists()
             self.full_clean()
@@ -202,7 +204,8 @@ class StockMovement(UUIDTimestampedModel):
     def delete(self, *args, _inventory_token=None, **kwargs):
         if _inventory_token is not _MOVEMENT_MUTATION_TOKEN:
             raise ValidationError("Stock Movements must be deleted through Inventory services.")
-        with transaction.atomic():
+        using = kwargs.get("using") or (args[0] if args else None)
+        with business_atomic_context(using=using):
             persisted = (
                 type(self)
                 .objects.select_for_update()
@@ -343,7 +346,8 @@ class StockMovementLine(UUIDTimestampedModel):
             raise ValidationError(
                 "Stock Movement Lines must be changed through Inventory services."
             )
-        with transaction.atomic():
+        using = kwargs.get("using") or (args[2] if len(args) > 2 else None)
+        with business_atomic_context(using=using):
             if self.movement_id:
                 StockMovement.objects.select_for_update().filter(pk=self.movement_id).exists()
             self.full_clean()
@@ -354,7 +358,8 @@ class StockMovementLine(UUIDTimestampedModel):
             raise ValidationError(
                 "Stock Movement Lines must be deleted through Inventory services."
             )
-        with transaction.atomic():
+        using = kwargs.get("using") or (args[0] if args else None)
+        with business_atomic_context(using=using):
             persisted = type(self).objects.filter(pk=self.pk).values("movement_id").first()
             if persisted is None:
                 return super().delete(*args, **kwargs)

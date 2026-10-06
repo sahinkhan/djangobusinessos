@@ -3,7 +3,7 @@ from decimal import Decimal, InvalidOperation
 from uuid import UUID, uuid4
 
 from django.core.exceptions import PermissionDenied, ValidationError
-from django.db import IntegrityError, transaction
+from django.db import IntegrityError
 from django.db.models import Max, Sum
 from django.utils import timezone
 from django.utils.dateparse import parse_date
@@ -11,6 +11,7 @@ from django.utils.dateparse import parse_date
 from businessos.core.access.policies import require_permission
 from businessos.core.audit.services import record_audit_entry
 from businessos.core.common.context import BusinessContext
+from businessos.core.database import business_atomic, business_atomic_context
 from businessos.core.organization.models import Company
 from businessos.core.reference.models import Currency
 from businessos.modules.catalog.models import ProductVariant
@@ -212,7 +213,7 @@ def _record_order_update(context: BusinessContext, order: PurchaseOrder, **metad
     )
 
 
-@transaction.atomic
+@business_atomic
 def create_purchase_order(
     context: BusinessContext,
     *,
@@ -241,7 +242,7 @@ def create_purchase_order(
     return order
 
 
-@transaction.atomic
+@business_atomic
 def update_purchase_order(context: BusinessContext, *, order_id, **changes) -> PurchaseOrder:
     _lock_company_and_authorize(context, UPDATE_ORDERS)
     order = _locked_order(context, order_id)
@@ -269,7 +270,7 @@ def update_purchase_order(context: BusinessContext, *, order_id, **changes) -> P
     return order
 
 
-@transaction.atomic
+@business_atomic
 def add_purchase_order_line(
     context: BusinessContext,
     *,
@@ -308,7 +309,7 @@ def add_purchase_order_line(
     return line
 
 
-@transaction.atomic
+@business_atomic
 def update_purchase_order_line(
     context: BusinessContext,
     *,
@@ -351,7 +352,7 @@ def update_purchase_order_line(
     return line
 
 
-@transaction.atomic
+@business_atomic
 def remove_purchase_order_line(context: BusinessContext, *, line_id) -> None:
     _lock_company_and_authorize(context, UPDATE_ORDERS)
     order = _locked_order(context, _line_order_id(context, line_id))
@@ -362,7 +363,7 @@ def remove_purchase_order_line(context: BusinessContext, *, line_id) -> None:
     _record_order_update(context, order, change="line_removed", line_id=str(line_id))
 
 
-@transaction.atomic
+@business_atomic
 def confirm_purchase_order(context: BusinessContext, *, order_id) -> PurchaseOrder:
     _lock_company_and_authorize(context, CONFIRM_ORDERS)
     order = _locked_order(context, order_id)
@@ -394,7 +395,7 @@ def confirm_purchase_order(context: BusinessContext, *, order_id) -> PurchaseOrd
     return order
 
 
-@transaction.atomic
+@business_atomic
 def cancel_purchase_order(context: BusinessContext, *, order_id) -> PurchaseOrder:
     _lock_company_and_authorize(context, CANCEL_ORDERS)
     order = _locked_order(context, order_id)
@@ -419,7 +420,7 @@ def cancel_purchase_order(context: BusinessContext, *, order_id) -> PurchaseOrde
     return order
 
 
-@transaction.atomic
+@business_atomic
 def receive_purchase_order(
     context: BusinessContext,
     *,
@@ -475,7 +476,7 @@ def receive_purchase_order(
                 f"{order_lines[line_id].sku_snapshot}."
             )
     try:
-        with transaction.atomic():
+        with business_atomic_context():
             posted_at = timezone.now()
             receipt = PurchaseReceipt(
                 company_id=context.company_id,
