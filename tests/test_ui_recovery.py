@@ -44,6 +44,21 @@ def test_recovered_styles_and_header_are_not_the_old_sidebar_design():
     assert header.count("openLauncher($event.currentTarget)") == 2
 
 
+def test_login_card_controls_share_the_compact_responsive_container():
+    root = Path(__file__).resolve().parents[1]
+    styles = (root / "static/css/businessos.css").read_text(encoding="utf-8")
+    card = styles.split(".erp-login-card {", 1)[1].split("}", 1)[0]
+    input_control = styles.split(".erp-login-control input {", 1)[1].split("}", 1)[0]
+    submit = styles.split(".erp-login-submit {", 1)[1].split("}", 1)[0]
+
+    assert "width: 100%" in card
+    assert "max-width: 24rem" in card
+    assert "width: 100%" in input_control
+    assert "width: 100%" in submit
+    assert "max-width:" not in input_control
+    assert "max-width:" not in submit
+
+
 @pytest.mark.django_db
 def test_recovered_login_has_no_authenticated_shell_or_snapshot_cache(client):
     response = client.get(reverse("login"))
