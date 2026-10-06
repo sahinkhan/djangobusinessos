@@ -1,17 +1,10 @@
-{% extends "base.html" %}
+{% extends "components/form_page.html" %}
 
-{% block title %}{{ heading }} · BusinessOS{% endblock %}
-{% block breadcrumbs %}{% include "components/breadcrumbs.html" with current=heading %}{% endblock %}
-{% block page_header %}{% include "components/page_heading.html" with heading=heading description="Simple products receive one internal default variant; variable products begin with one explicit SKU." %}{% endblock %}
-{% block content %}
-<form method="post" class="card max-w-4xl space-y-5">
-  {% csrf_token %}
-  {% include "components/company_form_scope.html" %}
-  {% for error in form.non_field_errors %}<p class="alert alert-error">{{ error }}</p>{% endfor %}
-  <div class="grid gap-5 sm:grid-cols-2">
-  {% for field in form.visible_fields %}<div{% if field.name == "sales_description" or field.name == "purchase_description" %} class="sm:col-span-2"{% endif %}><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}</div>{% endfor %}
-  </div>
-  <div class="rounded-xl bg-indigo-50 p-4 text-sm leading-6 text-indigo-900">SKU is stored on ProductVariant. Simple-product variant complexity stays hidden after creation.</div>
-  <div class="flex gap-3"><button class="btn-primary" type="submit">Save product</button><a class="btn-secondary" href="{% url 'catalog:product_list' %}" data-app-nav>Cancel</a></div>
-</form>
-{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with parent_label="Products" parent_url="/catalog/products/" current=heading %}{% endblock %}
+{% block form_eyebrow %}Product details{% endblock %}
+{% block form_description %}Set up the product, SKU, and descriptions used by your business.{% endblock %}
+{% block form_fields %}{% include "components/form_fields.html" with wide_fields="sales_description,purchase_description" %}{% endblock %}
+{% block save_label %}Save product{% endblock %}
+{% block footer_save_label %}Save product{% endblock %}
+{% block cancel_action %}<a class="btn-secondary" href="{% url 'catalog:product_list' %}" data-app-nav>Cancel</a>{% endblock %}
+{% block form_note %}<p class="record-note">Choose a simple product for one SKU, or a variable product for multiple options.</p>{% endblock %}

@@ -42,8 +42,17 @@
   function configureSafeLinks(root) {
     if (!window.htmx) return;
     for (const link of linksWithin(root)) {
-      const url = new URL(link.href, window.location.href);
+      const url = new URL(link.dataset.appUrl || link.href, window.location.href);
       if (url.origin !== window.location.origin || link.hasAttribute("download")) continue;
+      link.dataset.appUrl = url.href;
+      const content = document.getElementById("app-content");
+      const modulePath = /^\/(parties|catalog|sales|procurement|inventory)\//.test(url.pathname);
+      if (modulePath && content?.dataset.companySelected === "false") {
+        const companyUrl = new URL(content.dataset.companySelectUrl, window.location.href);
+        companyUrl.searchParams.set("next", url.pathname + url.search);
+        url.href = companyUrl.href;
+      }
+      link.href = url.href;
       link.setAttribute("hx-get", url.href);
       link.setAttribute("hx-target", "#app-content");
       link.setAttribute("hx-select", "#app-content");
@@ -76,7 +85,7 @@
       form.setAttribute("hx-get", url.href);
       form.setAttribute("hx-target", "#list-results");
       form.setAttribute("hx-select", "#list-results");
-      form.setAttribute("hx-swap", "outerHTML show:top");
+      form.setAttribute("hx-swap", "outerHTML show:#app-content:top");
       form.setAttribute("hx-push-url", "true");
       window.htmx.process(form);
     }
@@ -87,7 +96,7 @@
       link.setAttribute("hx-get", url.href);
       link.setAttribute("hx-target", "#list-results");
       link.setAttribute("hx-select", "#list-results");
-      link.setAttribute("hx-swap", "outerHTML show:top");
+      link.setAttribute("hx-swap", "outerHTML show:#app-content:top");
       link.setAttribute("hx-push-url", "true");
       window.htmx.process(link);
     }
@@ -119,6 +128,7 @@
       const root = link.dataset.navRoot;
       const active = root === "/" ? path === "/" : path.startsWith(root);
       link.classList.toggle("nav-item-active", active);
+      link.classList.toggle("is-active", active);
       if (active) {
         link.setAttribute("aria-current", "page");
       } else {
@@ -132,6 +142,28 @@
     const responseDocument = new DOMParser().parseFromString(responseText, "text/html");
     const title = responseDocument.querySelector("title")?.textContent?.trim();
     if (title) document.title = title;
+  }
+
+  function updateApplicationHeader(responseText) {
+    if (!responseText) return;
+    const responseDocument = new DOMParser().parseFromString(responseText, "text/html");
+    for (const id of ["bos-current-app", "bos-module-menu", "bos-company-context"]) {
+      const current = document.getElementById(id);
+      const replacement = responseDocument.getElementById(id);
+      if (!current || !replacement) continue;
+      current.replaceWith(replacement);
+      configureSafeLinks(document.getElementById(id));
+    }
+  }
+
+  function updateControlTail(responseText) {
+    if (!responseText) return;
+    const responseDocument = new DOMParser().parseFromString(responseText, "text/html");
+    const current = document.querySelector("[data-control-tail]");
+    const replacement = responseDocument.querySelector("[data-control-tail]");
+    if (!current || !replacement) return;
+    current.replaceWith(replacement);
+    configureListResults(document.querySelector("[data-control-tail]"));
   }
 
   function finishLoading() {
@@ -219,9 +251,10 @@
     if (event.detail.target?.id === "app-content") {
       finishLoading();
       const content = document.getElementById("app-content");
-      configureSafeLinks(content);
+      configureSafeLinks(document);
       configureListResults(content);
       updateTitle(event.detail.xhr?.responseText);
+      updateApplicationHeader(event.detail.xhr?.responseText);
       syncActiveNavigation();
       window.dispatchEvent(new CustomEvent("app:navigated"));
       content?.focus({ preventScroll: true });
@@ -233,6 +266,7 @@
       const results = document.getElementById("list-results");
       configureSafeLinks(results);
       configureListResults(results);
+      updateControlTail(event.detail.xhr?.responseText);
       results?.focus({ preventScroll: true });
     }
   });

@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+
+{% block title %}{{ heading }} · BusinessOS{% endblock %}
+{% block page_header %}
+<div class="record-heading">
+  {% include "components/page_heading.html" with heading=heading %}
+  <div class="page-heading-actions">
+    <button class="btn-primary" type="submit" form="record-form">{% block save_label %}Save{% endblock %}</button>
+    {% block cancel_action %}{% endblock %}
+  </div>
+</div>
+{% endblock %}
+{% block content %}
+<form method="post" id="record-form" class="record-sheet record-form">
+  {% csrf_token %}
+  {% include "components/company_form_scope.html" %}
+  <header class="record-sheet-heading">
+    <span class="record-eyebrow">{% block form_eyebrow %}Record details{% endblock %}</span>
+    <h2>{{ heading }}</h2>
+    <p>{% block form_description %}Complete the details below. Required fields are marked with an asterisk.{% endblock %}</p>
+  </header>
+  {% block form_fields %}{% include "components/form_fields.html" %}{% endblock %}
+  {% block form_note %}{% endblock %}
+  <footer class="form-footer">
+    <span class="form-help">Review your details before saving.</span>
+    <button class="btn-primary" type="submit">{% block footer_save_label %}Save{% endblock %}</button>
+  </footer>
+</form>
+{% endblock %}

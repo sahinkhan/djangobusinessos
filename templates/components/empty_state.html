@@ -1,5 +1,5 @@
-<div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-  <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-500">{{ icon|default:"＋" }}</div>
+<div class="bos-empty-state border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
+  <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-slate-100 text-xl text-slate-500" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" class="h-6 w-6"><path d="M4 7.5 12 3l8 4.5V17l-8 4-8-4V7.5Zm0 0 8 4 8-4M12 11.5V21" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
   <h3 class="mt-4 font-semibold text-slate-900">{{ title|default:"Nothing here yet" }}</h3>
   {% if description %}<p class="mx-auto mt-2 max-w-md text-sm text-slate-500">{{ description }}</p>{% endif %}
 </div>

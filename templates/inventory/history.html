@@ -2,10 +2,11 @@
 {% load tz %}
 {% block title %}Stock history · BusinessOS{% endblock %}
 {% block breadcrumbs %}{% include "components/breadcrumbs.html" with parent_label="Inventory" parent_url="/inventory/movements/" current="History" %}{% endblock %}
-{% block page_header %}{% include "components/page_heading.html" with heading="Stock history" description="Only posted ledger movements appear in stock history." %}{% endblock %}
+{% block page_header %}{% include "components/page_heading.html" with heading="Stock history" description="Trace posted stock activity by product, location, and date." %}{% endblock %}
+{% block control_tools %}<form method="get" class="bos-searchbar" data-list-filter aria-controls="list-results"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4" stroke-linecap="round"/></svg><label class="sr-only" for="{{ form.warehouse.id_for_label }}">Warehouse</label>{{ form.warehouse }}<label class="sr-only" for="{{ form.product_variant.id_for_label }}">Product variant</label>{{ form.product_variant }}<button type="submit" aria-label="Filter"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M3 5h14l-5.5 6v4l-3 1v-5L3 5Z" stroke-linejoin="round"/></svg></button></form>{% endblock %}
 {% block content %}
+<nav class="bos-mobile-subnav" aria-label="Inventory sections"><a href="{% url 'inventory:list' %}" data-app-nav>Operations</a><a href="{% url 'inventory:balances' %}" data-app-nav>Stock</a><a href="{% url 'inventory:history' %}" data-app-nav>Reporting</a></nav>
 <div class="min-w-0 max-w-full overflow-x-hidden">
-  <form method="get" class="card mb-5 grid gap-3 sm:grid-cols-3" data-list-filter aria-controls="list-results"><div><label class="form-label" for="{{ form.warehouse.id_for_label }}">Warehouse</label>{{ form.warehouse }}</div><div><label class="form-label" for="{{ form.product_variant.id_for_label }}">Product / SKU</label>{{ form.product_variant }}</div><div class="self-end"><button class="btn-primary">Filter</button></div></form>
   <div class="list-results-shell" data-list-results-shell>
     {% include "components/list_results_status.html" %}
     <div id="list-results" data-list-results aria-live="polite" aria-busy="false" tabindex="-1">

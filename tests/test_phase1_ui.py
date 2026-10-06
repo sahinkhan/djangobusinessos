@@ -112,7 +112,7 @@ def test_simple_product_workflow_hides_variant_management(scoped_client, company
     product = Product.objects.get(name="Organic Honey")
     assert response.status_code == 200
     assert product.variants.count() == 1
-    assert b"Internal default variant" in response.content
+    assert b"Single product SKU" in response.content
     assert b"Add variant" not in response.content
 
 

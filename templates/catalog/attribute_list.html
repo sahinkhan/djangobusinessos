@@ -1,6 +1,12 @@
 {% extends "base.html" %}
-
 {% block title %}Attributes · BusinessOS{% endblock %}
-{% block breadcrumbs %}{% include "components/breadcrumbs.html" with current="Attributes" %}{% endblock %}
-{% block page_header %}{% include "components/page_heading.html" with heading="Variant attributes" description="Reusable option definitions, not a generic metadata engine." %}{% endblock %}
-{% block content %}<div class="grid gap-5 lg:grid-cols-2"><form method="post" class="card space-y-4">{% csrf_token %}<h2 class="font-semibold">Create attribute</h2>{% include "components/company_form_scope.html" %}{% for error in form.non_field_errors %}<p class="alert alert-error">{{ error }}</p>{% endfor %}{% for field in form.visible_fields %}<div><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}</div>{% endfor %}<button class="btn-primary">Create</button></form><section class="space-y-4">{% for attribute in attributes %}<article class="card"><div class="flex items-center justify-between"><h2 class="font-semibold">{{ attribute.name }}</h2><a class="btn-secondary" href="{% url 'catalog:attribute_value_create' attribute.id %}" data-app-nav>Add value</a></div><p class="mt-3 text-sm text-slate-500">{% for value in attribute.values.all %}<span class="badge-neutral">{{ value.value }}</span> {% empty %}No values yet.{% endfor %}</p></article>{% empty %}<div class="card text-sm text-slate-500">No attributes yet.</div>{% endfor %}</section></div>{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with parent_label="Products" parent_url="/catalog/products/" current="Attributes" %}{% endblock %}
+{% block page_header %}{% include "components/page_heading.html" with heading="Variant attributes" description="Define product options such as size, color, and material." %}{% endblock %}
+{% block content %}
+<div class="configuration-grid">
+  <section class="record-sheet"><header class="section-heading"><div><h2>Product options</h2><p>Manage the values available for each attribute.</p></div></header>
+    {% for attribute in attributes %}<div class="record-list-row"><div class="min-w-0"><h3>{{ attribute.name }}</h3><div class="record-badges">{% for value in attribute.values.all %}<span class="badge-neutral">{{ value.value }}</span>{% empty %}<p class="form-help">No values yet.</p>{% endfor %}</div></div><a class="btn-secondary" href="{% url 'catalog:attribute_value_create' attribute.id %}" data-app-nav>Add value</a></div>{% empty %}<div class="section-empty">No attributes yet. Create an option to describe your variants.</div>{% endfor %}
+  </section>
+  <form method="post" class="record-sheet record-form compact-form">{% csrf_token %}{% include "components/company_form_scope.html" %}<header class="record-sheet-heading"><h2>Create attribute</h2><p>Name a reusable product option.</p></header>{% include "components/form_fields.html" %}<footer class="form-footer"><button class="btn-primary" type="submit">Create attribute</button></footer></form>
+</div>
+{% endblock %}

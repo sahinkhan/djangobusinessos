@@ -1,55 +1,73 @@
 {% load static %}
 <!doctype html>
-<html lang="en" class="h-full bg-slate-50">
+<html lang="en" class="h-full bg-[#f0f0f5]">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#714b67">
   <meta name="htmx-config" content='{"historyCacheSize":0,"refreshOnHistoryMiss":true}'>
   <title>{% block title %}BusinessOS{% endblock %}</title>
-  <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}">
-  <link rel="stylesheet" href="{% static 'css/businessos.css' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{% static 'css/tailwind.css' %}?v=ui-recovery-1">
+  <link rel="stylesheet" href="{% static 'css/businessos.css' %}?v=ui-recovery-1">
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.9/dist/cdn.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.6/dist/htmx.min.js"></script>
-  <script defer src="{% static 'js/app-navigation.js' %}?v=ui-gate1"></script>
+  <script defer src="{% static 'js/app-navigation.js' %}?v=ui-recovery-1"></script>
   {% block extra_head %}{% endblock %}
 </head>
-<body class="h-full bg-slate-50 text-slate-900 antialiased" hx-history="false">
+<body class="h-full bg-[#f0f0f5] text-slate-900 antialiased" hx-history="false">
   <div id="app-progress" aria-hidden="true"></div>
-  {% if user.is_authenticated %}
-    <div class="min-h-full" x-data="{ sidebarOpen: false }" @app:navigated.window="sidebarOpen = false" @resize.window="if (window.innerWidth >= 1024) sidebarOpen = false">
+  {% if user.is_authenticated and request.resolver_match.url_name != 'login' %}
+    <div class="bos-shell min-h-full" x-data="{ sidebarOpen: false, appSearch: '', launcherOpener: null, openLauncher(opener) { this.launcherOpener = opener; this.appSearch = ''; this.sidebarOpen = true; this.$nextTick(() => this.$refs.appSearch.focus()) }, closeLauncher(restoreFocus = true) { this.sidebarOpen = false; if (restoreFocus) this.$nextTick(() => this.launcherOpener?.isConnected &amp;&amp; this.launcherOpener.focus()) } }" @app:navigated.window="closeLauncher(false)" @keydown.ctrl.k.window.prevent="openLauncher(document.activeElement)" @keydown.meta.k.window.prevent="openLauncher(document.activeElement)">
       <dialog
         x-cloak
         x-effect="if (sidebarOpen) { $el.showModal() } else { $el.close() }"
-        @cancel.prevent="sidebarOpen = false; $nextTick(() => $refs.menuTrigger.focus())"
+        @cancel.prevent="closeLauncher()"
         @close="sidebarOpen = false"
         x-ref="mobileSidebar"
         id="mobile-sidebar"
-        class="fixed inset-0 m-0 h-full max-h-full w-full max-w-full border-0 bg-transparent p-0 lg:hidden"
+        class="fixed inset-0 m-0 h-full max-h-full w-full max-w-full border-0 bg-transparent p-0 z-50"
         aria-modal="true"
         aria-label="Primary navigation"
       >
-        <div class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm" @click="sidebarOpen = false" aria-hidden="true"></div>
-        <div class="fixed inset-y-0 left-0 flex w-80 max-w-[calc(100vw-3rem)]">
+        <div class="fixed inset-0 bg-slate-800/75 backdrop-blur-md" @click="closeLauncher()" aria-hidden="true"></div>
+        <div class="fixed inset-0 overflow-y-auto">
           {% include "components/sidebar.html" %}
         </div>
       </dialog>
-
-      <div class="hidden lg:fixed lg:inset-y-0 lg:z-40 lg:flex lg:w-[17rem] lg:flex-col">
-        {% include "components/sidebar.html" %}
-      </div>
-
-      <div class="min-w-0 lg:pl-[17rem]">
+      <div class="min-w-0" :inert="sidebarOpen">
         {% include "components/header.html" %}
-        <main class="min-w-0 px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
-          <div id="app-content" class="mx-auto min-w-0 max-w-[90rem]" tabindex="-1">
+        <main class="app-workspace min-w-0">
+          <div id="app-content" class="min-w-0" tabindex="-1" data-company-selected="{% if request.session.businessos_company_id %}true{% else %}false{% endif %}" data-company-select-url="{% url 'select_company' %}">
             {% include "components/messages.html" %}
-            {% block breadcrumbs %}
-              {% include "components/breadcrumbs.html" with current="Overview" %}
-            {% endblock %}
-            <div class="page-header-region">{% block page_header %}{% endblock %}</div>
-            {% block content %}{% endblock %}
+            {% if not request.session.businessos_company_id and request.resolver_match.url_name != 'select_company' %}
+            <div class="company-required-banner" role="status">
+              <div><strong>Choose your company to get started</strong><p>Select a company before opening business applications.</p></div>
+              <a href="{% url 'select_company' %}" data-app-nav class="btn-primary">Select company</a>
+            </div>
+            {% endif %}
+            <section class="bos-control-panel">
+              {% block breadcrumbs %}
+                {% include "components/breadcrumbs.html" with current="Overview" %}
+              {% endblock %}
+              <div class="page-header-region">{% block page_header %}{% endblock %}</div>
+              <div class="bos-control-tools">{% block control_tools %}{% endblock %}</div>
+              <div class="bos-control-tail" data-control-tail>
+                {% if page_obj %}
+                  <span class="bos-record-count">{{ page_obj.start_index }}-{{ page_obj.end_index }} / {{ page_obj.paginator.count }}</span>
+                  <span class="bos-pager-buttons">
+                    {% if page_obj.has_previous %}<a href="{% querystring page=page_obj.previous_page_number %}" data-list-page aria-label="Previous page"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="m12 5-5 5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>{% else %}<span aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="m12 5-5 5 5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>{% endif %}
+                    {% if page_obj.has_next %}<a href="{% querystring page=page_obj.next_page_number %}" data-list-page aria-label="Next page"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="m8 5 5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></a>{% else %}<span aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="m8 5 5 5-5 5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>{% endif %}
+                  </span>
+                {% endif %}
+                {% if page_obj %}<span class="bos-view-switcher" aria-label="List view">
+                  <span class="is-active" aria-hidden="true"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M4 5h12M4 10h12M4 15h12" stroke-linecap="round"/></svg></span>
+                </span>{% endif %}
+              </div>
+            </section>
+            <div class="bos-view-content">{% block content %}{% endblock %}</div>
           </div>
         </main>
       </div>

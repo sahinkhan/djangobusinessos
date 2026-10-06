@@ -1,0 +1,4 @@
+{% if form.non_field_errors %}<div class="alert alert-error" role="alert">{{ form.non_field_errors }}</div>{% endif %}
+<div class="form-grid">
+  {% for field in form.visible_fields %}{% include "components/form_field.html" %}{% endfor %}
+</div>

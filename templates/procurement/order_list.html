@@ -2,13 +2,9 @@
 {% load procurement_format %}
 {% block title %}Purchase Orders · BusinessOS{% endblock %}
 {% block breadcrumbs %}{% include "components/breadcrumbs.html" with current="Purchase Orders" %}{% endblock %}
-{% block page_header %}<div class="flex flex-wrap items-end justify-between gap-4">{% include "components/page_heading.html" with heading="Purchase Orders" description="Supplier orders and immutable receipts; Inventory remains unchanged." %}{% if can_create %}<a class="btn-primary" href="{% url 'procurement:order_create' %}" data-app-nav>Create order</a>{% endif %}</div>{% endblock %}
+{% block page_header %}<div class="flex flex-wrap items-end justify-between gap-4">{% include "components/page_heading.html" with heading="Purchase Orders" description="Manage supplier orders and review purchase receipts." %}{% if can_create %}<a class="btn-primary" href="{% url 'procurement:order_create' %}" data-app-nav><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10 4v12M4 10h12" stroke-linecap="round"/></svg>New</a>{% endif %}</div>{% endblock %}
+{% block control_tools %}<form method="get" class="bos-searchbar" data-list-filter aria-controls="list-results"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4" stroke-linecap="round"/></svg><input id="id_q" name="q" value="{{ filter_form.q.value|default:'' }}" placeholder="Search..." aria-label="Search Purchase Orders">{{ filter_form.status }}<button type="submit" aria-label="Filter"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M3 5h14l-5.5 6v4l-3 1v-5L3 5Z" stroke-linejoin="round"/></svg></button></form>{% endblock %}
 {% block content %}
-<form method="get" class="card mb-5 flex flex-wrap items-end gap-3" data-list-filter aria-controls="list-results">
-  <div><label class="form-label" for="id_q">Search</label><input id="id_q" name="q" value="{{ filter_form.q.value|default:'' }}" placeholder="Search number or supplier"></div>
-  <div><label class="form-label" for="id_status">Status</label>{{ filter_form.status }}</div>
-  <button class="btn-secondary" type="submit">Filter</button>
-</form>
 <div class="list-results-shell" data-list-results-shell>
   {% include "components/list_results_status.html" %}
   <div id="list-results" data-list-results aria-live="polite" aria-busy="false" tabindex="-1">

@@ -1,8 +1,9 @@
-{% extends "base.html" %}
+{% extends "components/form_page.html" %}
 
-{% block title %}{{ heading }} · BusinessOS{% endblock %}
-{% block breadcrumbs %}{% include "components/breadcrumbs.html" with current=heading %}{% endblock %}
-{% block page_header %}{% include "components/page_heading.html" with heading=heading description="Explicit values only; no automatic variant combination generation." %}{% endblock %}
-{% block content %}
-<form method="post" class="card max-w-2xl space-y-5">{% csrf_token %}{% include "components/company_form_scope.html" %}{% for error in form.non_field_errors %}<p class="alert alert-error">{{ error }}</p>{% endfor %}{% for field in form.visible_fields %}<div><label class="form-label" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% for error in field.errors %}<p class="form-error">{{ error }}</p>{% endfor %}</div>{% endfor %}<button class="btn-primary" type="submit">Save</button></form>
-{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with parent_label="Catalog" parent_url="/catalog/products/" current=heading %}{% endblock %}
+{% block form_eyebrow %}Catalog details{% endblock %}
+{% block form_description %}Manage SKUs, product options, and their available values.{% endblock %}
+{% block form_fields %}{% include "components/form_fields.html" with wide_fields="attribute_values" %}{% endblock %}
+{% block save_label %}Save{% endblock %}
+{% block footer_save_label %}Save{% endblock %}
+{% block cancel_action %}<a class="btn-secondary" href="{% url 'catalog:product_list' %}" data-app-nav>Cancel</a>{% endblock %}

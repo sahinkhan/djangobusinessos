@@ -1,5 +1,5 @@
 {% if messages %}
-  <div class="mb-5 space-y-3" role="status" aria-live="polite">
+  <div class="app-messages" role="status" aria-live="polite">
     {% for message in messages %}
       <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
         <span>{{ message }}</span>

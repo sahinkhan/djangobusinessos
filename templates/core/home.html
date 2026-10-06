@@ -1,188 +1,46 @@
 {% extends "base.html" %}
 
-{% block title %}Overview · BusinessOS{% endblock %}
+{% block title %}Dashboards · BusinessOS{% endblock %}
 
 {% block page_header %}
-  {% url 'select_company' as company_switch_url %}
-  {% include "components/page_heading.html" with eyebrow="Workspace overview" heading="Welcome to BusinessOS" description="Your central workspace for sales, purchasing, stock, products, and business relationships." action_label="Switch company" action_url=company_switch_url %}
+  <div class="bos-dashboard-heading">
+    <span class="bos-dashboard-heading-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19h16M6 16V9m4 7V5m4 11v-4m4 4V7" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+    <div class="min-w-0"><h1>BusinessOS Dashboard</h1><p>Open an application or pick up your daily work.</p></div>
+  </div>
 {% endblock %}
 
 {% block content %}
-<div class="space-y-6 sm:space-y-8">
-  <section class="grid min-w-0 gap-3 sm:grid-cols-3 sm:gap-4" aria-label="Workspace summary">
-    <article class="card flex min-w-0 items-center gap-4">
-      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 ring-1 ring-inset ring-indigo-100">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5" aria-hidden="true"><path d="M4 5a1 1 0 0 1 1-1h5v6H4V5Zm10-1h5a1 1 0 0 1 1 1v5h-6V4ZM4 14h6v6H5a1 1 0 0 1-1-1v-5Zm10 0h6v5a1 1 0 0 1-1 1h-5v-6Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </span>
-      <div class="min-w-0">
-        <p class="text-2xl font-bold tracking-tight text-slate-950">{{ enabled_module_codes|length }}</p>
-        <p class="mt-0.5 text-xs font-medium text-slate-500">Available business areas</p>
-      </div>
-    </article>
-
-    <article class="card flex min-w-0 items-center gap-4">
-      <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-200">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5" aria-hidden="true"><path d="M4 21V7l8-4 8 4v14M8 9h.01M12 9h.01M16 9h.01M8 13h.01M12 13h.01M16 13h.01M9 21v-4h6v4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </span>
-      <div class="min-w-0">
-        {% if request.session.businessos_company_id %}
-          <p class="text-sm font-bold text-slate-950">Company selected</p>
-          <p class="mt-1 text-xs font-medium text-slate-500">Operational scope is active</p>
-        {% else %}
-          <p class="text-sm font-bold text-slate-950">Choose a company</p>
-          <p class="mt-1 text-xs font-medium text-slate-500">Set your operational scope</p>
-        {% endif %}
-      </div>
-    </article>
-
-    <article class="card flex min-w-0 items-center gap-4">
-      <span class="user-avatar h-11 w-11 rounded-xl text-sm" aria-hidden="true">{{ user.email|first|upper }}</span>
-      <div class="min-w-0">
-        <p class="truncate text-sm font-bold text-slate-950">{{ user.email }}</p>
-        <p class="mt-1 text-xs font-medium text-slate-500">Signed-in account</p>
-      </div>
-    </article>
+<div class="dashboard-home">
+  <section class="dashboard-context" aria-label="Workspace summary">
+    <div><small>BUSINESS APPLICATIONS</small><strong>{{ enabled_module_codes|length }} enabled</strong></div>
+    <div><small>CURRENT COMPANY</small><a href="{% url 'select_company' %}" data-app-nav>{% if request.session.businessos_company_id %}Company selected{% else %}Choose a company{% endif %}<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
+    <div class="dashboard-account"><small>SIGNED-IN ACCOUNT</small><strong title="{{ user.email }}">{{ user.email }}</strong></div>
   </section>
 
-  <section aria-labelledby="quick-access-title">
-    <div class="mb-4 flex min-w-0 items-end justify-between gap-4">
-      <div class="min-w-0">
-        <h2 id="quick-access-title" class="text-base font-bold tracking-tight text-slate-950">Quick access</h2>
-        <p class="mt-1 text-sm text-slate-500">Open an available business area and continue your work.</p>
+  <div class="dashboard-layout">
+    <section class="dashboard-section" aria-labelledby="business-apps-title">
+      <header><h2 id="business-apps-title">Business applications</h2><span class="dashboard-section-caption">Your workspace</span></header>
+      <div class="dashboard-app-grid">
+        {% if "sales" in enabled_module_codes %}<a href="{% url 'sales:order_list' %}" data-app-nav class="dashboard-app"><span class="dashboard-app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h4" stroke-linecap="round"/></svg></span><span><strong>Sales</strong><small>Quotations and customer orders</small></span><svg class="dashboard-link-arrow" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>{% endif %}
+        {% if "procurement" in enabled_module_codes %}<a href="{% url 'procurement:order_list' %}" data-app-nav class="dashboard-app"><span class="dashboard-app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 5h2l2.2 9.2a2 2 0 0 0 2 1.6h8a2 2 0 0 0 1.9-1.5L21 8H6" stroke-linecap="round"/></svg></span><span><strong>Purchase</strong><small>Supplier orders and purchase receipts</small></span><svg class="dashboard-link-arrow" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>{% endif %}
+        {% if "inventory" in enabled_module_codes %}<a href="{% url 'inventory:list' %}" data-app-nav class="dashboard-app"><span class="dashboard-app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Zm0 0v10l8 4 8-4V7M12 11v10" stroke-linecap="round"/></svg></span><span><strong>Inventory</strong><small>Movements, balances, and history</small></span><svg class="dashboard-link-arrow" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>{% endif %}
+        {% if "catalog" in enabled_module_codes %}<a href="{% url 'catalog:product_list' %}" data-app-nav class="dashboard-app"><span class="dashboard-app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 13 13 20l-9-9V4h7l9 9Z" stroke-linecap="round"/><circle cx="8.5" cy="8.5" r="1"/></svg></span><span><strong>Catalog</strong><small>Products, categories, and attributes</small></span><svg class="dashboard-link-arrow" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>{% endif %}
+        {% if "party" in enabled_module_codes %}<a href="{% url 'party:list' %}" data-app-nav class="dashboard-app"><span class="dashboard-app-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 4.5a4 4 0 0 1 0 7M18 15a5 5 0 0 1 3 4.6V21" stroke-linecap="round"/></svg></span><span><strong>Contacts</strong><small>Customers, suppliers, and people</small></span><svg class="dashboard-link-arrow" aria-hidden="true" viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>{% endif %}
+        {% if not enabled_module_codes %}<p class="dashboard-empty">No business applications are currently enabled.</p>{% endif %}
       </div>
-    </div>
+    </section>
 
-    {% if enabled_module_codes %}
-      <div class="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {% if "sales" in enabled_module_codes %}
-          <a href="{% url 'sales:order_list' %}" data-app-nav class="group card flex min-w-0 items-start gap-4 transition duration-150 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 ring-1 ring-inset ring-indigo-100 transition group-hover:bg-indigo-100">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5" aria-hidden="true"><path d="M5 3h14v18H5V3Zm4 5h6M9 12h6M9 16h3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
-            <span class="min-w-0 flex-1">
-              <span class="flex items-center justify-between gap-3">
-                <span class="font-bold text-slate-900">Sales</span>
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" class="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-indigo-500" aria-hidden="true"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <span class="mt-1.5 block text-sm leading-6 text-slate-500">Review customer orders and follow their current status.</span>
-            </span>
-          </a>
-        {% endif %}
-
-        {% if "procurement" in enabled_module_codes %}
-          <a href="{% url 'procurement:order_list' %}" data-app-nav class="group card flex min-w-0 items-start gap-4 transition duration-150 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 ring-1 ring-inset ring-indigo-100 transition group-hover:bg-indigo-100">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5" aria-hidden="true"><path d="M3 5h2l2.2 9.25a2 2 0 0 0 1.95 1.54h7.93a2 2 0 0 0 1.94-1.51L21 8H6M10 20a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm9 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
-            <span class="min-w-0 flex-1">
-              <span class="flex items-center justify-between gap-3">
-                <span class="font-bold text-slate-900">Procurement</span>
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" class="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-indigo-500" aria-hidden="true"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <span class="mt-1.5 block text-sm leading-6 text-slate-500">Manage supplier orders and review purchasing activity.</span>
-            </span>
-          </a>
-        {% endif %}
-
-        {% if "inventory" in enabled_module_codes %}
-          <a href="{% url 'inventory:list' %}" data-app-nav class="group card flex min-w-0 items-start gap-4 transition duration-150 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 ring-1 ring-inset ring-indigo-100 transition group-hover:bg-indigo-100">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5V17l-8 4-8-4V7.5Zm0 0 8 4 8-4M12 11.5V21" stroke-linecap="round" stroke-linejoin="round"/><path d="m8 5.25 8 4.25v3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
-            <span class="min-w-0 flex-1">
-              <span class="flex items-center justify-between gap-3">
-                <span class="font-bold text-slate-900">Inventory</span>
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" class="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-indigo-500" aria-hidden="true"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <span class="mt-1.5 block text-sm leading-6 text-slate-500">Track stock movements, warehouse balances, and history.</span>
-            </span>
-          </a>
-        {% endif %}
-
-        {% if "catalog" in enabled_module_codes %}
-          <a href="{% url 'catalog:product_list' %}" data-app-nav class="group card flex min-w-0 items-start gap-4 transition duration-150 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-200 transition group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:ring-indigo-100">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5" aria-hidden="true"><path d="m4 7.5 8-4 8 4-8 4-8-4Zm0 0v9l8 4 8-4v-9M12 11.5v9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
-            <span class="min-w-0 flex-1">
-              <span class="flex items-center justify-between gap-3">
-                <span class="font-bold text-slate-900">Catalog</span>
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" class="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-indigo-500" aria-hidden="true"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <span class="mt-1.5 block text-sm leading-6 text-slate-500">Maintain products, services, categories, and SKUs.</span>
-            </span>
-          </a>
-        {% endif %}
-
-        {% if "party" in enabled_module_codes %}
-          <a href="{% url 'party:list' %}" data-app-nav class="group card flex min-w-0 items-start gap-4 transition duration-150 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2">
-            <span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-200 transition group-hover:bg-indigo-50 group-hover:text-indigo-600 group-hover:ring-indigo-100">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5" aria-hidden="true"><path d="M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-4A4.5 4.5 0 0 0 3 18.5V20M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7-1a3 3 0 0 1 0 5.82M21 20v-1.5a4.5 4.5 0 0 0-2.25-3.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            </span>
-            <span class="min-w-0 flex-1">
-              <span class="flex items-center justify-between gap-3">
-                <span class="font-bold text-slate-900">Parties</span>
-                <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" class="h-4 w-4 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-indigo-500" aria-hidden="true"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-              </span>
-              <span class="mt-1.5 block text-sm leading-6 text-slate-500">Find customers, suppliers, contacts, and addresses.</span>
-            </span>
-          </a>
-        {% endif %}
-      </div>
-    {% else %}
-      <div class="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-        <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 text-slate-500">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-5 w-5" aria-hidden="true"><path d="M4 5a1 1 0 0 1 1-1h5v6H4V5Zm10-1h5a1 1 0 0 1 1 1v5h-6V4ZM4 14h6v6H5a1 1 0 0 1-1-1v-5Zm10 0h6v5a1 1 0 0 1-1 1h-5v-6Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
-        <h3 class="mt-4 font-bold text-slate-900">No business areas are available</h3>
-        <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-slate-500">Contact your BusinessOS administrator to enable the areas your team needs.</p>
-      </div>
-    {% endif %}
-  </section>
-
-  <section class="grid min-w-0 gap-4 lg:grid-cols-[minmax(0,1.45fr)_minmax(18rem,.55fr)]" aria-label="Operational overview">
-    <article class="card min-w-0">
-      <div class="flex min-w-0 items-start gap-3">
-        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-indigo-50 text-indigo-600">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-4.5 w-4.5" aria-hidden="true"><path d="M5 13.5 9 17l10-10M12 3a9 9 0 1 0 9 9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </span>
-        <div class="min-w-0">
-          <h2 class="font-bold text-slate-900">Your operational workspace</h2>
-          <p class="mt-1 text-sm leading-6 text-slate-500">BusinessOS keeps the areas enabled for your organization together in one focused workspace.</p>
-        </div>
-      </div>
-      <div class="mt-5 grid gap-3 sm:grid-cols-3">
-        <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-          <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Sell</p>
-          <p class="mt-2 text-sm font-semibold text-slate-700">{% if "sales" in enabled_module_codes %}Sales workspace available{% else %}No sales workspace{% endif %}</p>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-          <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Source</p>
-          <p class="mt-2 text-sm font-semibold text-slate-700">{% if "procurement" in enabled_module_codes %}Purchasing workspace available{% else %}No purchasing workspace{% endif %}</p>
-        </div>
-        <div class="rounded-xl border border-slate-200 bg-slate-50/70 p-4">
-          <p class="text-xs font-bold uppercase tracking-[0.08em] text-slate-400">Stock</p>
-          <p class="mt-2 text-sm font-semibold text-slate-700">{% if "inventory" in enabled_module_codes %}Inventory workspace available{% else %}No inventory workspace{% endif %}</p>
-        </div>
-      </div>
-    </article>
-
-    <aside class="card min-w-0">
-      <h2 class="font-bold text-slate-900">Workspace controls</h2>
-      <div class="mt-4 space-y-4">
-        <div class="flex min-w-0 items-center gap-3">
-          <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-500">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" class="h-4 w-4" aria-hidden="true"><path d="M4 21V7l8-4 8 4v14M8 9h.01M12 9h.01M16 9h.01M9 21v-4h6v4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </span>
-          <div class="min-w-0 flex-1">
-            <p class="text-xs font-medium text-slate-400">Company scope</p>
-            <p class="truncate text-sm font-semibold text-slate-700">{% if request.session.businessos_company_id %}Selected{% else %}Not selected{% endif %}</p>
-          </div>
-          <a href="{% url 'select_company' %}" data-app-nav class="text-xs font-bold text-indigo-600 hover:text-indigo-800 focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500">Change</a>
-        </div>
-        <div class="border-t border-slate-100 pt-4 text-xs leading-5 text-slate-500">Only business areas available to this workspace appear in navigation and quick access.</div>
-      </div>
-    </aside>
-  </section>
+    <section class="dashboard-section" aria-labelledby="dashboard-shortcuts-title">
+      <header><h2 id="dashboard-shortcuts-title">Quick links</h2><span class="dashboard-section-caption">Daily work</span></header>
+      <nav class="dashboard-shortcuts" aria-label="Business shortcuts">
+        {% if "sales" in enabled_module_codes %}<a href="{% url 'sales:order_list' %}?status=draft" data-app-nav><span><strong>Draft sales orders</strong><small>Review customer orders</small></span><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>{% endif %}
+        {% if "procurement" in enabled_module_codes %}<a href="{% url 'procurement:order_list' %}?status=confirmed" data-app-nav><span><strong>Confirmed purchase orders</strong><small>Review supplier deliveries</small></span><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>{% endif %}
+        {% if "inventory" in enabled_module_codes %}<a href="{% url 'inventory:balances' %}" data-app-nav><span><strong>Stock balances</strong><small>Check stock by location</small></span><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a><a href="{% url 'inventory:history' %}" data-app-nav><span><strong>Stock history</strong><small>Trace posted movements</small></span><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>{% endif %}
+        {% if "catalog" in enabled_module_codes %}<a href="{% url 'catalog:categories' %}" data-app-nav><span><strong>Product categories</strong><small>Keep your catalog organized</small></span><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>{% endif %}
+        {% if "party" in enabled_module_codes %}<a href="{% url 'party:list' %}" data-app-nav><span><strong>Customers &amp; suppliers</strong><small>Find a business contact</small></span><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="m7 4 6 6-6 6" stroke-linecap="round" stroke-linejoin="round"/></svg></a>{% endif %}
+        {% if not enabled_module_codes %}<p class="dashboard-empty">Shortcuts appear when business applications are enabled.</p>{% endif %}
+      </nav>
+    </section>
+  </div>
 </div>
 {% endblock %}

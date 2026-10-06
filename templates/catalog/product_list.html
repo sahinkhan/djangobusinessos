@@ -4,17 +4,24 @@
 {% block breadcrumbs %}{% include "components/breadcrumbs.html" with current="Catalog" %}{% endblock %}
 {% block page_header %}
 <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-  {% include "components/page_heading.html" with heading="Catalog" description="Products are catalog identities; variants are transactional SKU identities." %}
-  <a class="btn-primary" href="{% url 'catalog:product_create' %}" data-app-nav>Create product</a>
+  {% include "components/page_heading.html" with heading="Catalog" description="Manage your products, services, and product variants." %}
+  <a class="btn-primary" href="{% url 'catalog:product_create' %}" data-app-nav><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10 4v12M4 10h12" stroke-linecap="round"/></svg>New</a>
 </div>
 {% endblock %}
-{% block content %}
-<div class="mb-5 flex flex-wrap gap-3"><a class="btn-secondary" href="{% url 'catalog:categories' %}" data-app-nav>Categories</a><a class="btn-secondary" href="{% url 'catalog:attributes' %}" data-app-nav>Attributes</a></div>
-<form method="get" class="mb-5 grid gap-3 sm:grid-cols-[minmax(0,1fr)_12rem_auto]" role="search" data-list-filter aria-controls="list-results">
-  <input name="q" value="{{ search }}" placeholder="Search product or SKU" aria-label="Search catalog">
+{% block control_tools %}
+<form method="get" class="bos-searchbar" role="search" data-list-filter aria-controls="list-results">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4" stroke-linecap="round"/></svg>
+  <input name="q" value="{{ search }}" placeholder="Search..." aria-label="Search catalog">
   <select name="type" aria-label="Product type"><option value="">All types</option>{% for value,label in product_types %}<option value="{{ value }}"{% if value == selected_type %} selected{% endif %}>{{ label }}</option>{% endfor %}</select>
-  <button class="btn-secondary" type="submit">Filter</button>
+  <button type="submit" aria-label="Filter"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="M3 5h14l-5.5 6v4l-3 1v-5L3 5Z" stroke-linejoin="round"/></svg></button>
 </form>
+{% endblock %}
+{% block content %}
+<nav class="bos-mobile-subnav" aria-label="Catalog sections">
+  <a href="{% url 'catalog:product_list' %}" data-app-nav>Products</a>
+  <a href="{% url 'catalog:categories' %}" data-app-nav>Categories</a>
+  <a href="{% url 'catalog:attributes' %}" data-app-nav>Attributes</a>
+</nav>
 <div class="list-results-shell" data-list-results-shell>
   {% include "components/list_results_status.html" %}
   <div id="list-results" data-list-results aria-live="polite" aria-busy="false" tabindex="-1">

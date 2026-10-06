@@ -1,5 +1,14 @@
 {% extends "base.html" %}
 {% block title %}Receive {{ order.number }} · BusinessOS{% endblock %}
 {% block breadcrumbs %}{% url 'procurement:order_detail' order.id as order_url %}{% include "components/breadcrumbs.html" with parent_label=order.number parent_url=order_url current="Receive" %}{% endblock %}
-{% block page_header %}<div class="min-w-0 break-all">{% include "components/page_heading.html" with heading="Receive Purchase Order" description=order.number %}</div>{% endblock %}
-{% block content %}<form method="post" class="card min-w-0 max-w-4xl space-y-5 overflow-hidden" data-procurement-receipt-form>{% csrf_token %}{% include "components/company_form_scope.html" %}{% for error in form.non_field_errors %}<p class="alert alert-error" style="overflow-wrap: anywhere;">{{ error }}</p>{% endfor %}{% for field in form.visible_fields %}<div class="min-w-0 max-w-full"><label class="form-label block max-w-full" style="overflow-wrap: anywhere;" for="{{ field.id_for_label }}">{{ field.label }}</label>{{ field }}{% if field.help_text %}<p class="mt-1 text-xs text-slate-500" style="overflow-wrap: anywhere;">{{ field.help_text }}</p>{% endif %}{% for error in field.errors %}<p class="form-error" style="overflow-wrap: anywhere;">{{ error }}</p>{% endfor %}</div>{% endfor %}{% if not lines %}<p class="alert alert-warning">All lines have been fully received.</p>{% endif %}<p class="alert" style="overflow-wrap: anywhere;">Posting records Procurement receipt history only. Inventory will not change.</p><div class="flex flex-wrap gap-3"><button class="btn-primary" type="submit"{% if not lines %} disabled{% endif %}>Post receipt</button><a class="btn-secondary" href="{% url 'procurement:order_detail' order.id %}" data-app-nav>Cancel</a></div></form>{% endblock %}
+{% block page_header %}<div class="record-heading">{% include "components/page_heading.html" with heading="Receive Purchase Order" description=order.number %}<a class="btn-secondary" href="{% url 'procurement:order_detail' order.id %}" data-app-nav>Cancel</a></div>{% endblock %}
+{% block content %}
+<form method="post" class="record-sheet record-form receipt-form" data-procurement-receipt-form>
+  {% csrf_token %}{% include "components/company_form_scope.html" %}
+  <header class="record-sheet-heading"><span class="record-eyebrow">Supplier delivery</span><h2>Receive {{ order.number }}</h2><p>Enter the delivered quantity for each item. Leave undelivered items at zero.</p></header>
+  {% include "components/form_fields.html" %}
+  {% if not lines %}<p class="alert alert-warning">All lines have been fully received.</p>{% endif %}
+  <p class="record-note">Posting records the supplier receipt. Inventory will not change.</p>
+  <footer class="form-footer"><span class="form-help">Posted receipts cannot be edited.</span><button class="btn-primary" type="submit"{% if not lines %} disabled{% endif %}>Post receipt</button></footer>
+</form>
+{% endblock %}

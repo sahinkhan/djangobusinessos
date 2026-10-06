@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Access required · BusinessOS{% endblock %}
+{% block page_header %}{% include "components/page_heading.html" with heading="Access required" %}{% endblock %}
+{% block content %}
+<section class="record-sheet access-state">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 15v2" stroke-linecap="round"/></svg>
+  {% if not request.session.businessos_company_id %}
+  <h2>Select a company to continue</h2><p>Business applications need a selected company. Choose one of your available companies, then reopen this page.</p>
+  <a class="btn-primary" href="{% url 'select_company' %}?next={{ request.get_full_path|urlencode:"" }}" data-app-nav>Select company</a>
+  {% else %}
+  <h2>You do not have access to this page</h2><p>Check your company selection or ask your administrator to review your access.</p>
+  <a class="btn-secondary" href="{% url 'select_company' %}" data-app-nav>Switch company</a>
+  {% endif %}
+</section>
+{% endblock %}

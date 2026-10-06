@@ -7,7 +7,7 @@
   {% if action_label or secondary_action_label %}
     <div class="page-heading-actions">
       {% if secondary_action_label %}<a href="{{ secondary_action_url }}" data-app-nav class="btn-secondary">{{ secondary_action_label }}</a>{% endif %}
-      {% if action_label %}<a href="{{ action_url }}" data-app-nav class="btn-primary">{{ action_label }}</a>{% endif %}
+      {% if action_label %}<a href="{{ action_url }}" data-app-nav class="btn-primary"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10 4v12M4 10h12" stroke-linecap="round"/></svg>{{ action_label }}</a>{% endif %}
     </div>
   {% endif %}
 </div>

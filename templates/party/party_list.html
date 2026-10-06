@@ -4,16 +4,19 @@
 {% block breadcrumbs %}{% include "components/breadcrumbs.html" with current="Parties" %}{% endblock %}
 {% block page_header %}
 <div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-  {% include "components/page_heading.html" with heading="Parties" description="People and organizations shared across commercial modules." %}
-  <a class="btn-primary" data-app-nav href="{% url 'party:create' %}">Create party</a>
+  {% include "components/page_heading.html" with heading="Parties" description="Manage your customers, suppliers, and business contacts." %}
+  <a class="btn-primary" data-app-nav href="{% url 'party:create' %}"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" aria-hidden="true"><path d="M10 4v12M4 10h12" stroke-linecap="round"/></svg>New</a>
 </div>
+{% endblock %}
+{% block control_tools %}
+<form method="get" class="bos-searchbar" role="search" data-list-filter aria-controls="list-results">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4" stroke-linecap="round"/></svg>
+  <input name="q" value="{{ search }}" placeholder="Search..." aria-label="Search parties">
+  <button type="submit" aria-label="Search"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="m7 4 6 6-6 6" stroke-linecap="round"/></svg></button>
+</form>
 {% endblock %}
 
 {% block content %}
-<form method="get" class="mb-5 flex max-w-xl gap-3" role="search" data-list-filter aria-controls="list-results">
-  <input name="q" value="{{ search }}" placeholder="Search display or legal name" aria-label="Search parties">
-  <button class="btn-secondary" type="submit">Search</button>
-</form>
 <div class="list-results-shell" data-list-results-shell>
   {% include "components/list_results_status.html" %}
   <div id="list-results" data-list-results aria-live="polite" aria-busy="false" tabindex="-1">

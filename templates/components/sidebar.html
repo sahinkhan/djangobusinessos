@@ -1,87 +1,22 @@
-<aside class="app-sidebar flex h-full w-full flex-col text-slate-200">
-  <div class="flex h-[4.5rem] shrink-0 items-center justify-between border-b border-white/[.08] px-5">
-    <a href="{% url 'home' %}" data-app-nav class="group flex min-w-0 items-center gap-3 rounded-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950">
-      <span class="brand-mark" aria-hidden="true">
-        <svg viewBox="0 0 32 32" fill="none" class="h-5 w-5">
-          <path d="M7.5 8.25A2.25 2.25 0 0 1 9.75 6h7a5.25 5.25 0 0 1 3.79 8.89A5.5 5.5 0 0 1 17.5 25h-7.75a2.25 2.25 0 0 1-2.25-2.25V8.25Z" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
-          <path d="M11.5 11h5.25a1.75 1.75 0 1 1 0 3.5H11.5V11Zm0 3.5h6a2.5 2.5 0 0 1 0 5h-6v-5Z" stroke="currentColor" stroke-width="2.25" stroke-linejoin="round"/>
-        </svg>
-      </span>
-      <span class="min-w-0">
-        <span class="block truncate text-[15px] font-semibold tracking-tight text-white">BusinessOS</span>
-        <span class="block truncate text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Operations suite</span>
-      </span>
-    </a>
-    <span class="lg:hidden">
-      <button type="button" class="icon-button-dark" @click="sidebarOpen = false; $nextTick(() => $refs.menuTrigger.focus())" aria-label="Close navigation">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg>
-      </button>
-    </span>
-  </div>
-
-  <nav class="min-h-0 flex-1 overflow-y-auto px-3 py-5" aria-label="Primary navigation">
-    <p class="nav-section-label">Workspace</p>
-    <div class="space-y-1">
-      <a href="{% url 'home' %}" data-app-nav data-nav-root="/" class="nav-item{% if request.resolver_match.url_name == 'home' %} nav-item-active{% endif %}"{% if request.resolver_match.url_name == 'home' %} aria-current="page"{% endif %}>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 13.5V20h6v-5h4v5h6v-6.5M3 11l9-8 9 8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        <span>Overview</span>
-      </a>
+<aside class="app-sidebar mx-auto flex min-h-full w-full max-w-5xl flex-col items-center px-4 pb-12 pt-12 text-white sm:pt-16" @click.stop>
+  <div class="flex w-full max-w-md items-center gap-2">
+    <div class="relative flex-1">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="pointer-events-none absolute left-4 top-3.5 h-5 w-5 text-slate-400" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16.5 16.5 4 4" stroke-linecap="round"/></svg>
+      <input x-ref="appSearch" x-model="appSearch" type="search" class="bos-app-search" placeholder="Search apps..." aria-label="Search apps">
     </div>
-
-    {% if "party" in enabled_module_codes or "catalog" in enabled_module_codes or "sales" in enabled_module_codes or "procurement" in enabled_module_codes or "inventory" in enabled_module_codes %}
-      <p class="nav-section-label mt-7">Business modules</p>
-      <div class="space-y-1">
-        {% if "party" in enabled_module_codes %}
-          <a href="{% url 'party:list' %}" data-app-nav data-nav-root="/parties/" class="nav-item{% if request.resolver_match.namespace == 'party' %} nav-item-active{% endif %}"{% if request.resolver_match.namespace == 'party' %} aria-current="page"{% endif %}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M16 20v-1.5a4.5 4.5 0 0 0-4.5-4.5h-4A4.5 4.5 0 0 0 3 18.5V20M9.5 10a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm7-1a3 3 0 0 1 0 5.82M21 20v-1.5a4.5 4.5 0 0 0-2.25-3.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Parties</span>
-          </a>
-        {% endif %}
-        {% if "catalog" in enabled_module_codes %}
-          <a href="{% url 'catalog:product_list' %}" data-app-nav data-nav-root="/catalog/" class="nav-item{% if request.resolver_match.namespace == 'catalog' %} nav-item-active{% endif %}"{% if request.resolver_match.namespace == 'catalog' %} aria-current="page"{% endif %}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="m4 7.5 8-4 8 4-8 4-8-4Zm0 0v9l8 4 8-4v-9M12 11.5v9" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Catalog</span>
-          </a>
-        {% endif %}
-        {% if "sales" in enabled_module_codes %}
-          <a href="{% url 'sales:order_list' %}" data-app-nav data-nav-root="/sales/" class="nav-item{% if request.resolver_match.namespace == 'sales' %} nav-item-active{% endif %}"{% if request.resolver_match.namespace == 'sales' %} aria-current="page"{% endif %}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M5 3h14v18H5V3Zm4 5h6M9 12h6M9 16h3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Sales</span>
-          </a>
-        {% endif %}
-        {% if "procurement" in enabled_module_codes %}
-          <a href="{% url 'procurement:order_list' %}" data-app-nav data-nav-root="/procurement/" class="nav-item{% if request.resolver_match.namespace == 'procurement' %} nav-item-active{% endif %}"{% if request.resolver_match.namespace == 'procurement' %} aria-current="page"{% endif %}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M3 5h2l2.2 9.25a2 2 0 0 0 1.95 1.54h7.93a2 2 0 0 0 1.94-1.51L21 8H6M10 20a1 1 0 1 1-2 0 1 1 0 0 1 2 0Zm9 0a1 1 0 1 1-2 0 1 1 0 0 1 2 0Z" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Procurement</span>
-          </a>
-        {% endif %}
-        {% if "inventory" in enabled_module_codes %}
-          <a href="{% url 'inventory:list' %}" data-app-nav data-nav-root="/inventory/" class="nav-item{% if request.resolver_match.namespace == 'inventory' %} nav-item-active{% endif %}"{% if request.resolver_match.namespace == 'inventory' %} aria-current="page"{% endif %}>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 7.5 12 3l8 4.5V17l-8 4-8-4V7.5Zm0 0 8 4 8-4M12 11.5V21" stroke-linecap="round" stroke-linejoin="round"/><path d="m8 5.25 8 4.25v3" stroke-linecap="round" stroke-linejoin="round"/></svg>
-            <span>Inventory</span>
-          </a>
-        {% endif %}
-      </div>
-    {% endif %}
+    <button type="button" class="bos-launcher-close" @click="closeLauncher()" aria-label="Close navigation">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+  <nav class="bos-app-grid" aria-label="Primary navigation">
+    <a href="{% url 'home' %}" data-app-nav data-nav-root="/" class="bos-app-tile{% if request.resolver_match.url_name == 'home' %} is-active{% endif %}" x-show="'dashboards'.includes(appSearch.toLowerCase())">
+      <span class="bos-app-icon app-dashboard"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></span><span>Dashboards</span>
+    </a>
+    {% if "sales" in enabled_module_codes %}<a href="{% url 'sales:order_list' %}" data-app-nav data-nav-root="/sales/" class="bos-app-tile{% if request.resolver_match.namespace == 'sales' %} is-active{% endif %}" x-show="'sales'.includes(appSearch.toLowerCase())"><span class="bos-app-icon app-sales"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M5 4h14v16H5zM8 8h8M8 12h8M8 16h4" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Sales</span></a>{% endif %}
+    {% if "procurement" in enabled_module_codes %}<a href="{% url 'procurement:order_list' %}" data-app-nav data-nav-root="/procurement/" class="bos-app-tile{% if request.resolver_match.namespace == 'procurement' %} is-active{% endif %}" x-show="'purchase procurement'.includes(appSearch.toLowerCase())"><span class="bos-app-icon app-purchase"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M3 5h2l2.2 9.2a2 2 0 0 0 2 1.6h8a2 2 0 0 0 1.9-1.5L21 8H6M10 20h.01M18 20h.01" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Purchase</span></a>{% endif %}
+    {% if "inventory" in enabled_module_codes %}<a href="{% url 'inventory:list' %}" data-app-nav data-nav-root="/inventory/" class="bos-app-tile{% if request.resolver_match.namespace == 'inventory' %} is-active{% endif %}" x-show="'inventory'.includes(appSearch.toLowerCase())"><span class="bos-app-icon app-inventory"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="m4 7 8-4 8 4-8 4-8-4Zm0 0v10l8 4 8-4V7M12 11v10" stroke-linecap="round" stroke-linejoin="round"/></svg></span><span>Inventory</span></a>{% endif %}
+    {% if "catalog" in enabled_module_codes %}<a href="{% url 'catalog:product_list' %}" data-app-nav data-nav-root="/catalog/" class="bos-app-tile{% if request.resolver_match.namespace == 'catalog' %} is-active{% endif %}" x-show="'catalog products'.includes(appSearch.toLowerCase())"><span class="bos-app-icon app-catalog"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M20 13 13 20l-9-9V4h7l9 9Z" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8.5" cy="8.5" r="1"/></svg></span><span>Catalog</span></a>{% endif %}
+    {% if "party" in enabled_module_codes %}<a href="{% url 'party:list' %}" data-app-nav data-nav-root="/parties/" class="bos-app-tile{% if request.resolver_match.namespace == 'party' %} is-active{% endif %}" x-show="'contacts parties'.includes(appSearch.toLowerCase())"><span class="bos-app-icon app-contacts"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="9" cy="8" r="4"/><path d="M3 21v-2a6 6 0 0 1 12 0v2M16 4.5a4 4 0 0 1 0 7M18 15a5 5 0 0 1 3 4.6V21" stroke-linecap="round"/></svg></span><span>Contacts</span></a>{% endif %}
   </nav>
-
-  <div class="shrink-0 border-t border-white/[.08] p-3">
-    <a href="{% url 'select_company' %}" data-app-nav class="sidebar-company">
-      <span class="sidebar-company-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path d="M4 21V7l8-4 8 4v14M8 9h.01M12 9h.01M16 9h.01M8 13h.01M12 13h.01M16 13h.01M9 21v-4h6v4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </span>
-      <span class="min-w-0 flex-1">
-        <span class="block text-[10px] font-semibold uppercase tracking-[0.14em] text-slate-500">Current company</span>
-        <span class="mt-0.5 block truncate text-sm font-medium text-slate-200">Company workspace</span>
-      </span>
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="h-4 w-4 text-slate-500" aria-hidden="true"><path d="m9 18 6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-    </a>
-    <div class="mt-2 flex items-center gap-3 px-2 py-2">
-      <span class="user-avatar-dark" aria-hidden="true">{{ user.email|first|upper }}</span>
-      <span class="min-w-0 flex-1">
-        <span class="block truncate text-xs font-medium text-slate-300">{{ user.email }}</span>
-        <span class="mt-0.5 block text-[11px] text-slate-500">Signed in</span>
-      </span>
-    </div>
-  </div>
+  <p class="mt-10 text-center text-xs text-white/60">Press <kbd class="rounded bg-white/15 px-1.5 py-0.5 font-mono text-white">ESC</kbd> to return</p>
 </aside>
