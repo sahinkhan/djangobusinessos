@@ -1,13 +1,36 @@
 # ADR 0013 — Standalone Payments and Receipt Contract
 
-Status: Proposed — Gate PAY-0 candidate pending independent review
+Status: Accepted — Gate PAY-0
 
 Date: 2026-10-07
 
+## Formal acceptance — 2026-10-07
+
+Accepted contract candidate: `9ffb5eae09da680354776872a601bedd58163ab1`.
+Independent audit verdict: **FINAL PASS — PAY-0 CONTRACT APPROVED**.
+Implementation readiness: **A — precise enough for PAY-1 implementation**.
+Hosted candidate **Phase 0 checks #99 — SUCCESS**, run ID `37656399267`
+([run evidence](https://github.com/sahinkhan/djangobusinessos/actions/runs/37656399267)),
+checked out exactly `9ffb5eae09da680354776872a601bedd58163ab1` and passed fresh PostgreSQL
+migrations, **873 tests**, Ruff, Django checks, migration drift and mandatory npm/Tailwind/CSS checks.
+
+PAY-0 formal acceptance is **COMPLETE**, as documentation/architecture acceptance only.
+Canonical adoption is **PENDING**; PAY-0 is not canonically closed. This does not mean PAY-1 is
+implemented: PAY-1 and ACC-1 are **NOT STARTED** and require separate implementation authorization.
+PaymentAllocation and all integrations remain deferred. No runtime/schema, tag or main change
+is authorized by this acceptance milestone.
+
+The inherited nonblocking P3 concerning checkpoint-era ADR 0011/Billing authorization wording
+in ADR 0006 and `CORE_FOUNDATION_V1_RESTRUCTURE.md` remains a documentation-maintenance follow-up.
+Those files are unchanged; the follow-up does not alter this accepted contract.
+
 ## Authority, baseline and gate boundary
 
-Gate PAY-0 authorizes this documentation candidate only. It does not accept this ADR, implement
-PAY-1, register permissions/modules, publish a branch, adopt into main or authorize ACC-1.
+The initial Gate PAY-0 instruction authorized a documentation candidate only, not acceptance,
+publication or implementation. Subsequent independent review, candidate publication/CI and this
+separately authorized docs-only formal acceptance complete the contract-review sequence.
+Acceptance-commit publication/CI is authorized; canonical adoption remains separately gated.
+No PAY-1 implementation, permission/module registration or ACC-1 work is authorized here.
 Canonical starting main is `409e45eaa32fae1cf9c77042a762e57026d0349f`, checkpoint
 `billing-invoicing-v1`. BILL-1 is canonically closed there; main Phase 0 checks #97
 ([run 37645584246](https://github.com/sahinkhan/djangobusinessos/actions/runs/37645584246))
@@ -18,8 +41,8 @@ ADR 0011 remains Accepted and owns the Option A separation. This candidate refin
 Payments gate, not Billing v1 behavior or Accounting ownership. ADR 0002 governs optional
 composition; ADR 0006 remains accepted except the explicitly superseded combined Billing scope
 identified in ADR 0011. ADR 0012 governs database execution. Delivery order
-`BILL-1 -> PAY-1 -> ACC-1` is not a hard-dependency graph. This proposal needs independent PAY-0
-contract review and separate acceptance/adoption before separately authorized PAY-1 implementation.
+`BILL-1 -> PAY-1 -> ACC-1` is not a hard-dependency graph. Independent PAY-0 contract review and
+formal acceptance are complete; canonical adoption and PAY-1 implementation need separate authorization.
 
 ## Ownership versus first implementation scope
 
@@ -28,7 +51,7 @@ amount, payer/currency/method financial snapshots and receipt retry identity. Fu
 PaymentAllocation, settlement and refund/reversal semantics also belong to Payments, not Billing
 or Accounting. Ownership does not authorize or require those features in PAY-1.
 
-The proposed PAY-1 MVP is **standalone incoming receipt recording**: only PaymentMethod and
+The approved future PAY-1 MVP is **standalone incoming receipt recording**: only PaymentMethod and
 Payment/Receipt. A Payment records money received from a Party; existence means successfully
 recorded authoritative receipt. There is no separate Receipt model and no status field/state
 machine: no DRAFT, SETTLED, FAILED, REFUNDED or REVERSED states. It is not a gateway-capture,
@@ -61,7 +84,7 @@ Recording creates no JournalEntry, bank/cash posting, GL change or stock effect.
 usable without Payments or Billing. Future integrations call owning-module public contracts;
 neither base module imports the other and no circular dependency is introduced.
 
-## Proposed persistence contract
+## Future PAY-1 persistence contract
 
 These are future PAY-1 fields/constraints, not schema or migration changes in PAY-0. UUID and
 created/updated timestamps follow existing Core primitives. Referenced Company/Party/Currency/
@@ -324,7 +347,7 @@ refund, settlement, gateway, journal UI, redesign or current UI changes are auth
 
 PAY-1 exposes Receipt amount only. Do not expose Applied amount, Unapplied amount, allocation
 status, invoice outstanding or fake zero-allocation assumptions in APIs/selectors/UI. ADR 0011's
-earlier subsequent-gate mention of derived unapplied amounts is refined by this proposed deferral;
+earlier subsequent-gate mention of derived unapplied amounts is refined by this accepted deferral;
 its authoritative ownership and accepted BILL-1 behavior remain unchanged.
 
 PaymentAllocation stays Payments-owned but storage/schema/linkage is deferred to a separate
@@ -338,7 +361,7 @@ Accounting composition calls Accounting services; it is not part of receipt reco
 
 ## Required future PAY-1 verification
 
-This candidate defines acceptance tests; PAY-0 adds no runtime tests. PAY-1 must verify:
+This contract defines acceptance tests; PAY-0 adds no runtime tests. PAY-1 must verify:
 
 - PERSON/ORGANIZATION payer without customer role; active same-company new references; frozen
   payer/method/currency display after rename/deactivation/precision change; cross-company rejection.
@@ -382,5 +405,5 @@ balance, Billing/Payments dependency cycle or Core-to-module import. Core Audit 
 Party/Reference/Organization supply identities and time; Access authorizes; Core Database selects
 execution infrastructure. Payment existence is sufficient for the MVP, so no baseline contract
 requires a speculative status field. No unresolved PAY-1 architecture decision is deliberately
-left within this proposed scope; deferred features require their own future decisions. Gate PAY-0
-remains a local proposed contract pending independent audit, not acceptance or implementation.
+left within this accepted scope; deferred features require their own future decisions. Gate PAY-0
+is formally accepted, with canonical adoption pending; this is not PAY-1 implementation approval.
