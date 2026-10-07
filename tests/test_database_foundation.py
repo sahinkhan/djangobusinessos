@@ -285,7 +285,7 @@ def test_selected_alias_historical_bootstrap_and_business_flows(django_db_blocke
         with django_db_blocker.unblock(), database_execution(alias):
             executor = MigrationExecutor(connections[alias])
             executor.migrate(executor.loader.graph.leaf_nodes())
-            assert BusinessModule.objects.count() == 5
+            assert BusinessModule.objects.count() == 6
             assert Permission.objects.filter(code__startswith="access.").count() == 2
             call_command("seed_reference_data", verbosity=0)
             call_command("seed_phase1_demo", verbosity=0)

@@ -14,10 +14,14 @@ Hosted **Phase 0 checks #91 — SUCCESS**
 ([run 37579298801](https://github.com/sahinkhan/djangobusinessos/actions/runs/37579298801))
 verified that candidate, including 769 PostgreSQL tests and mandatory repository checks.
 
-This is documentation-only BILL-0 contract acceptance; canonical main adoption remains pending.
-BILL-0 acceptance does **not** mean Billing implementation is complete. BILL-1 remains not
-started and requires separate explicit authorization. Payment implementation, Accounting
-implementation, optional integrations and actual SaaS activation are not authorized.
+BILL-0 OPTION A CONTRACT CANONICALLY CLOSED at
+`b9dd8b185a301dca5b76ec7b6604c42805021174`, checkpoint `billing-option-a-contract-v1`.
+Main Phase 0 checks #93 — SUCCESS ([run 37581371586](https://github.com/sahinkhan/djangobusinessos/actions/runs/37581371586)).
+BILL-1 is separately authorized and implemented as a local candidate on `bill1-billing-invoicing`,
+pending independent audit; its implementation commit is `feat: implement standalone billing invoicing`.
+The exact candidate SHA is reported externally after that single commit is created (no self-referential
+commit hash). No BILL-1 acceptance, publication or canonical adoption is implied. Payment implementation,
+Accounting implementation, optional integrations and actual SaaS activation remain unauthorized.
 The future implementation proposals and verification gates below are preserved; this acceptance
 does not declare BILL-1, PAY-1 or ACC-1 implemented or accepted.
 

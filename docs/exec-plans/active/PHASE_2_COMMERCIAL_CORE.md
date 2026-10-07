@@ -6,13 +6,12 @@ Current contract milestone: BILL-0 OPTION A CONTRACT — FORMALLY ACCEPTED, 2026
 Independent audit FINAL PASS and hosted Phase 0 checks #91 SUCCESS
 ([run 37579298801](https://github.com/sahinkhan/djangobusinessos/actions/runs/37579298801))
 cover exact accepted candidate `24d73be43cc09ef66f4405453a210d8f07fcca7f`.
-Canonical main adoption remains pending. Acceptance is documentation-only, not completed Billing
-implementation. BILL-1 is not started; Payments, Accounting, integrations and actual SaaS activation
-remain unauthorized.
-Canonical base: `d65eeee14923910a6b28f11a840a465b1d28ac6f` (`tenant-db-foundation-v1`), with
-`ui-foundation-v1` preserved. Only documentation reconciliation is authorized. ADR 0011 proposes
-the BILL-1 -> PAY-1 -> ACC-1 sequence; implementation of all three and integrations requires
-separate authorization. Earlier acceptance/audit chronology below is preserved as historical evidence.
+BILL-0 OPTION A CONTRACT CANONICALLY CLOSED at `b9dd8b185a301dca5b76ec7b6604c42805021174`,
+checkpoint `billing-option-a-contract-v1`; main CI #93 SUCCESS (run `37581371586`).
+Separately authorized BILL-1 is now a local implementation candidate pending independent audit.
+Payments, Accounting, integrations and actual SaaS activation remain unauthorized.
+The prior `tenant-db-foundation-v1` and `ui-foundation-v1` checkpoints are preserved.
+Earlier acceptance/audit chronology below is preserved as historical evidence.
 
 Canonical Gate 4 base: `f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb`
 
@@ -573,8 +572,35 @@ In addition to normal tests:
 
 # Gate BILL-1 — Standalone Billing & Invoicing (replaces combined Batch 2D)
 
-Status: BILL-0 documentation acceptance recorded after independent FINAL PASS and candidate CI #91
-SUCCESS; canonical adoption pending. BILL-1 implementation is not started and requires separate authorization.
+Status: BILL-0 canonically closed. BILL-1 IMPLEMENTED / PENDING INDEPENDENT AUDIT, local-only
+on `bill1-billing-invoicing`, based directly on `b9dd8b185a301dca5b76ec7b6604c42805021174`.
+Candidate commit subject: `feat: implement standalone billing invoicing`; the exact SHA is reported
+after the single authorized commit. No publication, acceptance or main adoption is authorized.
+
+### BILL-1 implementation evidence — 2026-10-07
+
+- Invoice/InvoiceLine only; generic Party billing without customer role or Catalog identity.
+  Four exact Billing permissions, frozen disabled-by-default registration, enablement preservation,
+  HTTP-only gating, alias-aware Company-lock-before-RBAC services and atomic created/updated/issued audit.
+- Service-only writes, protected public ORM/bulk paths, immutable issued documents, collision-safe
+  UUID numbering, snapshots and frozen currency precision; one pure Decimal calculation helper
+  sums exact products and rounds once using HALF_UP. No stored total or payment/balance state.
+- Create/edit/detail/line/issue pages use the accepted shell, action RBAC, company-bound POSTs,
+  50-row deterministic pagination and explicit “Payment status unavailable”. No Payments,
+  Accounting, Inventory effect, Catalog dependency or historical Billing WIP was introduced.
+- PostgreSQL 17 / Python 3.13: full suite **873 passed**; Billing-local **104 passed**, including
+  **23 real-lock concurrency cases** and a non-default-alias lifecycle/audit/rollback test.
+  SQLite full suite **754 passed, 119 PostgreSQL-only skips**. Workers close their connections.
+- Fresh disposable PostgreSQL migrations, Django checks, migration drift, database architecture
+  guard, Ruff, npm/Tailwind/CSS reproducibility and diff checks passed. Existing npm advisories
+  remain outside scope; no dependency/workflow changes.
+- Browser QA uses disposable synthetic data: 200-character Party, long descriptions/notes,
+  maximum supported line values and eight-decimal totals at 390/768/1280 CSS pixels. Table scrolling
+  remains local; page layout stays bounded. Draft actions and issued read-only presentation verified.
+- Two new Billing migrations only: `0001_initial`, `0002_register_manifest`; accepted migrations
+  unchanged. Existing migration-count regression updated from five to six registered modules.
+- Accepted ADR 0011 financial/dependency/lifecycle decisions remain unchanged. This evidence is
+  implementation verification, **not independent acceptance**. PAY-1/ACC-1 remain unauthorized.
 
 ## Ownership and authoritative specification
 
@@ -1102,8 +1128,8 @@ Inventory final corrective         09794e92; FINAL PASS
 Inventory corrective adoption      35663e4f; accepted, adopted, and closed
 Sales post-closure remediation      b34a98a1; FINAL PASS / accepted / adopted / closed
 Gate TDB-1 foundation              canonically closed at d65eeee; tenant-db-foundation-v1
-Billing Option A contract         BILL-0 accepted; documentation only; canonical adoption pending
-Gate BILL-1 implementation         not authorized
+Billing Option A contract         BILL-0 canonically closed at b9dd8b18
+Gate BILL-1 implementation         local candidate; pending independent audit; not adopted
 Gate PAY-1 implementation          not authorized
 Gate ACC-1 implementation          not authorized
 Optional integrations             not authorized

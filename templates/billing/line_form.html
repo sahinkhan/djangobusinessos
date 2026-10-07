@@ -1,0 +1,5 @@
+{% extends "components/form_page.html" %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with parent_label="Invoices" parent_url="/billing/invoices/" current=heading %}{% endblock %}
+{% block form_description %}Enter a description, positive quantity and nonnegative unit price. Up to four decimal places are supported.{% endblock %}
+{% block form_fields %}{% include "components/form_fields.html" with wide_fields="description" %}{% endblock %}
+{% block cancel_action %}<a class="btn-secondary" href="{% url 'billing:detail' invoice.id %}" data-app-nav>Cancel</a>{% endblock %}

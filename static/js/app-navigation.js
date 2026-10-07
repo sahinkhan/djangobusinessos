@@ -46,7 +46,7 @@
       if (url.origin !== window.location.origin || link.hasAttribute("download")) continue;
       link.dataset.appUrl = url.href;
       const content = document.getElementById("app-content");
-      const modulePath = /^\/(parties|catalog|sales|procurement|inventory)\//.test(url.pathname);
+      const modulePath = /^\/(parties|catalog|sales|procurement|inventory|billing)\//.test(url.pathname);
       if (modulePath && content?.dataset.companySelected === "false") {
         const companyUrl = new URL(content.dataset.companySelectUrl, window.location.href);
         companyUrl.searchParams.set("next", url.pathname + url.search);

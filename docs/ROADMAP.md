@@ -106,9 +106,11 @@ Current future-work contract: **Option A — separate horizontal modules**, sele
 as of 2026-10-07. Independent audit FINAL PASS and hosted Phase 0 checks #91 SUCCESS
 ([run 37579298801](https://github.com/sahinkhan/djangobusinessos/actions/runs/37579298801))
 cover exact contract candidate `24d73be43cc09ef66f4405453a210d8f07fcca7f`.
-Formal acceptance is documentation-only; canonical main adoption remains pending. BILL-1 is not
-started and requires separate authorization. No Billing, Payments, Accounting, integration or
-actual SaaS activation implementation is authorized by this milestone.
+BILL-0 OPTION A CONTRACT CANONICALLY CLOSED at `b9dd8b185a301dca5b76ec7b6604c42805021174`,
+checkpoint `billing-option-a-contract-v1`; main CI #93 SUCCESS (run `37581371586`).
+Separately authorized BILL-1 is implemented as a local candidate on `bill1-billing-invoicing`,
+pending independent audit, not accepted or adopted. See the Phase 2 plan for verification evidence.
+Payments, Accounting, integrations and actual SaaS activation remain unauthorized.
 
 | Gate | Standalone ownership | Deferred integration |
 | --- | --- | --- |
