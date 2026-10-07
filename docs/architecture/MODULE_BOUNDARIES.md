@@ -45,6 +45,7 @@ Initial shared modules:
 - procurement
 - inventory
 - billing
+- payments
 - accounting
 - hr
 - ecommerce
@@ -83,11 +84,28 @@ Examples:
 - sales order lifecycle -> Sales
 - purchase order lifecycle -> Procurement
 - stock movement -> Inventory
-- invoice/payment orchestration -> Billing
+- Invoice/InvoiceLine, numbering, financial snapshots, issue and invoice totals -> Billing
+- Payment/Receipt, PaymentMethod, PaymentAllocation, payment retries and settlement -> Payments
 - journal entries/chart of accounts -> Accounting
 - employee/leave/attendance -> HR
 
 Other modules reference the owning concept; they do not create competing copies.
+
+### Option A commercial boundary (contract candidate)
+
+ADR 0011 proposes the owner-selected Billing & Invoicing -> Payments -> Accounting & Finance
+delivery sequence. These arrows are not hard dependencies. Billing never owns or imports Payment
+or PaymentAllocation. Generic Payments remains independent of Billing; optional invoice allocation
+composition consumes Billing's public invoice contract and Payments' allocation service. Accounting
+retains independent balanced entries; integrations call its public services rather than write GL rows.
+
+Billing's generic invoice lines require no Catalog or Sales/Procurement origin. BILL-1 exposes the
+original invoice total and explicitly unavailable payment status. Settlement-adjusted outstanding
+requires complete validated Payments allocation evidence through later approved composition; no
+fake zero-paid fallback or mutable authoritative balance. Invoice correction/void/credit belongs
+to Billing when approved; payment refunds/reversals belong to Payments when approved. BILL-1 has
+only DRAFT -> ISSUED and no void/credit implementation. Procurement PurchaseReceipt ownership is
+unchanged. ADR 0011 is proposed/pending independent review; no commercial code is authorized here.
 
 ## Catalog item identity rule
 

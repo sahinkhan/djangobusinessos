@@ -33,6 +33,7 @@ sales -> party, catalog, organization, reference, access
 procurement -> party, catalog, organization, reference, access
 inventory -> catalog, organization, reference, access
 billing -> party, organization, reference, access
+payments -> party, organization, reference, access
 accounting -> party, organization, reference, access
 hr -> party, organization, reference, access
 
@@ -115,7 +116,15 @@ It owns stock movement/ledger behavior. Other modules must not directly mutate i
 
 ### Billing
 
-Owns invoices/credit documents/payment orchestration and depends on Party plus core organization/reference/access capabilities.
+Owns Invoice/InvoiceLine, numbering, financial snapshots, currency, issue and totals; invoice
+void/credit policy is future Billing ownership, explicitly deferred from BILL-1. Depends on Party
+plus core organization/reference/access capabilities. This is the proposed ADR 0011 Option A
+contract, pending independent review.
+
+Billing must not own Payment, PaymentAllocation or PaymentMethod and must not import Payments.
+It has no hard dependency on Sales, Procurement, Inventory, Catalog, Payments or Accounting.
+Original invoice totals are Billing-owned. Settlement-aware outstanding needs later approved
+composition with Payments-owned allocations; standalone Billing reports payment status unavailable.
 
 Billing must be usable independently by Sales, Procurement and vertical products such as School, Hospital and Hotel.
 
@@ -123,13 +132,27 @@ References to upstream business documents should use stable identifiers/contract
 
 When Accounting is enabled, financial posting is an optional integration that must call Accounting's public service contract. Billing is not the owner of the general ledger.
 
+### Payments
+
+Owns Payment/Receipt, PaymentMethod, PaymentAllocation, partial payments, payment idempotency,
+allocation validation and settlement; refund/reversal capabilities require separate approval.
+Generic Payments requires Party plus Core organization/reference/access, not Billing or Accounting.
+It can record standalone receipts with Billing absent.
+
+Optional invoice-allocation composition -> Billing public invoice contracts + Payments public
+allocation services. This requires both capabilities, but adds no Billing dependency to the base
+Payments manifest/startup/models/migrations. No unconditional Invoice FK in generic Payments core.
+Concrete optional reference/storage design is deferred to PAY-1/integration review. Billing has no
+reverse import. Optional composition, not either module's base implementation, calls Accounting.
+
 ### Accounting
 
 Owns chart of accounts, journals and journal entries. It depends on Party plus core organization/reference/access capabilities.
 
 Other modules request postings through Accounting services when the optional integration is enabled; they do not directly manipulate ledger rows.
 
-Accounting must remain usable without Billing.
+Accounting must remain usable without Billing or Payments. Delivery order (BILL-1 -> PAY-1 ->
+ACC-1) is not an import graph. The chart/journal core does not depend on invoice or payment facts.
 
 ### HR
 
@@ -153,6 +176,8 @@ party -> hotel
 
 Ecommerce must reuse Catalog, Sales and Billing rather than create separate authoritative copies of products, orders or invoices.
 
+Payment processing, when separately approved, consumes Payments; it is not supplied by Billing.
+
 Inventory availability/reservation is an optional integration so Ecommerce can also support non-stock/service/digital scenarios.
 
 ## Optional integration examples
@@ -162,7 +187,9 @@ These are business flows, not hard dependency declarations:
 ```text
 Sales confirmation -> Inventory reserve/issue
 Procurement receipt -> Inventory receive
-Billing invoice/payment -> Accounting posting
+Billing invoice -> Accounting posting
+Payments outcome -> Accounting posting
+Payments receipt + Billing invoice -> Payments allocation / composed outstanding
 Ecommerce checkout -> Inventory availability/reservation
 Hospital pharmacy -> Inventory issue
 ```

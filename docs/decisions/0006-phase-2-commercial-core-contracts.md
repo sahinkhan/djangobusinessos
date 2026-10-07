@@ -2,6 +2,12 @@
 
 Status: Accepted
 
+Option A reconciliation (2026-10-07): ADR 0011 is a proposed contract pending independent review,
+following the owner's explicit module-separation decision. For that candidate, the conflicting
+Billing payment-ownership/outstanding portions of section 7, payment source in section 12 and
+five-module delivery assumption below are superseded as marked. All unrelated accepted contracts
+and historical acceptance evidence remain in force. This does not authorize implementation.
+
 Date: 2026-09-13
 
 ## Context
@@ -23,6 +29,7 @@ sales -> party, catalog, organization, reference, access
 procurement -> party, catalog, organization, reference, access
 inventory -> catalog, organization, reference, access
 billing -> party, organization, reference, access
+payments -> party, organization, reference, access
 accounting -> party, organization, reference, access
 ```
 
@@ -90,11 +97,18 @@ Duplicate posting protection/idempotency is required for posting and integration
 
 ### 7. Billing source of truth
 
-Billing owns Invoice, InvoiceLine, Payment and PaymentAllocation.
+Original accepted wording assigned Invoice, InvoiceLine, Payment and PaymentAllocation to Billing.
+That combined ownership is superseded for the Option A contract candidate by ADR 0011: Billing
+owns Invoice/InvoiceLine; Payments owns Payment/Receipt, PaymentMethod and PaymentAllocation.
+Generic Payments is usable without Billing; invoice allocation is an optional integration.
 
 Invoice lines are generic financial/document lines and do not hard-depend on Catalog. This keeps Billing reusable by Sales, School, Hospital, Hotel and other verticals.
 
-Issued invoices are immutable for core financial fields. Invoice total and outstanding amount are derived from lines and allocations rather than maintained as arbitrary mutable balances.
+Issued invoices remain immutable. Invoice total derives from Billing financial snapshots.
+Settlement-adjusted outstanding requires valid Payments-owned allocations through approved
+composition. Standalone BILL-1 exposes original invoice total and unavailable payment status,
+never a guessed fully unpaid balance. No mutable authoritative balance is allowed. BILL-1 proposes
+DRAFT -> ISSUED only; void/credit requires a separate safe lifecycle contract.
 
 Phase 2 excludes taxes, advanced discounts, credit notes, payment gateways and FX conversion.
 
@@ -144,7 +158,8 @@ After standalone module audits pass, Phase 2 may implement these explicit integr
 Procurement PurchaseReceipt -> Inventory receipt movement
 Sales confirmed order -> Billing invoice creation
 Billing issued invoice -> Accounting journal entry
-Billing payment -> Accounting journal entry
+Payments outcome -> Accounting journal entry
+Payments receipt + Billing invoice -> Payments-owned allocation (optional)
 ```
 
 Sales confirmation -> Inventory issue is deliberately NOT implemented until shipment/fulfillment or reservation semantics are defined.
@@ -155,7 +170,8 @@ Integration services must be retry-safe when they create authoritative Inventory
 
 Benefits:
 
-- five modules can be developed largely in parallel;
+- the original five-module scope is split into six standalone capabilities by proposed ADR 0011;
+  remaining delivery gates are BILL-1, PAY-1 and ACC-1, with integrations separately authorized;
 - Sales and Procurement remain usable for service/non-stock businesses;
 - Billing remains reusable by verticals without Sales;
 - Accounting remains usable without Billing;

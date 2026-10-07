@@ -2,6 +2,12 @@
 
 Status: IN PROGRESS — PROCUREMENT CORRECTIVE REMEDIATION ACCEPTED / ADOPTED / CLOSED
 
+Current contract milestone: BILLING OPTION A CONTRACT CANDIDATE — awaiting independent review.
+Canonical base: `d65eeee14923910a6b28f11a840a465b1d28ac6f` (`tenant-db-foundation-v1`), with
+`ui-foundation-v1` preserved. Only documentation reconciliation is authorized. ADR 0011 proposes
+the BILL-1 -> PAY-1 -> ACC-1 sequence; implementation of all three and integrations requires
+separate authorization. Earlier acceptance/audit chronology below is preserved as historical evidence.
+
 Canonical Gate 4 base: `f2d48c1d1a6f12c7b27c925e2c6f14f922d53beb`
 
 Historical standalone-plan base: `361d832713dcd2325363b4059a4f3b6cac7d3715`
@@ -12,7 +18,9 @@ Architecture decision: `docs/decisions/0006-phase-2-commercial-core-contracts.md
 
 Build the first reusable transactional core of BusinessOS without turning the Django monolith into a tightly coupled ERP.
 
-Phase 2 delivers minimum standalone Sales, Procurement, Inventory, Billing and Accounting capabilities, then adds a small set of explicit optional integrations after the standalone contracts pass review.
+Phase 2 delivers minimum standalone Sales, Procurement, Inventory, Billing & Invoicing, Payments
+and Accounting & Finance capabilities, then separately approved optional integrations after their
+standalone contracts pass review. This six-module future scope follows proposed ADR 0011.
 
 Speed matters, but Inventory and Accounting correctness is more important than feature breadth.
 
@@ -31,6 +39,8 @@ Before any Phase 2 implementation, read and obey:
 - `docs/decisions/0005-deployment-module-gating-and-simple-variant-lifecycle.md`
 - `docs/decisions/0006-phase-2-commercial-core-contracts.md`
 - `docs/decisions/0007-standalone-sales-acceptance.md`
+- `docs/decisions/0011-modular-billing-payments-accounting-boundary.md`
+- `docs/decisions/0012-tenant-ready-database-execution-foundation.md`
 - this execution plan
 
 Do not silently change these architecture contracts.
@@ -45,9 +55,10 @@ Gate 4A and Gate 4B are accepted, adopted, and closed.
 Gate 4C's historical adoption and post-closure correction are accepted, adopted, and closed.
 Sales post-closure remediation has independent FINAL PASS, formal corrective acceptance, and
 canonical adoption; the post-closure corrective cycle is closed.
-Billing, Accounting, and integrations remain unauthorized.
+Billing/Payments/Accounting implementation and integrations remain unauthorized. Remaining gates
+are sequentially governed as BILL-1, PAY-1 and ACC-1, not automatically launched in parallel.
 
-Recommended branches:
+Historical branch recommendations (not current implementation authorization):
 
 ```text
 phase2-sales
@@ -554,119 +565,111 @@ In addition to normal tests:
 
 ---
 
-# Batch 2D — Billing
+# Gate BILL-1 — Standalone Billing & Invoicing (replaces combined Batch 2D)
 
-## Ownership
+Status: proposed contract only, pending independent review and later implementation authorization.
 
-Billing owns generic invoices, payments and payment allocation. It must remain usable independently by Sales and by future verticals.
+## Ownership and authoritative specification
 
-Phase 2 minimum models:
+Billing owns Invoice/InvoiceLine, invoice identity/numbering, currency and financial snapshots,
+issue/finalization, document lifecycle, derived totals and future approved invoice correction
+policy. It is reusable across Retail, School, Hospital, Hotel, Services, Ecommerce and other
+verticals without Sales, Procurement or Catalog. It owns no Payment/PaymentAllocation/PaymentMethod,
+payment receipt, gateway, payment retry key, settlement, reconciliation, refund, journal or stock.
 
-### Invoice
+The precise proposed fields, validation, rounding, snapshot, lifecycle, RBAC and audit contract is
+[ADR 0011](../../decisions/0011-modular-billing-payments-accounting-boundary.md). That document
+is the single detailed BILL-1 specification; the checklist below summarizes its acceptance scope.
 
-- UUID id
-- company
-- company-unique human-readable number
-- bill_to_party -> Party
-- invoice_date
-- due_date optional
-- currency
-- status: DRAFT / ISSUED / VOID
-- notes
-- issued_at
-- timestamps
+## Minimum implementation for separate authorization
 
-### InvoiceLine
+- Invoice: explicit company; company-unique stable generated number; active same-company bill-to
+  Party (person/organization, no customer-role requirement); bill-to snapshots; invoice/due dates;
+  Currency and code/precision snapshots; DRAFT/ISSUED; notes; server issued timestamp; timestamps.
+- InvoiceLine: company, immutable parent, generic nonblank description, positive quantity,
+  nonnegative unit price, position and timestamps. No required Catalog or upstream order reference.
+- Decimal(18,4) inputs, finite-value/range/precision validation before persistence. Exact products,
+  sum before once-only ROUND_HALF_UP at frozen currency precision, checked aggregate range.
+  ADR 0011 specifies zero-total behavior, supported currency precision and boundary handling.
+- Draft edits only; at least one valid line before issue; issued header/lines fully immutable.
+  No void state/action, credit notes, issued deletion or reversal; safe correction policy deferred.
+- Module-local collision-safe numbering plus database uniqueness, no `MAX()+1` or sequence engine.
+- Services: create/update invoice, add/update/remove draft line, issue invoice. Same-invoice issue
+  retry has one transition/audit; initial creation has no request-key replay guarantee.
+- Reads: company-scoped invoices_for_company, invoice_detail, invoice_total. Deterministic 50-row
+  list pagination; list/create/edit/detail/issue UI uses the accepted shell and normal POST actions.
 
-- UUID id
-- company
-- invoice
-- description
-- quantity
-- unit_price
-- optional stable source reference metadata
-- timestamps
+## Amount presentation and future outstanding
 
-Do not hard-depend InvoiceLine on Catalog.
+Display **Invoice total**, not payment-aware amount due or fully unpaid balance. Payment status is
+explicitly unavailable. No amount_paid/amount_due selector or mutable balance exists in BILL-1.
+Only later approved composition may derive outstanding from frozen Billing financial state and
+complete valid Payments-owned allocations. Missing evidence never means zero paid. A due date is
+document information, not proof of unpaid/overdue debt. No fake allocation table in Billing.
 
-### Payment
+## Foundation acceptance requirements
 
-- UUID id
-- company
-- company-unique human-readable number
-- payer Party where appropriate
-- payment_date
-- currency
-- amount
-- method: minimal CASH / BANK / OTHER or equivalent
-- external_reference optional
-- idempotency_key optional with company-scoped uniqueness when supplied
-- timestamps
+- Hard manifest dependencies: party, organization, reference, access; existing Core utilities allowed.
+- Exact proposed permissions: billing.invoice.view/create/update/issue. Action GET forms and POST
+  handlers enforce action RBAC; selectors and installed Python services enforce their own permissions.
+- Mutation order: business_atomic -> active Company lock -> context/RBAC recheck -> invoice/line
+  locks -> validation/write/audit. Reads, mutation and audit use the same execution alias (ADR 0012).
+- Audit: billing.invoice.created/updated/issued. All persisted financial/snapshot changes covered;
+  no duplicate success event for true no-op/issue retry; audit failure rolls back the entire operation.
+- Public bulk ORM and stale-instance paths cannot bypass ownership, status or issued immutability.
+- Deterministic frozen manifest/permission registration; preserve existing enablement; fresh module
+  disabled. Missing/disabled HTTP returns 404 and hides navigation; installed APIs remain callable
+  with valid BusinessContext and RBAC. No tenant_id, SaaS activation or service enablement gate.
+- PostgreSQL real-lock regressions: issue versus edit/remove/stale deletes, issue retry, and role/
+  permission/company-access revocation after Company-lock wait. SQLite skips only actual lock cases.
+- Cross-company relationships, finite/invalid numeric inputs, currency snapshots/rounding, audit
+  rollback, non-HTTP calls, HTTP permission/stale-company matrix and absent optional modules tested.
+- Fresh migrations, module-local discovery, full suites/checks and responsive boundary-value UI QA.
 
-### PaymentAllocation
+## Deferred beyond BILL-1
 
-- UUID id
-- company
-- payment
-- invoice
-- amount
-- timestamps
-
-## Rules
-
-- bill-to/payer Party must be active and company-scoped; Billing does not require the Party to originate from Sales;
-- invoice line quantity > 0;
-- unit_price >= 0;
-- issued invoice must contain at least one line and becomes immutable for financial fields;
-- payment amount > 0;
-- allocation currency/company must match;
-- total allocations cannot exceed payment amount;
-- invoice allocations cannot exceed current invoice outstanding amount;
-- allocation operations use row locking/atomicity sufficient to prevent concurrent over-allocation;
-- invoice total and outstanding are derived, not arbitrary mutable balances;
-- duplicate payment creation with an idempotency key is retry-safe.
-
-## Services
-
-- create/update_invoice draft
-- add/update/remove_invoice_line draft
-- issue_invoice
-- void_invoice only if safe under current rules
-- record_payment
-- allocate_payment
-
-## Selectors
-
-- invoices_for_company
-- invoice_detail
-- invoice_total
-- amount_paid
-- amount_due
-- payments_for_company
-- unapplied_payment_amount
-
-## UI
-
-- invoice list/create/edit/detail
-- issue
-- payment list/record
-- allocate payment to invoice
-- display total/paid/due
-
-## Explicitly not Billing Phase 2
-
-- tax engine
-- discount engine
-- credit notes
-- payment gateway
-- automatic dunning
-- recurring billing/subscriptions
-- foreign-exchange conversion
-- vendor AP bills
+Payment gateways, customer refunds, vendor/AP billing, credit notes/void, recurring invoices,
+subscriptions, advanced taxes (no tax calculation in BILL-1), discounts/promotions, FX conversion,
+Accounting integration, Sales-to-Billing automation, Ecommerce checkout, settlement/reconciliation,
+dunning and localized fiscal numbering require separate approval. No preserved Billing WIP resumes.
 
 ---
 
-# Batch 2E — Accounting
+# Gate PAY-1 — Standalone Payments
+
+Status: ownership boundary proposed; detailed contract and implementation separately authorized.
+
+Payments owns Payment/Receipt, PaymentMethod, PaymentAllocation, partial payments, payment
+idempotency, allocation validation and settlement; refunds/reversals only when separately approved.
+Procurement PurchaseReceipt remains unrelated goods/service receipt evidence.
+
+Generic Payments hard dependencies: party, organization, reference, access plus existing Core
+utilities. It must record standalone receipts with Billing absent. Proposed PAY-1 design covers
+company-scoped receipts, payer Party, dates, currency, finite positive amounts, methods, numbering,
+external references/retry keys, permissions/audit and derived unapplied amounts. Concrete schema,
+receipt/settlement lifecycle and APIs require PAY-1 contract review before implementation.
+
+Invoice allocation is optional composition with Billing, not a hard dependency of generic Payments.
+Payments owns the allocation facts and writes; composition validates eligible Billing invoices
+through public contracts. No unconditional Invoice FK or eager Billing import in generic Payments
+models/migrations/startup. Optional linkage/storage, lock protocol and complete applied-amount
+evidence must be explicitly designed before enabling allocations. Billing never imports Payments.
+
+Allocation requires company/currency/identity agreement, no excess over payment availability or
+invoice outstanding, concurrent lock/recheck protection, exact retry/idempotency, rollback and audit.
+Those are acceptance requirements for the future optional integration, not present functionality.
+Payment receipt processing must not automatically create an invoice or Accounting journal.
+
+Gate PAY-1 requires independent standalone review; invoice-allocation integration requires its own
+review/authorization. Gateway, refund/reversal and settlement processing are not implicitly approved.
+
+---
+
+# Gate ACC-1 — Accounting & Finance Core (formerly Batch 2E)
+
+Status: future standalone gate, not implementation authorization. The following accepted journal
+scope is preserved. Accounting depends on Party and Core, not Billing or Payments; automation
+consumes separately approved source outcomes through optional composition and public services.
 
 ## Ownership
 
@@ -782,9 +785,11 @@ Phase 2 minimum models:
 
 ---
 
-# Batch 2F — Optional integrations and integration branch
+# Optional integrations — separately governed after standalone gates (formerly Batch 2F)
 
-Do not start this batch until standalone module branches have passed architecture review and are merged into `phase2-commercial-core`.
+Do not start until the relevant standalone modules pass independent review and canonical adoption,
+and the specific integration is explicitly authorized. The historical `phase2-commercial-core`
+branch proposal is not an instruction to merge preserved branches or start integrations now.
 
 ## Procurement -> Inventory
 
@@ -812,11 +817,20 @@ Requirements:
 - Billing remains independent of Catalog/Sales internally;
 - source SalesOrder remains unchanged.
 
-## Billing -> Accounting
+## Payments + Billing invoice allocation
+
+Separately approve optional composition consuming Billing invoice eligibility/financial snapshots
+and Payments allocation services. PaymentAllocation remains Payments-owned. Validate company,
+currency, invoice and payment identities; derive outstanding from complete valid allocation
+evidence; serialize against competing allocations and any future invoice correction. Missing
+evidence must fail or report unavailable. PAY-1/integration review must resolve optional storage
+without making generic Payments require Billing. No direct cross-module authoritative writes.
+
+## Billing / Payments outcomes -> Accounting
 
 Implement explicit posting services for base-currency documents only:
 
-### Invoice posting
+### Billing invoice outcome posting
 
 Minimum Phase 2 pattern:
 
@@ -825,7 +839,7 @@ Dr Accounts Receivable
 Cr Revenue
 ```
 
-### Payment posting
+### Payments allocated-receipt outcome posting
 
 Minimum Phase 2 pattern:
 
@@ -836,10 +850,16 @@ Cr Accounts Receivable
 
 The integration may require explicit account IDs or a deliberately small Accounting-owned configuration. Do not build a generic accounting-rule engine.
 
+The payment example applies to an approved receivable allocation, not every standalone receipt.
+Unallocated receipts and settlement/refund mappings require their own explicit accounting policy.
+
 Requirements:
 
 - Accounting enabled;
+- the relevant Billing or Payments capability and its specific integration enabled;
 - invoice/payment currency equals company base currency;
+- Billing supplies invoice outcomes; Payments supplies payment/allocation outcomes;
+- Accounting owns all journal/GL writes; no payment posting service belongs to Billing;
 - call Accounting public services;
 - deterministic idempotency key per source document/effect;
 - retry cannot duplicate JournalEntry;
@@ -864,6 +884,10 @@ Every new module:
 - returns 404 for direct module HTTP access when disabled.
 
 Do not build automatic dependency resolution. Deployment configuration must explicitly enable required hard dependencies.
+
+Registry enablement controls HTTP/navigation only; installed Python services still require valid
+BusinessContext and exact RBAC but remain callable with missing/disabled module registry state.
+Deterministic registration preserves existing enablement and freezes migration-time declarations.
 
 ---
 
@@ -925,9 +949,13 @@ Also verify:
 
 For Inventory and Accounting additionally verify atomicity, failure rollback and duplicate-posting/idempotency behavior.
 
-For Billing payment allocation verify concurrent/atomic over-allocation prevention.
+For BILL-1 verify the ADR 0011 invoice financial/snapshot/issue/immutability/RBAC/audit contract.
+For Payments invoice allocation verify concurrent/atomic over-allocation prevention, retry safety
+and complete settlement evidence through the approved optional integration. Never substitute
+standalone invoice total for payment-aware outstanding.
 
-After Batch 2F, run a complete PostgreSQL suite and end-to-end commercial-core smoke flows.
+After the separately approved integration gate, run the full PostgreSQL suite and relevant
+end-to-end commercial-core smoke flows.
 
 ---
 
@@ -941,18 +969,25 @@ Customer
 -> Confirm
 ```
 
-Optionally when Billing enabled:
+Optionally when Billing and Sales-to-Billing integration are approved and enabled:
 
 ```text
 Confirmed Sales Order
 -> Invoice
--> Payment
+```
+
+Then, only when Payments and invoice allocation are approved/enabled:
+
+```text
+Issued Billing Invoice + Payments Receipt
+-> Payments-owned Allocation
+-> settlement-adjusted outstanding through approved composition
 ```
 
 and when Accounting enabled/base currency:
 
 ```text
-Invoice/Payment
+Billing invoice / Payments allocation outcomes
 -> Balanced Journal Entries
 -> Trial Balance
 ```
@@ -1023,16 +1058,17 @@ Do NOT add unless a new architecture decision explicitly changes scope:
 
 Phase 2 can receive FINAL PASS only when:
 
-1. Sales, Procurement, Inventory, Billing and Accounting each pass standalone architecture review;
+1. Sales, Procurement, Inventory, Billing, Payments and Accounting each pass standalone architecture review;
 2. company isolation is tested for all modules;
 3. ProductVariant is used consistently for concrete Sales/Procurement/Inventory item identity;
 4. Inventory source of truth is posted movement ledger only;
 5. Accounting source of truth is posted balanced journal lines only;
-6. Billing totals/outstanding are derived from lines/allocations;
+6. Billing totals derive from frozen invoice financial data; settlement-adjusted outstanding derives
+   only through approved composition with valid Payments-owned allocations, never a mutable balance;
 7. posted/confirmed documents are protected against unsafe mutation;
 8. Inventory/Accounting authoritative effects are retry-safe/idempotent where applicable;
 9. approved optional integrations use public services and do not create hard circular dependencies;
-10. module registry gating works for all five modules;
+10. module registry gating works for all six modules, preserving installed service RBAC semantics;
 11. PostgreSQL full suite, Ruff, Django checks and migration drift checks pass;
 12. no speculative platform framework was introduced;
 13. architecture review explicitly accepts the Phase 2 contracts.
@@ -1058,6 +1094,10 @@ Inventory precision candidate      d7fc63c; independent corrective re-audit REVI
 Inventory final corrective         09794e92; FINAL PASS
 Inventory corrective adoption      35663e4f; accepted, adopted, and closed
 Sales post-closure remediation      b34a98a1; FINAL PASS / accepted / adopted / closed
-Billing / Accounting              not authorized
+Gate TDB-1 foundation              canonically closed at d65eeee; tenant-db-foundation-v1
+Billing Option A contract         proposed / awaiting independent review; documentation only
+Gate BILL-1 implementation         not authorized
+Gate PAY-1 implementation          not authorized
+Gate ACC-1 implementation          not authorized
 Optional integrations             not authorized
 ```

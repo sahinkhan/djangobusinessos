@@ -15,12 +15,11 @@ The roadmap is capability-driven, not date-driven. A later phase should not begi
 
 ## Phase 0 — Foundation
 
-Backend infrastructure follow-up: Tenant-Ready Database Execution Foundation is implemented as a
-local, unpushed candidate on `tenant-ready-db-foundation`, based on canonical UI checkpoint
-`65a0e46b51a05aab16de0958e6e0ea5882b3f7fd`. ADR 0012 records the explicitly authorized direction;
-independent architecture/concurrency acceptance is pending. The active execution plan contains the
-database-assumption inventory and local evidence. This is single-database compatibility mode, not
-SaaS activation. No tenant model, schema migration, UI change or Billing resumption is included.
+Backend checkpoint for the Option A contract: Gate TDB-1 is canonically closed at
+`d65eeee14923910a6b28f11a840a465b1d28ac6f`, tagged `tenant-db-foundation-v1`, after independent
+FINAL PASS, candidate CI #88 and main CI #89 (769 PostgreSQL tests). Its original execution-plan
+candidate evidence remains historical. ADR 0012's contract applies in single-database mode;
+actual SaaS activation remains deferred. `ui-foundation-v1` remains unchanged at `65a0e46b...`.
 
 Goal: establish the minimum architecture needed to unblock fast module development.
 
@@ -101,6 +100,26 @@ Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contract
 ---
 
 ## Phase 2 — Commercial Core
+
+Current future-work contract: **Option A — separate horizontal modules**, selected by the owner.
+[ADR 0011](decisions/0011-modular-billing-payments-accounting-boundary.md) is proposed/pending
+independent acceptance. Only contract documentation is authorized on `billing-option-a-contract`;
+no Billing, Payments, Accounting or integration implementation has started under this milestone.
+
+| Gate | Standalone ownership | Deferred integration |
+| --- | --- | --- |
+| BILL-1 — Billing & Invoicing | Invoice/InvoiceLine, generic lines, snapshots, numbering, DRAFT -> ISSUED, derived original totals | No payment-aware outstanding; no void/credit, Sales automation or journals |
+| PAY-1 — Payments | Payment/Receipt, PaymentMethod, payment idempotency; sole owner of PaymentAllocation | Invoice allocation requires separately approved Billing composition; refunds/settlement details separately reviewed |
+| ACC-1 — Accounting & Finance Core | Accounts, journals, balanced immutable postings, derived GL/trial balance | Billing/Payments automation separately approved |
+
+This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
+generic Payments and Accounting work without Billing. Settlement-adjusted outstanding is a future
+derived composition of invoice state and valid Payments allocations; absence of integration must
+not display an invoice as fully unpaid. No duplicate mutable financial balance is introduced.
+
+Historical audit/adoption records below are retained as evidence of their respective checkpoints.
+The future delivery list and ADR 0011 govern this contract candidate; they do not reopen accepted
+Sales, Procurement, Inventory, UI or Core behavior.
 
 Status: Gate 4A Sales is accepted, adopted, and closed. Gate 4B Procurement implementation
 candidate `395da2ad874fc2efb72219da71316b9a6d8f73bf` replays the historically accepted standalone
@@ -228,15 +247,17 @@ Deliver:
 - Sales
 - Procurement
 - Inventory
-- basic Billing
-- basic Accounting
+- Gate BILL-1: standalone Billing & Invoicing
+- Gate PAY-1: standalone Payments, with invoice allocation separately governed
+- Gate ACC-1: independent Accounting & Finance Core
 
 Golden flows:
 
 - Customer -> Sales Order -> Confirm
 - Supplier -> Purchase Order -> Receive
 - Stock Receive / Issue / Transfer
-- Invoice/Payment basics
+- Generic Invoice -> Issue (Billing); standalone payment receipts (Payments)
+- Invoice allocation/outstanding only through a separately approved Payments/Billing integration
 - Journal Entry + Trial Balance basics
 
 Concrete transactional item references use Catalog ProductVariant where an item/SKU is required.
@@ -250,7 +271,7 @@ Accounting and Inventory require transactional tests and duplicate-posting prote
 Deliver:
 
 - HR basics: Employee, Department, Attendance, Leave
-- Ecommerce composition using Catalog + Sales + Inventory + Billing
+- Ecommerce composition using Catalog + Sales + Inventory + Billing; Payments when separately approved
 
 Do not create duplicate ecommerce product/variant/order/stock sources of truth.
 
@@ -322,8 +343,9 @@ Expand/harden:
 - CRM/Sales
 - Procurement
 - Inventory/Warehouse/Logistics
-- Billing/Payments
-- Accounting/Finance
+- Billing & Invoicing
+- Payments
+- Accounting & Finance
 - Assets/Expenses/Treasury
 - HR/Payroll
 - Project/Helpdesk/Field Service

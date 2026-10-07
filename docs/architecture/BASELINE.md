@@ -201,6 +201,20 @@ Derived balances may later be cached/materialized.
 
 Accounting source of truth is journal entry + journal lines. Posted entries must balance debits and credits. Account balances are derived, not arbitrarily mutated.
 
+## Commercial ownership — Option A contract candidate
+
+ADR 0011 proposes the owner-selected separation: Billing & Invoicing owns Invoice/InvoiceLine;
+Payments owns Payment/Receipt, PaymentMethod and PaymentAllocation; Accounting & Finance owns
+balanced journals and the General Ledger. Delivery order is Billing, Payments, then Accounting,
+not a hard-dependency chain. Generic Payments and Accounting remain usable without Billing.
+Invoice allocation and journal automation require separate optional integration approval.
+
+Standalone Billing exposes original invoice totals, not payment-aware outstanding or an assumed
+fully unpaid balance. It requires Party and Core, not Catalog/Sales/Procurement/Inventory/Payments/
+Accounting. BILL-1 proposes DRAFT -> ISSUED only; void/credit and payment processing are deferred.
+The reconciled ADR 0011 contract is pending independent acceptance; this is documentation-only
+authorization and does not activate any module. ADR 0012 governs all future mutation transactions.
+
 ## Client customization
 
 Standard module code remains product-owned and upgradeable.
