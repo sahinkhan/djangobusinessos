@@ -138,8 +138,9 @@ When Accounting is enabled, financial posting is an optional integration that mu
 Owns Payment/Receipt, PaymentMethod, PaymentAllocation, partial payments, payment idempotency,
 allocation validation and settlement; refund/reversal capabilities require separate approval.
 Generic Payments requires Party plus Core organization/reference/access, not Billing or Accounting.
-Its future standalone receipt capability must work with Billing absent. Proposed ADR 0013
-(Gate PAY-0, pending independent review) restricts the future PAY-1 MVP to PaymentMethod and
+Its standalone receipt capability must work with Billing absent. Accepted ADR 0013
+(Gate PAY-0 closed at `d12f3e8c`, `payments-contract-v1`, main CI #101 SUCCESS) restricts
+the separately authorized PAY-1 local candidate, pending independent audit, to PaymentMethod and
 immutable incoming Payment/Receipt. The manifest dependencies are exactly
 `party, organization, reference, access`; approved Core utilities are infrastructure, not extra
 manifest dependencies. Payments ownership of future allocations/settlement/refunds does not

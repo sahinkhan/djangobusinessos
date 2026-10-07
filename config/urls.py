@@ -19,5 +19,6 @@ urlpatterns = [
     path("procurement/", include("businessos.modules.procurement.urls")),
     path("inventory/", include("businessos.modules.inventory.urls")),
     path("billing/", include("businessos.modules.billing.urls")),
+    path("payments/", include("businessos.modules.payments.urls")),
     path("", home, name="home"),
 ]

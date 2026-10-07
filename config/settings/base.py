@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "businessos.modules.procurement",
     "businessos.modules.inventory",
     "businessos.modules.billing",
+    "businessos.modules.payments",
 ]
 
 MIDDLEWARE = [

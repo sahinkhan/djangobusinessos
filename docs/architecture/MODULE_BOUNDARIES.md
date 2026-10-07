@@ -91,7 +91,7 @@ Examples:
 
 Other modules reference the owning concept; they do not create competing copies.
 
-### Option A commercial boundary (accepted; PAY-0 refinement proposed)
+### Option A commercial boundary (accepted; PAY-0 refinement accepted)
 
 Accepted ADR 0011 defines the owner-selected Billing & Invoicing -> Payments -> Accounting & Finance
 delivery sequence. These arrows are not hard dependencies. Billing never owns or imports Payment
@@ -108,14 +108,15 @@ only DRAFT -> ISSUED and no void/credit implementation. Procurement PurchaseRece
 unchanged. BILL-1 is canonically closed at `409e45eaa32fae1cf9c77042a762e57026d0349f`, checkpoint
 `billing-invoicing-v1`, with main CI #97 SUCCESS (run `37645584246`).
 
-Proposed ADR 0013 defines the Gate PAY-0 contract candidate for future standalone incoming
+Accepted ADR 0013 defines the canonically closed Gate PAY-0 contract for standalone incoming
 receipts: PaymentMethod and immutable Payment/Receipt only. Payment existence means recorded
 receipt; there is no draft/settlement status machine or receipt editing/deletion. Payments owns
 future allocation/settlement/refund semantics, but ownership does not implement them in PAY-1.
 Allocation storage and applied/unapplied/outstanding reads/UI await a separate optional integration
 contract. Generic Payments depends exactly on Party/organization/reference/access plus approved
-Core utilities, never Billing or Accounting. PAY-0 authorizes documentation only; independent
-review, acceptance and PAY-1 implementation remain separate gates.
+Core utilities, never Billing or Accounting. PAY-0 closed at `d12f3e8c` (`payments-contract-v1`,
+main CI #101 SUCCESS). PAY-1 has separate local implementation authorization; independent
+candidate audit, publication and adoption remain separate gates.
 
 ## Catalog item identity rule
 

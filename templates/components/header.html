@@ -11,12 +11,16 @@
         {% elif request.resolver_match.namespace == 'procurement' %}Purchase
         {% elif request.resolver_match.namespace == 'inventory' %}Inventory
         {% elif request.resolver_match.namespace == 'billing' %}Billing
+        {% elif request.resolver_match.namespace == 'payments' %}Payments
         {% else %}Dashboards{% endif %}
       </a>
       <span class="hidden h-4 w-px bg-white/25 sm:block"></span>
       <nav id="bos-module-menu" class="hidden items-center md:flex" aria-label="Module navigation">
         {% if request.resolver_match.namespace == 'billing' %}<a href="{% url 'billing:list' %}" data-app-nav class="bos-menu-link is-active">Invoices</a>{% endif %}
-        {% if request.resolver_match.namespace == 'catalog' %}
+        {% if request.resolver_match.namespace == 'payments' %}
+          <a href="{% url 'payments:list' %}" data-app-nav class="bos-menu-link{% if request.resolver_match.url_name == 'list' or request.resolver_match.url_name == 'detail' or request.resolver_match.url_name == 'record' %} is-active{% endif %}">Receipts</a>
+          <a href="{% url 'payments:methods' %}" data-app-nav class="bos-menu-link{% if request.resolver_match.url_name == 'methods' or request.resolver_match.url_name == 'method_create' or request.resolver_match.url_name == 'method_edit' %} is-active{% endif %}">Payment methods</a>
+        {% elif request.resolver_match.namespace == 'catalog' %}
           <a href="{% url 'catalog:product_list' %}" data-app-nav class="bos-menu-link{% if request.resolver_match.url_name == 'product_list' %} is-active{% endif %}">Products<svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="m6 8 4 4 4-4" stroke-linecap="round"/></svg></a>
           <a href="{% url 'catalog:categories' %}" data-app-nav class="bos-menu-link{% if request.resolver_match.url_name == 'categories' %} is-active{% endif %}">Categories<svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="m6 8 4 4 4-4" stroke-linecap="round"/></svg></a>
           <a href="{% url 'catalog:attributes' %}" data-app-nav class="bos-menu-link{% if request.resolver_match.url_name == 'attributes' %} is-active{% endif %}">Attributes<svg viewBox="0 0 20 20" fill="none" stroke="currentColor"><path d="m6 8 4 4 4-4" stroke-linecap="round"/></svg></a>

@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — BILL-1 CANONICALLY CLOSED / PAY-0 FORMALLY ACCEPTED / CANONICAL ADOPTION PENDING
+Status: IN PROGRESS — BILL-1 / PAY-0 CANONICALLY CLOSED; PAY-1 LOCAL IMPLEMENTATION, AUDIT PENDING
 
 Current contract milestone: BILL-0 OPTION A CONTRACT — FORMALLY ACCEPTED, 2026-10-07.
 Independent audit FINAL PASS and hosted Phase 0 checks #91 SUCCESS
@@ -18,9 +18,12 @@ Gate PAY-0 is **FORMALLY ACCEPTED**, 2026-10-07, as documentation/architecture o
 `pay0-payments-contract` from that canonical main. ADR 0013 is **Accepted — Gate PAY-0**.
 Accepted candidate `9ffb5eae09da680354776872a601bedd58163ab1` has independent FINAL PASS and
 exact-head Phase 0 checks #99 / `37656399267` SUCCESS (873 PostgreSQL tests and all mandatory checks).
-Formal acceptance is COMPLETE; canonical adoption is PENDING, not canonically closed. PAY-1 and
-ACC-1 are NOT STARTED. Acceptance documentation/publication is authorized; no runtime, canonical
-adoption, Accounting, integrations or actual SaaS activation is authorized here.
+Formal acceptance and canonical adoption are COMPLETE at
+`d12f3e8c3a955dd90f1e03f35a30fde789441764`, checkpoint `payments-contract-v1`;
+exact-head main CI #101 / `37662202308` SUCCESS, 873 PostgreSQL tests.
+Separately authorized PAY-1 local implementation is in progress on `pay1-payments`.
+Independent PAY-1 audit/publication/adoption remain pending; ACC-1, integrations and actual
+SaaS activation are not authorized.
 The prior `tenant-db-foundation-v1` and `ui-foundation-v1` checkpoints are preserved.
 Earlier acceptance/audit chronology below is preserved as historical evidence.
 
@@ -58,7 +61,7 @@ Before any Phase 2 implementation, read and obey:
 - `docs/decisions/0007-standalone-sales-acceptance.md`
 - `docs/decisions/0011-modular-billing-payments-accounting-boundary.md`
 - `docs/decisions/0012-tenant-ready-database-execution-foundation.md`
-- `docs/decisions/0013-standalone-payments-contract.md` (Accepted — Gate PAY-0; canonical adoption pending)
+- `docs/decisions/0013-standalone-payments-contract.md` (Accepted — Gate PAY-0; canonically closed)
 - this execution plan
 
 Do not silently change these architecture contracts.
@@ -74,7 +77,7 @@ Gate 4C's historical adoption and post-closure correction are accepted, adopted,
 Sales post-closure remediation has independent FINAL PASS, formal corrective acceptance, and
 canonical adoption; the post-closure corrective cycle is closed.
 BILL-1 was separately authorized and is canonically closed at `409e45e...` (`billing-invoicing-v1`).
-PAY-0 is documentation-only; Payments/Accounting implementation and integrations remain
+PAY-0 is documentation-only; PAY-1 has separate local implementation authorization. Accounting and integrations remain
 unauthorized. Remaining gates are sequentially governed, not automatically launched in parallel.
 
 Historical branch recommendations (not current implementation authorization):
@@ -735,9 +738,9 @@ Hosted candidate **Phase 0 checks #99 — SUCCESS**, run ID `37656399267`
 ([run evidence](https://github.com/sahinkhan/djangobusinessos/actions/runs/37656399267)),
 checked out that exact candidate and passed fresh PostgreSQL migrations, **873 tests**, Ruff,
 Django checks, migration drift and mandatory npm/Tailwind/CSS reproducibility.
-Formal acceptance is **COMPLETE**; canonical adoption is **PENDING**, not canonically closed.
-Acceptance documentation/publication is authorized. PAY-1 and ACC-1 remain **NOT STARTED**;
-no runtime, permission/module registration, tag, canonical adoption or integration is authorized.
+Formal acceptance and canonical adoption are **COMPLETE** at `d12f3e8c3a955dd90f1e03f35a30fde789441764`.
+Checkpoint `payments-contract-v1`, main CI #101 / `37662202308` SUCCESS (873 PostgreSQL tests).
+PAY-1 now has separate local implementation authorization; ACC-1 and integrations remain unauthorized.
 
 The authoritative accepted specification is
 [ADR 0013 — Standalone Payments and Receipt Contract](../../decisions/0013-standalone-payments-contract.md).
@@ -746,13 +749,14 @@ PAY-0 candidate froze precise dependency, receipt, amount, normalization/retry, 
 immutability and future-verification rules in one documentation commit, reconciling BILL-1 without
 rewriting history. Its initial proposed/pending-review status is retained in candidate history;
 subsequent independent audit, candidate publication/CI and separately authorized formal acceptance
-complete contract review, not canonical adoption or PAY-1 implementation.
+completed contract review. Subsequent separately authorized adoption closed PAY-0;
+the separately authorized PAY-1 candidate still requires independent implementation audit.
 
 Inherited nonblocking P3: checkpoint-era ADR 0011/Billing authorization wording in ADR 0006 and
 `CORE_FOUNDATION_V1_RESTRUCTURE.md` remains a documentation-maintenance follow-up. Those files are
 unchanged by this milestone; the follow-up does not alter PAY-0 semantics.
 
-## Future PAY-1 — standalone incoming receipt recording (not authorized)
+## PAY-1 — standalone incoming receipt recording (local implementation authorized)
 
 Payments owns receipts/methods/numbering/amount/snapshots/idempotency and future allocations,
 settlement and refund/reversal semantics. **Ownership is not PAY-1 implementation scope**.
@@ -794,6 +798,98 @@ PurchaseReceipt remains unrelated. PAY-1 must work with Billing and Accounting a
   deterministic 50-row backend pagination, safe GET swaps/fallback and normal company-bound POSTs.
   Responsive boundary QA at 390/768/1280px; no global redesign or financial integration screens.
 
+### PAY-1 local implementation evidence — 2026-10-08
+
+Branch: `pay1-payments`, directly from canonical
+`d12f3e8c3a955dd90f1e03f35a30fde789441764`. Status: **LOCAL IMPLEMENTATION CANDIDATE,
+AWAITING INDEPENDENT PAY-1 AUDIT**. No publication, canonical adoption, tag, Accounting or
+integration authorization is implied. ADR 0013 remains Accepted with its financial semantics
+unchanged. No historical Payments WIP was restored.
+
+Implementation:
+
+- New `businessos/modules/payments/` contains the exact two models, manifest, framework-neutral
+  amount/input normalization, company/RBAC services and selectors, presentation, and local tests.
+- `0001_initial` adds only PaymentMethod/Payment with protected references, positive/range/precision
+  checks and company-scoped method code, receipt number and non-null retry-key uniqueness.
+  `0002_register_manifest` freezes the four permission identities locally, uses the migration
+  connection alias, leaves fresh registration disabled and preserves existing enablement.
+- Public instance and queryset write/delete/bulk/upsert paths reject, including asynchronous
+  wrappers. Private token-controlled insertion/method administration is invoked by the authorized
+  services only. No Payment edit, deletion, status, allocation or correction escape hatch exists.
+- Recording serializes at the active Company before current context/RBAC recheck. A matching
+  locked retry is recovered before NEW-reference eligibility, using frozen precision and date.
+  New recording locks method, payer, then currency and snapshots their facts. Exact Decimal tuple
+  normalization removes redundant zeros without ambient-context rounding. Three bounded receipt
+  number attempts use nested alias savepoints; only identified number-constraint collisions
+  regenerate a number. Other integrity failures propagate; keyed collisions recover or conflict.
+- Mutation and audit share one transaction/alias. Retry and method no-op produce no duplicate
+  success audit. Audit failure rolls back method creation/name/activity and receipt insertion.
+- Payments-local UI uses the accepted shell. Navigation/dashboard/header/path matching only adds
+  Payments; no shared security behavior or existing commercial production module was changed.
+  Normal POSTs remain company-bound, with action-specific GET/POST RBAC. Lists use deterministic
+  ordering and server-side 50-row pages. Receipts display frozen facts without allocation language.
+
+Regression evidence includes exact numeric/date/UUID normalization, all receipt retry fields,
+omitted-date midnight recovery, reference retirement/rename and precision change, invalid amounts,
+38-digit PostgreSQL persistence, number collision/exhaustion, audit rollback, synchronous/asynchronous
+ORM protection, cross-company relationship/selectors/deep-link checks, and actual A-to-B session
+switches for recording and every method mutation. An isolated subprocess migrates and records a
+receipt with Party/Payments as the only business modules: Billing, Accounting, Sales, Procurement,
+Catalog and Inventory are absent. Another test migrates a separate real PostgreSQL alias, forbids
+all default-connection access, and checks method lifecycle, receipt retry, audit rollback, locks
+and savepoints on the selected alias (portable SQLite equivalent also runs).
+
+The separate PostgreSQL concurrency suite has **22 passed** on Python **3.13.16**:
+same-key matching/conflicting requests; method rename/deactivation versus recording in both
+orders; same-code creation; and role/permission/company-access revocation across method creation,
+rename, activity change, recording and matching retry. Coordination checks `pg_blocking_pids`,
+not timing guesses; workers close their connections. SQLite explicitly skips these lock tests.
+
+Real-browser QA used only synthetic data in a disposable local PostgreSQL database. Receipt
+list/detail/entry and method list/edit were checked at **390 / 768 / 1280 px**; no page-level
+horizontal overflow or out-of-viewport inputs were measured. Boundary receipt used a 199-character
+unbroken payer, 128-character reference, long notes and the exact maximum numeric(38,8) amount.
+Table scrolling stays local. Method creation/rename/deactivation and invalid `NaN` then valid
+redundant-zero receipt POSTs succeeded as expected; immutable detail retained original method
+facts. Browser GET search/filter swaps, Back/Forward, refresh/deep-link and 50/2-row pagination
+with preserved `q` were verified. No JavaScript errors were reported. Non-JavaScript response
+and POST behavior are additionally covered by ordinary Django client tests.
+
+Existing eight npm advisories (two moderate, six high) and stale Browserslist data remain outside
+PAY-1 scope; no dependency upgrade was made. The local virtualenv is Python 3.12.14, so supported
+Python 3.13.16 PostgreSQL verification also uses the existing project Docker image with the
+repository mounted read-only. Windows pytest's inherited temp-directory permission issue is
+avoided with a dedicated ignored workspace scratch directory, without changing tests or settings.
+
+Recovery verification — 2026-10-08:
+
+- Case A: `pay1-payments` HEAD, local/remote main and peeled `payments-contract-v1` were
+  `d12f3e8c3a955dd90f1e03f35a30fde789441764`. All 13 modified tracked files and 26 new
+  Payments source/template files were preserved; no candidate commit or missing implementation
+  was found. No production-code correction was needed during recovery.
+- Previous test results were treated as historical. Final current-files verification used
+  **Python 3.13.16 / Django 5.2.17 / PostgreSQL 17**: Payments-local **136 passed**;
+  separate real-lock concurrency **22 passed**; full PostgreSQL **1,009 passed** with no warnings;
+  full SQLite **868 passed / 141 expected PostgreSQL-only skips**.
+- Dedicated database architecture regressions **222 passed**, including zero active-runtime
+  violations; database execution/foundation checks separately **17 passed**. A fresh PostgreSQL
+  database migrated from zero, registered exactly four active Payments permissions, and left
+  Payments disabled. Migration drift, Django checks, Ruff, JavaScript syntax and diff checks passed.
+- `npm ci` and Tailwind build passed; generated CSS remained byte-identical to the canonical
+  baseline. Local Node was 24.20.0; no package/lockfile or CI configuration changed.
+- Current focused real-browser smoke reconfirmed all five Payments screens at 390/768/1280px,
+  exact boundary amount display, wrapping long payer/reference/notes, no receipt edit/delete,
+  invalid-amount feedback, query-preserving 50/2 pagination and zero JavaScript console errors.
+  Earlier browser workflow evidence above is historical, on unchanged presentation files.
+- Final supported-runtime suites used fresh container-local `/tmp` directories; the inherited
+  Windows temporary-directory failure did not recur. An interrupted full-run result was not
+  inferred: the full PostgreSQL run was repeated with retained logs and actually completed.
+
+This remains a **local implementation candidate awaiting independent PAY-1 audit**. Recovery
+authorizes exactly one local `feat: implement standalone payments receipts` commit, not
+publication, adoption, checkpoint tagging, allocations, Accounting or integrations.
+
 ## Deferred allocation and acceptance requirements
 
 PaymentAllocation stays Payments-owned but is NOT implemented in PAY-1. Applied/unapplied amounts,
@@ -814,9 +910,9 @@ absent Billing/Accounting and responsive UI verification. Exact detail is in ADR
 
 Also defer settlement/reconciliation, refund/reversal/chargeback/gateway, outgoing/vendor/AP,
 Accounting posting, FX/revaluation, fees/splitting/advance credit/statements and fiscal/provider
-numbering. PAY-0 formal acceptance is complete; canonical adoption, PAY-1 implementation and any
-integration still need separate authorization and required review. No historical experimental
-runtime is restored.
+numbering. PAY-0 is canonically closed. PAY-1 local implementation is separately authorized;
+its independent review, publication and canonical adoption remain separate gates. No integration
+is authorized and no historical experimental runtime is restored.
 
 ---
 
@@ -1260,8 +1356,8 @@ Gate BILL-1 canonical adoption     CLOSED / main CI #97 SUCCESS / billing-invoic
 Gate PAY-0 accepted candidate      9ffb5eae09da680354776872a601bedd58163ab1 / independent FINAL PASS
 Gate PAY-0 candidate hosted CI     #99 / 37656399267 SUCCESS / 873 PostgreSQL tests
 Gate PAY-0 formal acceptance       COMPLETE / ADR 0013 Accepted / documentation-architecture only
-Gate PAY-0 canonical adoption      PENDING / not canonically closed / not authorized
-Gate PAY-1 implementation          NOT STARTED / not authorized
+Gate PAY-0 canonical adoption      CLOSED / d12f3e8c / payments-contract-v1 / main CI #101 PASS
+Gate PAY-1 implementation          LOCAL CANDIDATE / independent audit pending / no publication
 Gate ACC-1 implementation          NOT STARTED / not authorized
 Optional integrations             not authorized
 ```

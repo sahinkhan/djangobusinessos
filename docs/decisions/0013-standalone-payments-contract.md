@@ -15,10 +15,12 @@ checked out exactly `9ffb5eae09da680354776872a601bedd58163ab1` and passed fresh 
 migrations, **873 tests**, Ruff, Django checks, migration drift and mandatory npm/Tailwind/CSS checks.
 
 PAY-0 formal acceptance is **COMPLETE**, as documentation/architecture acceptance only.
-Canonical adoption is **PENDING**; PAY-0 is not canonically closed. This does not mean PAY-1 is
-implemented: PAY-1 and ACC-1 are **NOT STARTED** and require separate implementation authorization.
-PaymentAllocation and all integrations remain deferred. No runtime/schema, tag or main change
-is authorized by this acceptance milestone.
+Canonical adoption is **COMPLETE** at `d12f3e8c3a955dd90f1e03f35a30fde789441764`,
+checkpoint `payments-contract-v1`; exact-head main CI #101 / `37662202308` succeeded
+with 873 PostgreSQL tests. PAY-0 is canonically closed. Subsequently authorized PAY-1
+implementation is in progress on `pay1-payments`, pending independent candidate review.
+ACC-1, PaymentAllocation and all integrations remain deferred. PAY-1 publication and canonical
+adoption are not authorized by the local implementation milestone.
 
 The inherited nonblocking P3 concerning checkpoint-era ADR 0011/Billing authorization wording
 in ADR 0006 and `CORE_FOUNDATION_V1_RESTRUCTURE.md` remains a documentation-maintenance follow-up.
@@ -29,8 +31,8 @@ Those files are unchanged; the follow-up does not alter this accepted contract.
 The initial Gate PAY-0 instruction authorized a documentation candidate only, not acceptance,
 publication or implementation. Subsequent independent review, candidate publication/CI and this
 separately authorized docs-only formal acceptance complete the contract-review sequence.
-Acceptance-commit publication/CI is authorized; canonical adoption remains separately gated.
-No PAY-1 implementation, permission/module registration or ACC-1 work is authorized here.
+That acceptance milestone authorized publication/CI only; subsequent separate authorization
+completed canonical adoption and opened PAY-1 implementation. ACC-1 remains unauthorized.
 Canonical starting main is `409e45eaa32fae1cf9c77042a762e57026d0349f`, checkpoint
 `billing-invoicing-v1`. BILL-1 is canonically closed there; main Phase 0 checks #97
 ([run 37645584246](https://github.com/sahinkhan/djangobusinessos/actions/runs/37645584246))
@@ -42,7 +44,8 @@ Payments gate, not Billing v1 behavior or Accounting ownership. ADR 0002 governs
 composition; ADR 0006 remains accepted except the explicitly superseded combined Billing scope
 identified in ADR 0011. ADR 0012 governs database execution. Delivery order
 `BILL-1 -> PAY-1 -> ACC-1` is not a hard-dependency graph. Independent PAY-0 contract review and
-formal acceptance are complete; canonical adoption and PAY-1 implementation need separate authorization.
+formal acceptance and canonical adoption are complete; PAY-1 has separate implementation
+authorization only, not independent acceptance or canonical adoption.
 
 ## Ownership versus first implementation scope
 

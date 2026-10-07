@@ -1,0 +1,9 @@
+{% extends "components/form_page.html" %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with current=heading %}{% endblock %}
+{% block form_eyebrow %}Payments{% endblock %}
+{% block form_description %}Method identity stays fixed. Names and activity may change without rewriting recorded receipts.{% endblock %}
+{% block form_fields %}{% if method %}<p style="overflow-wrap: anywhere;">Code: {{ method.code }} · {% if method.is_active %}Active{% else %}Inactive{% endif %}</p>{% endif %}{% include "components/form_fields.html" %}{% endblock %}
+{% block save_label %}Save method{% endblock %}
+{% block footer_save_label %}Save method{% endblock %}
+{% block cancel_action %}<a class="btn-secondary" href="{% url 'home' %}" data-app-nav>Cancel</a>{% endblock %}
+{% block content %}{{ block.super }}{% if method %}<section class="record-sheet"><form method="post" action="{% url 'payments:method_activity' method.id %}">{% csrf_token %}{{ activity_form.scope_company_id }}<label for="{{ activity_form.is_active.id_for_label }}">Method activity</label>{{ activity_form.is_active }}<button type="submit" class="btn-secondary">Update activity</button></form></section>{% endif %}{% endblock %}

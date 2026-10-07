@@ -129,13 +129,15 @@ Accepted candidate `9ffb5eae09da680354776872a601bedd58163ab1` has independent
 and exact-head hosted **Phase 0 checks #99 — SUCCESS**, run ID `37656399267`
 ([run evidence](https://github.com/sahinkhan/djangobusinessos/actions/runs/37656399267)):
 **873 PostgreSQL tests**, fresh migrations and all mandatory checks passed.
-Formal acceptance is **COMPLETE**; canonical adoption is **PENDING**, not canonically closed.
-It specifies future PAY-1 as PaymentMethod and immutable incoming
+Formal acceptance and canonical adoption are **COMPLETE** at
+`d12f3e8c3a955dd90f1e03f35a30fde789441764`, checkpoint `payments-contract-v1`.
+Exact-head main CI #101 / `37662202308` succeeded with 873 PostgreSQL tests.
+It specifies PAY-1 as PaymentMethod and immutable incoming
 Payment/Receipt only. PaymentAllocation remains Payments-owned but deferred to a separately
 approved optional integration, as are applied/unapplied/outstanding amounts, settlement/refunds
-and Accounting effects. PAY-1 and ACC-1 are **NOT STARTED** and require separate implementation
-authorization. Only acceptance documentation/publication is authorized here; canonical adoption,
-integrations and actual SaaS activation remain unauthorized. This is not production approval.
+and Accounting effects. Separately authorized PAY-1 implementation is in progress on
+`pay1-payments`; its local candidate requires independent audit and separate publication/adoption.
+ACC-1, integrations and actual SaaS activation remain unauthorized. This is not production approval.
 
 Inherited nonblocking PAY-0 P3: checkpoint-era ADR 0011/Billing authorization wording in ADR 0006
 and `CORE_FOUNDATION_V1_RESTRUCTURE.md` remains a documentation-maintenance follow-up. Those files
@@ -149,7 +151,7 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | Gate | Standalone ownership | Deferred integration |
 | --- | --- | --- |
 | BILL-1 — Billing & Invoicing | Invoice/InvoiceLine, generic lines, snapshots, numbering, DRAFT -> ISSUED, derived original totals | No payment-aware outstanding; no void/credit, Sales automation or journals |
-| PAY-1 — Payments (accepted ADR 0013; not implemented) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Payments-owned PaymentAllocation, applied/unapplied/outstanding, invoice integration, refunds/settlement and journals deferred |
+| PAY-1 — Payments (local implementation; independent audit pending) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Payments-owned PaymentAllocation, applied/unapplied/outstanding, invoice integration, refunds/settlement and journals deferred |
 | ACC-1 — Accounting & Finance Core | Accounts, journals, balanced immutable postings, derived GL/trial balance | Billing/Payments automation separately approved |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;

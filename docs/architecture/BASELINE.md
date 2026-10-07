@@ -201,7 +201,7 @@ Derived balances may later be cached/materialized.
 
 Accounting source of truth is journal entry + journal lines. Posted entries must balance debits and credits. Account balances are derived, not arbitrarily mutated.
 
-## Commercial ownership — accepted Option A and proposed PAY-0 refinement
+## Commercial ownership — accepted Option A and PAY-0 refinement
 
 Accepted ADR 0011 defines the owner-selected separation: Billing & Invoicing owns Invoice/InvoiceLine;
 Payments owns Payment/Receipt, PaymentMethod and PaymentAllocation; Accounting & Finance owns
@@ -215,8 +215,10 @@ Accounting. BILL-1 implements DRAFT -> ISSUED only; void/credit and payment proc
 BILL-1 is canonically closed at `409e45eaa32fae1cf9c77042a762e57026d0349f`, checkpoint
 `billing-invoicing-v1`, with exact-head main CI #97 SUCCESS (run `37645584246`).
 
-Proposed ADR 0013 is the documentation-only Gate PAY-0 candidate, pending independent review.
-It specifies future PAY-1 as PaymentMethod plus immutable standalone incoming Payment/Receipt,
+Accepted ADR 0013 is the Gate PAY-0 contract, canonically closed at `d12f3e8c`
+(`payments-contract-v1`, main CI #101 SUCCESS). PAY-1 has separate local implementation
+authorization; its candidate remains pending independent audit. It specifies PaymentMethod
+plus immutable standalone incoming Payment/Receipt,
 without Billing or Accounting. Payments owns future allocations/settlement/refunds, but PAY-1
 defers those features and applied/unapplied/outstanding balances. No Payments runtime is authorized
 by PAY-0. ADR 0012 governs future mutations; this changes no existing accepted module behavior.

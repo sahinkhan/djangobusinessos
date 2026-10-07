@@ -1,0 +1,8 @@
+{% extends "components/form_page.html" %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with current="Record receipt" %}{% endblock %}
+{% block form_eyebrow %}Payments{% endblock %}
+{% block form_description %}Record money received from a payer. Recorded receipts cannot be edited or deleted. Enter the exact receipt amount in the selected currency.{% endblock %}
+{% block form_fields %}{% include "components/form_fields.html" with wide_fields="notes" %}{% endblock %}
+{% block save_label %}Record receipt{% endblock %}
+{% block footer_save_label %}Record receipt{% endblock %}
+{% block cancel_action %}<a class="btn-secondary" href="{% url 'home' %}" data-app-nav>Cancel</a>{% endblock %}
