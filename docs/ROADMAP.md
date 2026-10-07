@@ -108,9 +108,21 @@ as of 2026-10-07. Independent audit FINAL PASS and hosted Phase 0 checks #91 SUC
 cover exact contract candidate `24d73be43cc09ef66f4405453a210d8f07fcca7f`.
 BILL-0 OPTION A CONTRACT CANONICALLY CLOSED at `b9dd8b185a301dca5b76ec7b6604c42805021174`,
 checkpoint `billing-option-a-contract-v1`; main CI #93 SUCCESS (run `37581371586`).
-Separately authorized BILL-1 is implemented as a local candidate on `bill1-billing-invoicing`,
-pending independent audit, not accepted or adopted. See the Phase 2 plan for verification evidence.
-Payments, Accounting, integrations and actual SaaS activation remain unauthorized.
+Separately authorized BILL-1 implementation `6f1b5f719fe0848e37774b3247a7bd4300a006a6` on
+`bill1-billing-invoicing` is **FORMALLY ACCEPTED FOR CANONICAL ADOPTION**, 2026-10-07.
+Independent implementation correctness audit passed; preservation re-audit under the clarified
+authoritative-ref policy returned **FINAL PASS — BILL-1 APPROVED FOR HOSTED CI** after the initial
+procedural capture-ref block. The candidate tree/content remained unchanged. Hosted **Phase 0
+checks #95 — SUCCESS** ([run 37639810038](https://github.com/sahinkhan/djangobusinessos/actions/runs/37639810038))
+tested that exact SHA: **873 PostgreSQL tests passed**, fresh migrations and all mandatory checks
+passed. Canonical adoption is **PENDING**; `main` remains at the BILL-0 checkpoint above.
+PAY-1 and ACC-1 are **NOT STARTED**; Payments, Accounting, integrations and actual SaaS activation
+remain unauthorized. This acceptance is not a production-readiness approval.
+
+Known nonblocking BILL-1 P3: the "Issued" badge may wrap in one extreme boundary-length list row
+at 1280px; retain it for separately authorized UI maintenance. Existing eight npm advisories
+(two moderate, six high) and GitHub Actions runtime deprecation warnings remain separate
+security-maintenance follow-ups. No accepted ownership or implementation is changed by acceptance.
 
 | Gate | Standalone ownership | Deferred integration |
 | --- | --- | --- |

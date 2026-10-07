@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — PROCUREMENT CORRECTIVE REMEDIATION ACCEPTED / ADOPTED / CLOSED
+Status: IN PROGRESS — BILL-1 FORMALLY ACCEPTED FOR CANONICAL ADOPTION / ADOPTION PENDING
 
 Current contract milestone: BILL-0 OPTION A CONTRACT — FORMALLY ACCEPTED, 2026-10-07.
 Independent audit FINAL PASS and hosted Phase 0 checks #91 SUCCESS
@@ -8,7 +8,10 @@ Independent audit FINAL PASS and hosted Phase 0 checks #91 SUCCESS
 cover exact accepted candidate `24d73be43cc09ef66f4405453a210d8f07fcca7f`.
 BILL-0 OPTION A CONTRACT CANONICALLY CLOSED at `b9dd8b185a301dca5b76ec7b6604c42805021174`,
 checkpoint `billing-option-a-contract-v1`; main CI #93 SUCCESS (run `37581371586`).
-Separately authorized BILL-1 is now a local implementation candidate pending independent audit.
+Separately authorized BILL-1 implementation `6f1b5f719fe0848e37774b3247a7bd4300a006a6` is
+FORMALLY ACCEPTED FOR CANONICAL ADOPTION after independent FINAL PASS and exact-head hosted
+Phase 0 checks #95 / run `37639810038` SUCCESS (873 PostgreSQL tests). Formal acceptance is
+COMPLETE; canonical adoption is PENDING and `main` remains at the BILL-0 checkpoint above.
 Payments, Accounting, integrations and actual SaaS activation remain unauthorized.
 The prior `tenant-db-foundation-v1` and `ui-foundation-v1` checkpoints are preserved.
 Earlier acceptance/audit chronology below is preserved as historical evidence.
@@ -60,8 +63,9 @@ Gate 4A and Gate 4B are accepted, adopted, and closed.
 Gate 4C's historical adoption and post-closure correction are accepted, adopted, and closed.
 Sales post-closure remediation has independent FINAL PASS, formal corrective acceptance, and
 canonical adoption; the post-closure corrective cycle is closed.
-Billing/Payments/Accounting implementation and integrations remain unauthorized. Remaining gates
-are sequentially governed as BILL-1, PAY-1 and ACC-1, not automatically launched in parallel.
+BILL-1 was separately authorized and is formally accepted for canonical adoption, which remains
+pending. Payments/Accounting implementation and integrations remain unauthorized. Remaining gates
+are sequentially governed, not automatically launched in parallel.
 
 Historical branch recommendations (not current implementation authorization):
 
@@ -572,10 +576,13 @@ In addition to normal tests:
 
 # Gate BILL-1 — Standalone Billing & Invoicing (replaces combined Batch 2D)
 
-Status: BILL-0 canonically closed. BILL-1 IMPLEMENTED / PENDING INDEPENDENT AUDIT, local-only
-on `bill1-billing-invoicing`, based directly on `b9dd8b185a301dca5b76ec7b6604c42805021174`.
-Candidate commit subject: `feat: implement standalone billing invoicing`; the exact SHA is reported
-after the single authorized commit. No publication, acceptance or main adoption is authorized.
+Status: BILL-0 canonically closed. BILL-1 **FORMALLY ACCEPTED FOR CANONICAL ADOPTION**, 2026-10-07.
+Accepted implementation candidate `6f1b5f719fe0848e37774b3247a7bd4300a006a6` on
+`bill1-billing-invoicing` is directly above `b9dd8b185a301dca5b76ec7b6604c42805021174`,
+with subject `feat: implement standalone billing invoicing`. Independent audit is FINAL PASS;
+hosted candidate CI #95 / `37639810038` is SUCCESS. Formal acceptance is COMPLETE;
+canonical adoption is **PENDING** and requires separate explicit authorization. No BILL-1
+checkpoint tag, main adoption, PAY-1 authorization or production-readiness approval is claimed.
 
 ### BILL-1 implementation evidence — 2026-10-07
 
@@ -601,6 +608,28 @@ after the single authorized commit. No publication, acceptance or main adoption 
   unchanged. Existing migration-count regression updated from five to six registered modules.
 - Accepted ADR 0011 financial/dependency/lifecycle decisions remain unchanged. This evidence is
   implementation verification, **not independent acceptance**. PAY-1/ACC-1 remain unauthorized.
+
+### BILL-1 independent audit and formal acceptance — 2026-10-07
+
+The local implementation-verification record above remains historical evidence. Independent full
+audit subsequently passed implementation correctness. The initial strict preservation audit was
+procedurally BLOCKED only by a Codex-generated capture ref. Preservation re-audit under the
+clarified authoritative-ref policy returned **FINAL PASS — BILL-1 APPROVED FOR HOSTED CI**;
+the accepted candidate tree/content remained unchanged. This chronology is retained, not rewritten.
+
+Hosted **Phase 0 checks #95 — SUCCESS**, run `37639810038`
+([run](https://github.com/sahinkhan/djangobusinessos/actions/runs/37639810038)), checked out exact
+implementation SHA `6f1b5f719fe0848e37774b3247a7bd4300a006a6` and passed **873 PostgreSQL tests**,
+fresh migrations, migration drift, Ruff, Django checks, `npm ci`, Tailwind and CSS reproducibility.
+BILL-1 is **FORMALLY ACCEPTED FOR CANONICAL ADOPTION**; acceptance is COMPLETE, adoption PENDING.
+No runtime, schema, migration, UI or Option A ownership change accompanies this acceptance record.
+
+Accepted nonblocking P3: at one extreme boundary-length 1280px list row the "Issued" badge may
+wrap, without affecting financial correctness, authorization, database integrity, invoice lifecycle
+or page-level overflow. Keep it for separately authorized UI maintenance. Existing eight npm
+advisories (two moderate, six high) and GitHub Actions runtime warnings remain separate follow-ups.
+Canonical `main` remains `b9dd8b185a301dca5b76ec7b6604c42805021174`; no BILL-1 tag is created.
+PAY-1 and ACC-1 are NOT STARTED; integrations and actual SaaS activation remain unauthorized.
 
 ## Ownership and authoritative specification
 
@@ -1129,8 +1158,10 @@ Inventory corrective adoption      35663e4f; accepted, adopted, and closed
 Sales post-closure remediation      b34a98a1; FINAL PASS / accepted / adopted / closed
 Gate TDB-1 foundation              canonically closed at d65eeee; tenant-db-foundation-v1
 Billing Option A contract         BILL-0 canonically closed at b9dd8b18
-Gate BILL-1 implementation         local candidate; pending independent audit; not adopted
-Gate PAY-1 implementation          not authorized
-Gate ACC-1 implementation          not authorized
+Gate BILL-1 implementation         6f1b5f71; independent FINAL PASS; CI #95 SUCCESS (873 passed)
+Gate BILL-1 formal acceptance      COMPLETE / FORMALLY ACCEPTED FOR CANONICAL ADOPTION
+Gate BILL-1 canonical adoption     PENDING; no main adoption or BILL-1 checkpoint tag
+Gate PAY-1 implementation          NOT STARTED / not authorized
+Gate ACC-1 implementation          NOT STARTED / not authorized
 Optional integrations             not authorized
 ```

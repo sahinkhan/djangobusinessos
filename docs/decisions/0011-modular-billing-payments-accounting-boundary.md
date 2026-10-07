@@ -17,13 +17,43 @@ verified that candidate, including 769 PostgreSQL tests and mandatory repository
 BILL-0 OPTION A CONTRACT CANONICALLY CLOSED at
 `b9dd8b185a301dca5b76ec7b6604c42805021174`, checkpoint `billing-option-a-contract-v1`.
 Main Phase 0 checks #93 — SUCCESS ([run 37581371586](https://github.com/sahinkhan/djangobusinessos/actions/runs/37581371586)).
-BILL-1 is separately authorized and implemented as a local candidate on `bill1-billing-invoicing`,
-pending independent audit; its implementation commit is `feat: implement standalone billing invoicing`.
-The exact candidate SHA is reported externally after that single commit is created (no self-referential
-commit hash). No BILL-1 acceptance, publication or canonical adoption is implied. Payment implementation,
-Accounting implementation, optional integrations and actual SaaS activation remain unauthorized.
-The future implementation proposals and verification gates below are preserved; this acceptance
-does not declare BILL-1, PAY-1 or ACC-1 implemented or accepted.
+The BILL-0 contract acceptance did not itself authorize implementation. BILL-1 subsequently received
+separate implementation, publication and formal-acceptance authorization, recorded below. PAY-1,
+ACC-1, optional integrations and actual SaaS activation remain unauthorized. The accepted Option A
+architecture and the original implementation specification/verification gates below are unchanged.
+
+## Formal BILL-1 implementation acceptance
+
+Acceptance date: 2026-10-07. Status: **FORMALLY ACCEPTED FOR CANONICAL ADOPTION**;
+canonical adoption is **PENDING**, not complete. Accepted implementation candidate on
+`bill1-billing-invoicing`: `6f1b5f719fe0848e37774b3247a7bd4300a006a6`,
+`feat: implement standalone billing invoicing`, directly above the BILL-0 canonical checkpoint.
+
+Independent full audit passed implementation correctness. The initial strict preservation audit
+was procedurally BLOCKED only because a Codex-generated capture ref appeared. Under the clarified
+authoritative-ref policy, preservation re-audit returned **FINAL PASS — BILL-1 APPROVED FOR HOSTED CI**.
+The candidate tree/content remained unchanged through review and publication; the procedural
+history is retained, not represented as a code defect or silently erased.
+
+Hosted **Phase 0 checks #95 — SUCCESS**, run ID `37639810038`
+([run](https://github.com/sahinkhan/djangobusinessos/actions/runs/37639810038)), checked out exactly
+`6f1b5f719fe0848e37774b3247a7bd4300a006a6`. The logs confirm **873 PostgreSQL tests passed**,
+fresh migrations including Billing bootstrap, Ruff, Django system checks, no migration drift,
+`npm ci`, Tailwind build and generated CSS reproducibility. This formal acceptance changes only
+documentation; it does not modify the independently approved implementation or accepted contract.
+
+Known accepted **nonblocking P3**: the "Issued" badge may wrap in one extreme boundary-length
+1280px list row. It does not affect financial correctness, authorization, database integrity,
+invoice lifecycle or page-level overflow. It remains a separately authorized UI-maintenance
+follow-up, not a fix in this milestone. Existing eight npm advisories (two moderate, six high)
+and GitHub Actions runtime deprecation warnings remain separate security-maintenance follow-ups.
+
+ADR 0011 remains **Accepted — Gate BILL-0**. Billing still owns Invoice/InvoiceLine, numbering,
+Party/Currency snapshots, DRAFT -> ISSUED and derived original totals; Payments and Accounting
+remain separate owners under Option A. Canonical `main` is still
+`b9dd8b185a301dca5b76ec7b6604c42805021174`; no BILL-1 checkpoint tag or main adoption is claimed.
+Canonical adoption requires separate explicit authorization. PAY-1/ACC-1 are not started;
+integrations, actual SaaS activation and production readiness are not approved.
 
 ## Baseline, evidence and supersession
 
@@ -258,8 +288,10 @@ Payments owns approved payment refund/settlement semantics, Accounting owns ledg
 | Old Accounting integration calls a Billing payment source | Separate Billing invoice and Payments outcome integrations; independent Accounting retained |
 | Five-module Phase 2 count and combined Invoice/Payment flow | Six standalone modules; BILL-1, PAY-1 and ACC-1 individually gated |
 
-Independent BILL-0 contract review is complete. Before BILL-1 implementation, separate explicit
-implementation authorization remains required. Before BILL-1 acceptance: PostgreSQL/SQLite tests, fresh bootstrap,
+Independent BILL-0 contract review is complete. BILL-1 received separate implementation authorization
+and formal acceptance as recorded above; canonical adoption remains separately authorized. The
+following BILL-1 acceptance requirements were applied and remain the frozen verification contract:
+PostgreSQL/SQLite tests, fresh bootstrap,
 Ruff/Django/drift checks; boundary Decimals/rounding/currency snapshots; cross-company rejection;
 issue retry/rollback; bulk/stale-instance immutability; real PostgreSQL lock coordination for issue
 versus edit/remove and permission/access revocation; HTTP action RBAC and stale-company forms;
