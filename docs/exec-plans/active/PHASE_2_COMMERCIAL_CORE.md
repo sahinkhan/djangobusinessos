@@ -2,7 +2,13 @@
 
 Status: IN PROGRESS — PROCUREMENT CORRECTIVE REMEDIATION ACCEPTED / ADOPTED / CLOSED
 
-Current contract milestone: BILLING OPTION A CONTRACT CANDIDATE — awaiting independent review.
+Current contract milestone: BILL-0 OPTION A CONTRACT — FORMALLY ACCEPTED, 2026-10-07.
+Independent audit FINAL PASS and hosted Phase 0 checks #91 SUCCESS
+([run 37579298801](https://github.com/sahinkhan/djangobusinessos/actions/runs/37579298801))
+cover exact accepted candidate `24d73be43cc09ef66f4405453a210d8f07fcca7f`.
+Canonical main adoption remains pending. Acceptance is documentation-only, not completed Billing
+implementation. BILL-1 is not started; Payments, Accounting, integrations and actual SaaS activation
+remain unauthorized.
 Canonical base: `d65eeee14923910a6b28f11a840a465b1d28ac6f` (`tenant-db-foundation-v1`), with
 `ui-foundation-v1` preserved. Only documentation reconciliation is authorized. ADR 0011 proposes
 the BILL-1 -> PAY-1 -> ACC-1 sequence; implementation of all three and integrations requires
@@ -567,7 +573,8 @@ In addition to normal tests:
 
 # Gate BILL-1 — Standalone Billing & Invoicing (replaces combined Batch 2D)
 
-Status: proposed contract only, pending independent review and later implementation authorization.
+Status: BILL-0 documentation acceptance recorded after independent FINAL PASS and candidate CI #91
+SUCCESS; canonical adoption pending. BILL-1 implementation is not started and requires separate authorization.
 
 ## Ownership and authoritative specification
 
@@ -1095,7 +1102,7 @@ Inventory final corrective         09794e92; FINAL PASS
 Inventory corrective adoption      35663e4f; accepted, adopted, and closed
 Sales post-closure remediation      b34a98a1; FINAL PASS / accepted / adopted / closed
 Gate TDB-1 foundation              canonically closed at d65eeee; tenant-db-foundation-v1
-Billing Option A contract         proposed / awaiting independent review; documentation only
+Billing Option A contract         BILL-0 accepted; documentation only; canonical adoption pending
 Gate BILL-1 implementation         not authorized
 Gate PAY-1 implementation          not authorized
 Gate ACC-1 implementation          not authorized

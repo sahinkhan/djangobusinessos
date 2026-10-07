@@ -1,8 +1,25 @@
 # ADR 0011 — Modular Billing, Payments and Accounting Ownership Boundary
 
-Status: Proposed — Option A selected by the owner; contract candidate pending independent review.
+Status: Accepted — Gate BILL-0
 
 Date: 2026-10-07
+
+## Formal BILL-0 acceptance
+
+Acceptance date: 2026-10-07. Independent audit verdict:
+**FINAL PASS — BILLING OPTION A CONTRACT APPROVED**.
+Accepted contract candidate and exact hosted-CI checkout:
+`24d73be43cc09ef66f4405453a210d8f07fcca7f`.
+Hosted **Phase 0 checks #91 — SUCCESS**
+([run 37579298801](https://github.com/sahinkhan/djangobusinessos/actions/runs/37579298801))
+verified that candidate, including 769 PostgreSQL tests and mandatory repository checks.
+
+This is documentation-only BILL-0 contract acceptance; canonical main adoption remains pending.
+BILL-0 acceptance does **not** mean Billing implementation is complete. BILL-1 remains not
+started and requires separate explicit authorization. Payment implementation, Accounting
+implementation, optional integrations and actual SaaS activation are not authorized.
+The future implementation proposals and verification gates below are preserved; this acceptance
+does not declare BILL-1, PAY-1 or ACC-1 implemented or accepted.
 
 ## Baseline, evidence and supersession
 
@@ -23,8 +40,8 @@ This Option A candidate supersedes only ADR 0006 section 7's Billing ownership o
 PaymentAllocation, its combined outstanding/payment scope, section 12's Billing-owned payment
 posting seam, and the resulting five-module delivery assumption. Unrelated Sales, Procurement,
 Inventory, Accounting, numbering, lifecycle and module-gating contracts remain accepted.
-ADR 0002 is preserved. ADR 0012 is neither overwritten nor renumbered. This document and its
-reconciled future plan require independent review before formal contract acceptance; no Billing
+ADR 0002 is preserved. ADR 0012 is neither overwritten nor renumbered. Independent BILL-0
+review and formal documentation acceptance are complete; no Billing
 implementation, registration, migration or integration is authorized by this milestone.
 
 ## Decision: three horizontal modules
@@ -237,8 +254,8 @@ Payments owns approved payment refund/settlement semantics, Accounting owns ledg
 | Old Accounting integration calls a Billing payment source | Separate Billing invoice and Payments outcome integrations; independent Accounting retained |
 | Five-module Phase 2 count and combined Invoice/Payment flow | Six standalone modules; BILL-1, PAY-1 and ACC-1 individually gated |
 
-Before BILL-1 implementation: independent review of this proposed contract and separate explicit
-implementation authorization. Before BILL-1 acceptance: PostgreSQL/SQLite tests, fresh bootstrap,
+Independent BILL-0 contract review is complete. Before BILL-1 implementation, separate explicit
+implementation authorization remains required. Before BILL-1 acceptance: PostgreSQL/SQLite tests, fresh bootstrap,
 Ruff/Django/drift checks; boundary Decimals/rounding/currency snapshots; cross-company rejection;
 issue retry/rollback; bulk/stale-instance immutability; real PostgreSQL lock coordination for issue
 versus edit/remove and permission/access revocation; HTTP action RBAC and stale-company forms;

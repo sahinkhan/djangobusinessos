@@ -102,9 +102,13 @@ Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contract
 ## Phase 2 — Commercial Core
 
 Current future-work contract: **Option A — separate horizontal modules**, selected by the owner.
-[ADR 0011](decisions/0011-modular-billing-payments-accounting-boundary.md) is proposed/pending
-independent acceptance. Only contract documentation is authorized on `billing-option-a-contract`;
-no Billing, Payments, Accounting or integration implementation has started under this milestone.
+[ADR 0011](decisions/0011-modular-billing-payments-accounting-boundary.md) is **Accepted — Gate BILL-0**
+as of 2026-10-07. Independent audit FINAL PASS and hosted Phase 0 checks #91 SUCCESS
+([run 37579298801](https://github.com/sahinkhan/djangobusinessos/actions/runs/37579298801))
+cover exact contract candidate `24d73be43cc09ef66f4405453a210d8f07fcca7f`.
+Formal acceptance is documentation-only; canonical main adoption remains pending. BILL-1 is not
+started and requires separate authorization. No Billing, Payments, Accounting, integration or
+actual SaaS activation implementation is authorized by this milestone.
 
 | Gate | Standalone ownership | Deferred integration |
 | --- | --- | --- |
