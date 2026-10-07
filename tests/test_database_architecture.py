@@ -10,6 +10,8 @@ proven safe. Ordinary assignment shadows an import; assigned callable aliases ar
 traced back to their origin. Function/module imports are precollected to cover
 forward closure references, not to prove conditional branches/execution order.
 Class-body imports bind as encountered; parameters start as injected values.
+Relative imports replace only their bound names with unknown targets. Their modules
+aren't executed/resolved; a relative re-export of a Django API requires manual review.
 Only active Python runtime roots are scanned; archived refs and generated frontend
 output aren't source inputs. Infrastructure exemptions are path-specific below.
 """
@@ -40,8 +42,10 @@ class ScopeImports(ast.NodeVisitor):
 
     def visit_ImportFrom(self, node):
         for alias in node.names:
-            if not node.level and alias.name != "*":
-                self.bindings[alias.asname or alias.name] = f"{node.module}.{alias.name}"
+            if alias.name != "*":
+                self.bindings[alias.asname or alias.name] = (
+                    "" if node.level else f"{node.module}.{alias.name}"
+                )
 
     def visit_FunctionDef(self, node):
         pass
@@ -185,10 +189,19 @@ class DatabaseGuard(ast.NodeVisitor):
     def visit_ClassDef(self, node):
         for expression in [*node.decorator_list, *node.bases, *node.keywords]:
             self.visit(expression)
-        self.scope.bindings[node.name] = ""
         with self.child_scope(node, node.name, node.body):
             for statement in node.body:
                 self.visit(statement)
+        # The class body runs before the resulting class replaces the outer name.
+        self.scope.bindings[node.name] = ""
+
+    def visit_For(self, node):
+        self.visit(node.iter)
+        self.visit(node.target)
+        for statement in [*node.body, *node.orelse]:
+            self.visit(statement)
+
+    visit_AsyncFor = visit_For
 
     def visit_Lambda(self, node):
         self.visit(node.args)
@@ -721,6 +734,194 @@ def test_comprehension_skips_class_namespace():
         "    value = [gc() for item in values]"
     )
     assert database_assumptions(source) == [(4, "implicit/default get_connection alias")]
+
+
+@pytest.mark.parametrize("declaration, name, expression, finding", [
+    (
+        "from django.db.transaction import get_connection as gc", "gc", "gc()",
+        "implicit/default get_connection alias",
+    ),
+    (
+        "from django.db import transaction as tx", "tx", "tx.atomic()",
+        "implicit/default transaction alias",
+    ),
+])
+@pytest.mark.parametrize("scope", ["module", "function", "async_function"])
+def test_loop_iterable_precedes_target_binding(declaration, name, expression, finding, scope):
+    loop = "async for" if scope == "async_function" else "for"
+    source = f"{declaration}\n{loop} {name} in [{expression}]:\n    {expression}"
+    line = 2
+    if scope != "module":
+        prefix = "async " if scope == "async_function" else ""
+        source = f"{prefix}def operation():\n" + textwrap.indent(source, "    ")
+        line += 1
+    # The iterable is unsafe; after target assignment the body uses an unknown value.
+    assert database_assumptions(source) == [(line, finding)]
+
+
+@pytest.mark.parametrize("declaration, name, expression", [
+    ("from django.db.transaction import get_connection as gc", "gc", "gc()"),
+    ("from django.db import transaction as tx", "tx", "tx.atomic()"),
+])
+@pytest.mark.parametrize("asynchronous", [False, True])
+def test_function_loop_target_is_local_even_before_assignment(
+    declaration, name, expression, asynchronous,
+):
+    prefix = "async " if asynchronous else ""
+    source = (
+        f"{declaration}\n{prefix}def operation():\n"
+        f"    {prefix}for {name} in [{expression}]:\n        {expression}"
+    )
+    # Python would raise UnboundLocalError; the iterable isn't the outer Django API.
+    assert database_assumptions(source) == []
+
+
+@pytest.mark.parametrize("asynchronous", [False, True])
+def test_loop_target_shadows_alias_but_body_and_else_are_still_scanned(asynchronous):
+    prefix = "async " if asynchronous else ""
+    source = (
+        "from django.db.transaction import get_connection as gc, get_connection as leak\n"
+        f"{prefix}for gc in callbacks:\n"
+        "    gc()\n"
+        "    leak()\n"
+        "else:\n"
+        "    leak()"
+    )
+    offset = 0
+    if asynchronous:
+        source = "async def operation():\n" + textwrap.indent(source, "    ")
+        offset = 1
+    assert database_assumptions(source) == [
+        (4 + offset, "implicit/default get_connection alias"),
+        (6 + offset, "implicit/default get_connection alias"),
+    ]
+
+
+def test_destructured_loop_target_binds_after_iterable():
+    source = (
+        "from django.db.transaction import get_connection as gc\n"
+        "for gc, other in [(gc(), callback)]:\n"
+        "    gc()"
+    )
+    assert database_assumptions(source) == [(2, "implicit/default get_connection alias")]
+
+
+@pytest.mark.parametrize("declaration, name, expression, finding", [
+    (
+        "from django.db.transaction import get_connection as gc", "gc", "gc()",
+        "implicit/default get_connection alias",
+    ),
+    (
+        "from django.db import transaction as tx", "tx", "tx.atomic()",
+        "implicit/default transaction alias",
+    ),
+])
+@pytest.mark.parametrize("nested", [False, True])
+def test_class_body_precedes_enclosing_class_name_binding(
+    declaration, name, expression, finding, nested,
+):
+    source = f"{declaration}\nclass {name}:\n    value = {expression}\n{name}()"
+    line = 3
+    if nested:
+        source = "def outer():\n" + textwrap.indent(source, "    ")
+        line += 1
+    # Constructing the resulting class afterwards isn't a call to the Django API.
+    assert database_assumptions(source) == [(line, finding)]
+
+
+@pytest.mark.parametrize("source, expected", [
+    ("""
+        from django.db.transaction import get_connection as gc
+        @gc()
+        class gc(gc()):
+            value = gc()
+    """, [
+        (2, "implicit/default get_connection alias"),
+        (3, "implicit/default get_connection alias"),
+        (4, "implicit/default get_connection alias"),
+    ]),
+    ("""
+        from django.db.transaction import get_connection as gc
+        class Outer:
+            class gc:
+                value = gc()
+    """, [(4, "implicit/default get_connection alias")]),
+    ("""
+        from django.db.transaction import get_connection as gc
+        def outer():
+            class gc:
+                value = gc()
+    """, []),
+    ("""
+        from helpers import callback as gc
+        class gc:
+            value = gc()
+        gc()
+    """, []),
+    ("""
+        from django.db.transaction import get_connection as gc
+        class gc:
+            gc = injected_callback
+            value = gc()
+        gc()
+    """, []),
+    ("""
+        from django.db.transaction import get_connection as gc
+        class gc:
+            from helpers import callback as gc
+            value = gc()
+    """, []),
+])
+def test_class_definition_binding_order_preserves_lookup_rules(source, expected):
+    assert database_assumptions(textwrap.dedent(source).strip()) == expected
+
+
+@pytest.mark.parametrize("relative_import, name", [
+    ("from .callbacks import gc", "gc"),
+    ("from .callbacks import gc as callback", "callback"),
+    ("from .callbacks import callback as gc", "gc"),
+    ("from . import gc", "gc"),
+    ("from ..helpers import gc", "gc"),
+])
+@pytest.mark.parametrize("local", [False, True])
+def test_relative_import_replaces_exact_binding(relative_import, name, local):
+    source = (
+        f"from django.db.transaction import get_connection as {name}\n"
+        f"{relative_import}\n{name}()"
+    )
+    if local:
+        source = "def callback():\n" + textwrap.indent(source, "    ")
+    assert database_assumptions(source) == []
+
+
+@pytest.mark.parametrize("relative_import, call", [
+    ("from .callbacks import other_callback", "other_callback()"),
+    ("from .callbacks import gc as callback", "callback()"),
+])
+@pytest.mark.parametrize("local", [False, True])
+def test_relative_import_preserves_unrelated_django_binding(relative_import, call, local):
+    source = (
+        "from django.db.transaction import get_connection as gc\n"
+        f"{relative_import}\n{call}\ngc()"
+    )
+    line = 4
+    if local:
+        source = "def operation():\n" + textwrap.indent(source, "    ")
+        line += 1
+    assert database_assumptions(source) == [(line, "implicit/default get_connection alias")]
+
+
+@pytest.mark.parametrize("reverse", [False, True])
+def test_relative_import_shadowing_stays_in_its_function(reverse):
+    safe = "def safe():\n    from .callbacks import gc\n    return gc()"
+    unsafe = "def unsafe():\n    return gc()"
+    functions = [unsafe, safe] if reverse else [safe, unsafe]
+    source = (
+        "from django.db.transaction import get_connection as gc\n"
+        + "\n\n".join(functions)
+    )
+    line = 3 if reverse else 7
+    assert database_assumptions(source) == [(line, "implicit/default get_connection alias")]
 
 
 def runtime_database_findings(root):
