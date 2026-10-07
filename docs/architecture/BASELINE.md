@@ -201,9 +201,9 @@ Derived balances may later be cached/materialized.
 
 Accounting source of truth is journal entry + journal lines. Posted entries must balance debits and credits. Account balances are derived, not arbitrarily mutated.
 
-## Commercial ownership — Option A contract candidate
+## Commercial ownership — accepted Option A and proposed PAY-0 refinement
 
-ADR 0011 proposes the owner-selected separation: Billing & Invoicing owns Invoice/InvoiceLine;
+Accepted ADR 0011 defines the owner-selected separation: Billing & Invoicing owns Invoice/InvoiceLine;
 Payments owns Payment/Receipt, PaymentMethod and PaymentAllocation; Accounting & Finance owns
 balanced journals and the General Ledger. Delivery order is Billing, Payments, then Accounting,
 not a hard-dependency chain. Generic Payments and Accounting remain usable without Billing.
@@ -211,9 +211,15 @@ Invoice allocation and journal automation require separate optional integration 
 
 Standalone Billing exposes original invoice totals, not payment-aware outstanding or an assumed
 fully unpaid balance. It requires Party and Core, not Catalog/Sales/Procurement/Inventory/Payments/
-Accounting. BILL-1 proposes DRAFT -> ISSUED only; void/credit and payment processing are deferred.
-The reconciled ADR 0011 contract is pending independent acceptance; this is documentation-only
-authorization and does not activate any module. ADR 0012 governs all future mutation transactions.
+Accounting. BILL-1 implements DRAFT -> ISSUED only; void/credit and payment processing are deferred.
+BILL-1 is canonically closed at `409e45eaa32fae1cf9c77042a762e57026d0349f`, checkpoint
+`billing-invoicing-v1`, with exact-head main CI #97 SUCCESS (run `37645584246`).
+
+Proposed ADR 0013 is the documentation-only Gate PAY-0 candidate, pending independent review.
+It specifies future PAY-1 as PaymentMethod plus immutable standalone incoming Payment/Receipt,
+without Billing or Accounting. Payments owns future allocations/settlement/refunds, but PAY-1
+defers those features and applied/unapplied/outstanding balances. No Payments runtime is authorized
+by PAY-0. ADR 0012 governs future mutations; this changes no existing accepted module behavior.
 
 ## Client customization
 

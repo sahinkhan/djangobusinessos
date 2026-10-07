@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — BILL-1 FORMALLY ACCEPTED FOR CANONICAL ADOPTION / ADOPTION PENDING
+Status: IN PROGRESS — BILL-1 CANONICALLY CLOSED / PAY-0 CONTRACT CANDIDATE PENDING INDEPENDENT REVIEW
 
 Current contract milestone: BILL-0 OPTION A CONTRACT — FORMALLY ACCEPTED, 2026-10-07.
 Independent audit FINAL PASS and hosted Phase 0 checks #91 SUCCESS
@@ -9,10 +9,14 @@ cover exact accepted candidate `24d73be43cc09ef66f4405453a210d8f07fcca7f`.
 BILL-0 OPTION A CONTRACT CANONICALLY CLOSED at `b9dd8b185a301dca5b76ec7b6604c42805021174`,
 checkpoint `billing-option-a-contract-v1`; main CI #93 SUCCESS (run `37581371586`).
 Separately authorized BILL-1 implementation `6f1b5f719fe0848e37774b3247a7bd4300a006a6` is
-FORMALLY ACCEPTED FOR CANONICAL ADOPTION after independent FINAL PASS and exact-head hosted
-Phase 0 checks #95 / run `37639810038` SUCCESS (873 PostgreSQL tests). Formal acceptance is
-COMPLETE; canonical adoption is PENDING and `main` remains at the BILL-0 checkpoint above.
-Payments, Accounting, integrations and actual SaaS activation remain unauthorized.
+CANONICALLY CLOSED after independent FINAL PASS and exact-head hosted Phase 0 checks #95 /
+run `37639810038` SUCCESS (873 PostgreSQL tests). Formal acceptance/adoption checkpoint
+`409e45eaa32fae1cf9c77042a762e57026d0349f` was adopted by normal fast-forward and passed
+main CI #97 / `37645584246` SUCCESS, with 873 PostgreSQL tests
+and fresh migrations/all mandatory checks. Checkpoint `billing-invoicing-v1` resolves to that SHA.
+Gate PAY-0 is separately authorized documentation-only contract work from that canonical main,
+on `pay0-payments-contract`. ADR 0013 remains Proposed, pending independent review. No PAY-1
+runtime, publication/adoption, Accounting, integrations or actual SaaS activation is authorized here.
 The prior `tenant-db-foundation-v1` and `ui-foundation-v1` checkpoints are preserved.
 Earlier acceptance/audit chronology below is preserved as historical evidence.
 
@@ -28,7 +32,8 @@ Build the first reusable transactional core of BusinessOS without turning the Dj
 
 Phase 2 delivers minimum standalone Sales, Procurement, Inventory, Billing & Invoicing, Payments
 and Accounting & Finance capabilities, then separately approved optional integrations after their
-standalone contracts pass review. This six-module future scope follows proposed ADR 0011.
+standalone contracts pass review. This six-module future scope follows accepted ADR 0011;
+proposed ADR 0013 refines standalone incoming Payments without implementing it.
 
 Speed matters, but Inventory and Accounting correctness is more important than feature breadth.
 
@@ -49,6 +54,7 @@ Before any Phase 2 implementation, read and obey:
 - `docs/decisions/0007-standalone-sales-acceptance.md`
 - `docs/decisions/0011-modular-billing-payments-accounting-boundary.md`
 - `docs/decisions/0012-tenant-ready-database-execution-foundation.md`
+- `docs/decisions/0013-standalone-payments-contract.md` (PAY-0 proposal, pending review)
 - this execution plan
 
 Do not silently change these architecture contracts.
@@ -63,9 +69,9 @@ Gate 4A and Gate 4B are accepted, adopted, and closed.
 Gate 4C's historical adoption and post-closure correction are accepted, adopted, and closed.
 Sales post-closure remediation has independent FINAL PASS, formal corrective acceptance, and
 canonical adoption; the post-closure corrective cycle is closed.
-BILL-1 was separately authorized and is formally accepted for canonical adoption, which remains
-pending. Payments/Accounting implementation and integrations remain unauthorized. Remaining gates
-are sequentially governed, not automatically launched in parallel.
+BILL-1 was separately authorized and is canonically closed at `409e45e...` (`billing-invoicing-v1`).
+PAY-0 is documentation-only; Payments/Accounting implementation and integrations remain
+unauthorized. Remaining gates are sequentially governed, not automatically launched in parallel.
 
 Historical branch recommendations (not current implementation authorization):
 
@@ -576,13 +582,15 @@ In addition to normal tests:
 
 # Gate BILL-1 — Standalone Billing & Invoicing (replaces combined Batch 2D)
 
-Status: BILL-0 canonically closed. BILL-1 **FORMALLY ACCEPTED FOR CANONICAL ADOPTION**, 2026-10-07.
+Status: BILL-0 canonically closed. BILL-1 **CANONICALLY CLOSED**, 2026-10-07.
 Accepted implementation candidate `6f1b5f719fe0848e37774b3247a7bd4300a006a6` on
 `bill1-billing-invoicing` is directly above `b9dd8b185a301dca5b76ec7b6604c42805021174`,
 with subject `feat: implement standalone billing invoicing`. Independent audit is FINAL PASS;
-hosted candidate CI #95 / `37639810038` is SUCCESS. Formal acceptance is COMPLETE;
-canonical adoption is **PENDING** and requires separate explicit authorization. No BILL-1
-checkpoint tag, main adoption, PAY-1 authorization or production-readiness approval is claimed.
+hosted candidate CI #95 / `37639810038` is SUCCESS. Formal acceptance and authorized canonical
+adoption are COMPLETE at `409e45eaa32fae1cf9c77042a762e57026d0349f`, checkpoint
+`billing-invoicing-v1`; exact-head main CI #97 / `37645584246` SUCCESS. PAY-1 authorization
+and production-readiness approval are not claimed. The original implementation/audit chronology
+below remains historical evidence.
 
 ### BILL-1 implementation evidence — 2026-10-07
 
@@ -621,15 +629,29 @@ Hosted **Phase 0 checks #95 — SUCCESS**, run `37639810038`
 ([run](https://github.com/sahinkhan/djangobusinessos/actions/runs/37639810038)), checked out exact
 implementation SHA `6f1b5f719fe0848e37774b3247a7bd4300a006a6` and passed **873 PostgreSQL tests**,
 fresh migrations, migration drift, Ruff, Django checks, `npm ci`, Tailwind and CSS reproducibility.
-BILL-1 is **FORMALLY ACCEPTED FOR CANONICAL ADOPTION**; acceptance is COMPLETE, adoption PENDING.
+At that acceptance stage BILL-1 was **FORMALLY ACCEPTED FOR CANONICAL ADOPTION**;
+acceptance was COMPLETE, adoption PENDING. The subsequent adoption is recorded below.
 No runtime, schema, migration, UI or Option A ownership change accompanies this acceptance record.
 
 Accepted nonblocking P3: at one extreme boundary-length 1280px list row the "Issued" badge may
 wrap, without affecting financial correctness, authorization, database integrity, invoice lifecycle
 or page-level overflow. Keep it for separately authorized UI maintenance. Existing eight npm
 advisories (two moderate, six high) and GitHub Actions runtime warnings remain separate follow-ups.
-Canonical `main` remains `b9dd8b185a301dca5b76ec7b6604c42805021174`; no BILL-1 tag is created.
+At that historical acceptance stage canonical `main` remained
+`b9dd8b185a301dca5b76ec7b6604c42805021174`; no BILL-1 tag had yet been created.
 PAY-1 and ACC-1 are NOT STARTED; integrations and actual SaaS activation remain unauthorized.
+
+### BILL-1 canonical adoption and closure — 2026-10-07
+
+Formal acceptance commit `409e45eaa32fae1cf9c77042a762e57026d0349f` received separately
+authorized normal fast-forward adoption into `main`, which passed
+exact-head **Phase 0 checks #97 — SUCCESS**
+([run 37645584246](https://github.com/sahinkhan/djangobusinessos/actions/runs/37645584246)).
+Main CI checked out that exact SHA and passed fresh PostgreSQL migrations, **873 tests**, Ruff,
+Django checks, migration drift and mandatory npm/Tailwind/CSS checks. Annotated
+`billing-invoicing-v1` resolves to the accepted/adopted SHA. BILL-1 is canonically closed, not a
+local candidate or pending adoption. Earlier procedural/audit records and accepted semantics are
+unchanged. The new PAY-0 proposal is documentation only and not production-readiness approval.
 
 ## Ownership and authoritative specification
 
@@ -639,7 +661,7 @@ policy. It is reusable across Retail, School, Hospital, Hotel, Services, Ecommer
 verticals without Sales, Procurement or Catalog. It owns no Payment/PaymentAllocation/PaymentMethod,
 payment receipt, gateway, payment retry key, settlement, reconciliation, refund, journal or stock.
 
-The precise proposed fields, validation, rounding, snapshot, lifecycle, RBAC and audit contract is
+The precise accepted fields, validation, rounding, snapshot, lifecycle, RBAC and audit contract is
 [ADR 0011](../../decisions/0011-modular-billing-payments-accounting-boundary.md). That document
 is the single detailed BILL-1 specification; the checklist below summarizes its acceptance scope.
 
@@ -697,33 +719,84 @@ dunning and localized fiscal numbering require separate approval. No preserved B
 
 ---
 
-# Gate PAY-1 — Standalone Payments
+# Gate PAY-0 — Standalone Payments Contract Freeze
 
-Status: ownership boundary proposed; detailed contract and implementation separately authorized.
+Status: **Proposed — Gate PAY-0 candidate pending independent review**. Local documentation-only
+branch `pay0-payments-contract`, directly from canonical main
+`409e45eaa32fae1cf9c77042a762e57026d0349f`. No PAY-1 runtime, permission/module registration,
+publication, tag, canonical adoption or Accounting/integration work is authorized by this gate.
 
-Payments owns Payment/Receipt, PaymentMethod, PaymentAllocation, partial payments, payment
-idempotency, allocation validation and settlement; refunds/reversals only when separately approved.
-Procurement PurchaseReceipt remains unrelated goods/service receipt evidence.
+The authoritative proposed specification is
+[ADR 0013 — Standalone Payments and Receipt Contract](../../decisions/0013-standalone-payments-contract.md).
+It refines accepted ADR 0011 without changing Billing/Payments/Accounting ownership. Required
+PAY-0 outcome: precise dependency, receipt, amount, normalization/retry, RBAC/audit, locking,
+immutability and future-verification rules; current BILL-1 status reconciled without rewriting
+history; exactly one local documentation commit; independent PAY-0 contract audit before acceptance.
 
-Generic Payments hard dependencies: party, organization, reference, access plus existing Core
-utilities. It must record standalone receipts with Billing absent. Proposed PAY-1 design covers
-company-scoped receipts, payer Party, dates, currency, finite positive amounts, methods, numbering,
-external references/retry keys, permissions/audit and derived unapplied amounts. Concrete schema,
-receipt/settlement lifecycle and APIs require PAY-1 contract review before implementation.
+## Future PAY-1 — standalone incoming receipt recording (not authorized)
 
-Invoice allocation is optional composition with Billing, not a hard dependency of generic Payments.
-Payments owns the allocation facts and writes; composition validates eligible Billing invoices
-through public contracts. No unconditional Invoice FK or eager Billing import in generic Payments
-models/migrations/startup. Optional linkage/storage, lock protocol and complete applied-amount
-evidence must be explicitly designed before enabling allocations. Billing never imports Payments.
+Payments owns receipts/methods/numbering/amount/snapshots/idempotency and future allocations,
+settlement and refund/reversal semantics. **Ownership is not PAY-1 implementation scope**.
+The proposed PAY-1 MVP implements only PaymentMethod plus immutable incoming Payment/Receipt;
+existence means a recorded receipt, with no status machine or edit/delete path. Procurement
+PurchaseReceipt remains unrelated. PAY-1 must work with Billing and Accounting absent.
 
-Allocation requires company/currency/identity agreement, no excess over payment availability or
-invoice outstanding, concurrent lock/recheck protection, exact retry/idempotency, rollback and audit.
-Those are acceptance requirements for the future optional integration, not present functionality.
-Payment receipt processing must not automatically create an invoice or Accounting journal.
+- Dependencies exactly `party, organization, reference, access` plus approved Core utilities.
+  No Invoice FK/import, Billing startup/migration dependency or service/selector call; no Catalog,
+  Sales, Procurement, Inventory or Accounting dependency/effect.
+- PaymentMethod: UUID, explicit immutable company/code, company/code uniqueness, name, activity,
+  timestamps. Authorized service-only name/activity administration; deactivate, no hard-delete API.
+  Inactive methods cannot record NEW receipts; frozen code/name keeps historical receipts valid.
+- Payment: UUID, explicit company, company-unique immutable UUID-derived PAY number, payer,
+  frozen payer names, payment_date, Currency plus frozen code/precision, amount, method plus frozen
+  code/name, optional reference/key/notes, recorded_at and timestamps. No status, invoice, balance,
+  allocation, journal, stock or tenant fields. Active same-company PERSON/ORGANIZATION payer needs
+  no customer role; active Core Currency may differ from Company.base_currency without FX.
+- Exact positive finite Decimal(38,8), less than `10^30`, exactly representable at frozen currency
+  precision 0..8. Decimal/integer/numeric strings only; no bool/float/nonfinite/malformed input,
+  rounding or range/scale truncation. Redundant fractional zeros are representation only.
+- Optional normalized company-unique key: same canonical payer/date/currency/amount/method/
+  reference/notes returns the authorized original receipt, without snapshot/time/audit refresh;
+  different payload conflicts. Omitted-date retry uses the original date across midnight.
+  New receipts default date via company_local_date; server recorded_at is aware UTC.
+- Permissions exactly `payments.method.view/manage`, `payments.payment.view/record`.
+  Audit exactly `payments.method.created/updated`, `payments.payment.recorded`; real changes only,
+  one audit per first receipt, rollback on audit failure. No receipt update/delete permission/API.
+- Services: create_payment_method, update_payment_method, set_payment_method_active, record_payment.
+  Reads: payment_methods_for_company, payments_for_company, payment_detail. All context/scoped/RBAC;
+  mutation GET/POST surfaces enforce action grants independently of read grants.
+- ADR 0012 transaction -> active Company lock -> authoritative context/RBAC recheck -> receipt/
+  method/Party/Currency locks -> validation/write/audit, on one alias. Protect supported public ORM
+  save/delete/bulk/upsert/update_or_create and stale-instance paths; no arbitrary raw-SQL guarantee.
+- Manifest payments / Payments / 0.1.0, fresh disabled, existing enablement preserved, migration-local
+  declarations. Missing/disabled HTTP/navigation unavailable; installed services remain callable
+  with valid context/RBAC. No SaaS activation or service-level module-enabled authorization.
+- UI limited to method administration and receipt list/record/detail in the accepted shell,
+  deterministic 50-row backend pagination, safe GET swaps/fallback and normal company-bound POSTs.
+  Responsive boundary QA at 390/768/1280px; no global redesign or financial integration screens.
 
-Gate PAY-1 requires independent standalone review; invoice-allocation integration requires its own
-review/authorization. Gateway, refund/reversal and settlement processing are not implicitly approved.
+## Deferred allocation and acceptance requirements
+
+PaymentAllocation stays Payments-owned but is NOT implemented in PAY-1. Applied/unapplied amounts,
+invoice outstanding/status and allocation UI/selectors are deferred, not assumed to be zero.
+Receipt amount is the standalone financial display; Billing still says Payment status unavailable.
+A separate optional gate (such as PAY-INT-1) must approve stable Billing references/storage,
+company/currency/frozen-precision agreement, availability/eligibility/complete evidence, partial/
+over-allocation, PostgreSQL lock order, retry, audit, refund interaction, alias and outstanding
+derivation. Do not prematurely freeze that storage or add an unconditional Billing dependency.
+
+Future PAY-1 requires real PostgreSQL blocking coordination for same-key same/different payloads,
+role/permission/company-access revocation after lock wait, method deactivation versus recording in
+both orders, method snapshot updates and code-uniqueness races. Include canonical date/UUID/numeric
+retry/midnight tests, historical retry after reference retirement, ORM bypass and audit/persistence
+rollback, clean worker connections and non-default-alias checks; SQLite skips only lock-specific
+cases. Add full suites/bootstrap/checks, module-local discovery, stale-company/RBAC HTTP matrix,
+absent Billing/Accounting and responsive UI verification. Exact detail is in ADR 0013.
+
+Also defer settlement/reconciliation, refund/reversal/chargeback/gateway, outgoing/vendor/AP,
+Accounting posting, FX/revaluation, fees/splitting/advance credit/statements and fiscal/provider
+numbering. PAY-0 acceptance/adoption, PAY-1 implementation and any integration need separate
+authorization and independent review. No historical experimental runtime is restored.
 
 ---
 
@@ -1012,6 +1085,9 @@ Also verify:
 For Inventory and Accounting additionally verify atomicity, failure rollback and duplicate-posting/idempotency behavior.
 
 For BILL-1 verify the ADR 0011 invoice financial/snapshot/issue/immutability/RBAC/audit contract.
+For future standalone PAY-1 verify ADR 0013's receipt/method/snapshot/precision/idempotency,
+Company-lock authorization recheck, method races, immutable ORM, alias and audit-rollback contract.
+This proposed verification scope is not PAY-1 implementation authorization.
 For Payments invoice allocation verify concurrent/atomic over-allocation prevention, retry safety
 and complete settlement evidence through the approved optional integration. Never substitute
 standalone invoice total for payment-aware outstanding.
@@ -1159,8 +1235,9 @@ Sales post-closure remediation      b34a98a1; FINAL PASS / accepted / adopted / 
 Gate TDB-1 foundation              canonically closed at d65eeee; tenant-db-foundation-v1
 Billing Option A contract         BILL-0 canonically closed at b9dd8b18
 Gate BILL-1 implementation         6f1b5f71; independent FINAL PASS; CI #95 SUCCESS (873 passed)
-Gate BILL-1 formal acceptance      COMPLETE / FORMALLY ACCEPTED FOR CANONICAL ADOPTION
-Gate BILL-1 canonical adoption     PENDING; no main adoption or BILL-1 checkpoint tag
+Gate BILL-1 formal acceptance      COMPLETE at 409e45eaa32fae1cf9c77042a762e57026d0349f
+Gate BILL-1 canonical adoption     CLOSED / main CI #97 SUCCESS / billing-invoicing-v1
+Gate PAY-0 contract candidate      Proposed / local documentation only / independent review pending
 Gate PAY-1 implementation          NOT STARTED / not authorized
 Gate ACC-1 implementation          NOT STARTED / not authorized
 Optional integrations             not authorized

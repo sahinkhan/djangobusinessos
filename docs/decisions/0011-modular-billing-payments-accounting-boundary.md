@@ -24,8 +24,9 @@ architecture and the original implementation specification/verification gates be
 
 ## Formal BILL-1 implementation acceptance
 
-Acceptance date: 2026-10-07. Status: **FORMALLY ACCEPTED FOR CANONICAL ADOPTION**;
-canonical adoption is **PENDING**, not complete. Accepted implementation candidate on
+Acceptance date: 2026-10-07. Current status: **BILL-1 CANONICALLY CLOSED**.
+At formal acceptance, adoption was pending; the subsequent authorized adoption is recorded below.
+Accepted implementation candidate on
 `bill1-billing-invoicing`: `6f1b5f719fe0848e37774b3247a7bd4300a006a6`,
 `feat: implement standalone billing invoicing`, directly above the BILL-0 canonical checkpoint.
 
@@ -48,11 +49,20 @@ invoice lifecycle or page-level overflow. It remains a separately authorized UI-
 follow-up, not a fix in this milestone. Existing eight npm advisories (two moderate, six high)
 and GitHub Actions runtime deprecation warnings remain separate security-maintenance follow-ups.
 
+Formal acceptance checkpoint `409e45eaa32fae1cf9c77042a762e57026d0349f`
+was adopted into canonical `main` by normal fast-forward.
+Main **Phase 0 checks #97 — SUCCESS**
+([run 37645584246](https://github.com/sahinkhan/djangobusinessos/actions/runs/37645584246))
+tested exactly that accepted SHA, with fresh migrations, **873 PostgreSQL tests passed** and all
+mandatory checks. Annotated checkpoint `billing-invoicing-v1` resolves to that SHA.
+Acceptance, canonical adoption and closure are complete; no implementation change accompanies
+this factual current-status normalization.
+
 ADR 0011 remains **Accepted — Gate BILL-0**. Billing still owns Invoice/InvoiceLine, numbering,
 Party/Currency snapshots, DRAFT -> ISSUED and derived original totals; Payments and Accounting
-remain separate owners under Option A. Canonical `main` is still
-`b9dd8b185a301dca5b76ec7b6604c42805021174`; no BILL-1 checkpoint tag or main adoption is claimed.
-Canonical adoption requires separate explicit authorization. PAY-1/ACC-1 are not started;
+remain separate owners under Option A. Canonical `main` is now
+`409e45eaa32fae1cf9c77042a762e57026d0349f`; the earlier BILL-0 checkpoint and audit history
+remain preserved. PAY-1/ACC-1 are not started;
 integrations, actual SaaS activation and production readiness are not approved.
 
 ## Baseline, evidence and supersession
@@ -258,12 +268,21 @@ activation. This contract authorizes no current registry, permission or database
 
 ## Subsequent gates and deliberate deferrals
 
+Gate PAY-0 now has separate documentation-only authorization. Proposed
+[ADR 0013](0013-standalone-payments-contract.md) is the precise standalone incoming-receipt
+candidate pending independent review: PaymentMethod plus immutable Payment/Receipt, with
+PaymentAllocation and applied/unapplied selectors/UI deferred to a separately approved optional
+integration. This refines the earlier subsequent-gate proposal below without changing accepted
+Option A ownership or Billing v1. It authorizes no Payments/Accounting runtime or integration.
+
 PAY-1 separately specifies standalone payment receipts/methods, positive finite amounts, company/
 currency/Party validity, payment retry keys and derived unapplied amounts. Invoice allocations
 remain Payments-owned but require the optional Billing integration contract described above;
 partial allocations, atomic concurrent over-allocation rejection and retry safety must be audited
 before enabling that integration. PaymentAllocation linkage/schema, settlement details, refund/
-reversal lifecycle and permission vocabulary are intentionally not frozen by BILL-1.
+reversal lifecycle and permission vocabulary are intentionally not frozen by BILL-1. This paragraph
+is retained as the original BILL-1 future-scope proposal; the more precise proposed PAY-0 deferral
+above governs the new contract candidate, not an allocation/unapplied implementation in PAY-1.
 
 ACC-1 preserves ADR 0006's independent Company-base-currency balanced journal core, posted
 immutability, rollback/idempotency and derived trial balance. Neither invoice issue nor payment
@@ -289,7 +308,8 @@ Payments owns approved payment refund/settlement semantics, Accounting owns ledg
 | Five-module Phase 2 count and combined Invoice/Payment flow | Six standalone modules; BILL-1, PAY-1 and ACC-1 individually gated |
 
 Independent BILL-0 contract review is complete. BILL-1 received separate implementation authorization
-and formal acceptance as recorded above; canonical adoption remains separately authorized. The
+and formal acceptance as recorded above; subsequent separately authorized canonical adoption is
+complete at `409e45eaa32fae1cf9c77042a762e57026d0349f`. The
 following BILL-1 acceptance requirements were applied and remain the frozen verification contract:
 PostgreSQL/SQLite tests, fresh bootstrap,
 Ruff/Django/drift checks; boundary Decimals/rounding/currency snapshots; cross-company rejection;

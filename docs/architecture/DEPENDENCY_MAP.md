@@ -118,8 +118,9 @@ It owns stock movement/ledger behavior. Other modules must not directly mutate i
 
 Owns Invoice/InvoiceLine, numbering, financial snapshots, currency, issue and totals; invoice
 void/credit policy is future Billing ownership, explicitly deferred from BILL-1. Depends on Party
-plus core organization/reference/access capabilities. This is the proposed ADR 0011 Option A
-contract, pending independent review.
+plus core organization/reference/access capabilities. ADR 0011 Option A is Accepted; BILL-1 is
+canonically closed at `409e45eaa32fae1cf9c77042a762e57026d0349f` (`billing-invoicing-v1`),
+main CI #97 SUCCESS (run `37645584246`).
 
 Billing must not own Payment, PaymentAllocation or PaymentMethod and must not import Payments.
 It has no hard dependency on Sales, Procurement, Inventory, Catalog, Payments or Accounting.
@@ -137,13 +138,21 @@ When Accounting is enabled, financial posting is an optional integration that mu
 Owns Payment/Receipt, PaymentMethod, PaymentAllocation, partial payments, payment idempotency,
 allocation validation and settlement; refund/reversal capabilities require separate approval.
 Generic Payments requires Party plus Core organization/reference/access, not Billing or Accounting.
-It can record standalone receipts with Billing absent.
+Its future standalone receipt capability must work with Billing absent. Proposed ADR 0013
+(Gate PAY-0, pending independent review) restricts the future PAY-1 MVP to PaymentMethod and
+immutable incoming Payment/Receipt. The manifest dependencies are exactly
+`party, organization, reference, access`; approved Core utilities are infrastructure, not extra
+manifest dependencies. Payments ownership of future allocations/settlement/refunds does not
+implement or authorize them in PAY-1. Applied/unapplied/outstanding reads/UI are deferred.
 
 Optional invoice-allocation composition -> Billing public invoice contracts + Payments public
 allocation services. This requires both capabilities, but adds no Billing dependency to the base
 Payments manifest/startup/models/migrations. No unconditional Invoice FK in generic Payments core.
-Concrete optional reference/storage design is deferred to PAY-1/integration review. Billing has no
-reverse import. Optional composition, not either module's base implementation, calls Accounting.
+Concrete optional reference/storage design is deferred to a separate allocation integration gate,
+not standalone PAY-1. No Invoice FK/import/selector/service call or Billing migration/startup
+dependency belongs to generic Payments. PAY-0 adds no runtime or dependency/package changes.
+Billing has no reverse import. Optional composition, not either module's base implementation,
+calls Accounting.
 
 ### Accounting
 
