@@ -135,9 +135,26 @@ Exact-head main CI #101 / `37662202308` succeeded with 873 PostgreSQL tests.
 It specifies PAY-1 as PaymentMethod and immutable incoming
 Payment/Receipt only. PaymentAllocation remains Payments-owned but deferred to a separately
 approved optional integration, as are applied/unapplied/outstanding amounts, settlement/refunds
-and Accounting effects. Separately authorized PAY-1 implementation is in progress on
-`pay1-payments`; its local candidate requires independent audit and separate publication/adoption.
-ACC-1, integrations and actual SaaS activation remain unauthorized. This is not production approval.
+and Accounting effects. Separately authorized PAY-1 implementation on `pay1-payments` is
+**FORMALLY ACCEPTED FOR CANONICAL ADOPTION**, 2026-10-11, at implementation
+`86e15f9f0aea29a07694c251d511e4b60fc6d2ad`. Independent audit returned
+**FINAL PASS — PAY-1 APPROVED FOR HOSTED CI**. Hosted implementation **Phase 0 checks #103 — SUCCESS**,
+run ID `38076354718`
+([run evidence](https://github.com/sahinkhan/djangobusinessos/actions/runs/38076354718)),
+checked out that exact SHA and passed 1,009 PostgreSQL tests, fresh migrations and all mandatory
+checks. The detailed independent evidence is recorded in ADR 0013, separately from historical
+implementation verification. Formal acceptance is **COMPLETE**; canonical adoption is **PENDING**.
+The documentation-only acceptance commit requires its own exact-head hosted CI. Canonical `main`
+remains `d12f3e8c3a955dd90f1e03f35a30fde789441764`; PAY-1 is not canonically closed or tagged.
+PAY-INT-1 and ACC-1 are **NOT STARTED**; integrations and actual SaaS activation remain unauthorized.
+This is not production approval.
+
+PAY-1 acceptance preserves PaymentMethod and immutable incoming Payment/Receipt only, their
+exact amount/snapshot/authorization/idempotency and omitted-date midnight-retry semantics.
+PaymentAllocation remains absent; no Billing dependency/effect, Accounting or Inventory effect
+is introduced. Known PAY-1 maintenance follow-ups remain inherited ADR status wording (only
+necessary acceptance lines normalized), favicon 404, eight npm advisories (two moderate, six high),
+Actions runtime warnings and stale Browserslist data; no runtime maintenance is authorized here.
 
 Inherited nonblocking PAY-0 P3: checkpoint-era ADR 0011/Billing authorization wording in ADR 0006
 and `CORE_FOUNDATION_V1_RESTRUCTURE.md` remains a documentation-maintenance follow-up. Those files
@@ -151,7 +168,7 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | Gate | Standalone ownership | Deferred integration |
 | --- | --- | --- |
 | BILL-1 — Billing & Invoicing | Invoice/InvoiceLine, generic lines, snapshots, numbering, DRAFT -> ISSUED, derived original totals | No payment-aware outstanding; no void/credit, Sales automation or journals |
-| PAY-1 — Payments (local implementation; independent audit pending) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Payments-owned PaymentAllocation, applied/unapplied/outstanding, invoice integration, refunds/settlement and journals deferred |
+| PAY-1 — Payments (formally accepted; canonical adoption pending) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Payments-owned PaymentAllocation, applied/unapplied/outstanding, invoice integration, refunds/settlement and journals deferred |
 | ACC-1 — Accounting & Finance Core | Accounts, journals, balanced immutable postings, derived GL/trial balance | Billing/Payments automation separately approved |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;

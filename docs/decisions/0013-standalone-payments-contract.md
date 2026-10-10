@@ -17,14 +17,64 @@ migrations, **873 tests**, Ruff, Django checks, migration drift and mandatory np
 PAY-0 formal acceptance is **COMPLETE**, as documentation/architecture acceptance only.
 Canonical adoption is **COMPLETE** at `d12f3e8c3a955dd90f1e03f35a30fde789441764`,
 checkpoint `payments-contract-v1`; exact-head main CI #101 / `37662202308` succeeded
-with 873 PostgreSQL tests. PAY-0 is canonically closed. Subsequently authorized PAY-1
-implementation is in progress on `pay1-payments`, pending independent candidate review.
-ACC-1, PaymentAllocation and all integrations remain deferred. PAY-1 publication and canonical
-adoption are not authorized by the local implementation milestone.
+with 873 PostgreSQL tests. PAY-0 is canonically closed. PAY-1 subsequently completed the separately
+authorized implementation, independent review and candidate publication/CI milestones recorded
+below. ACC-1, PaymentAllocation and all integrations remain deferred. Neither the historical local
+implementation authorization nor this formal acceptance authorizes canonical PAY-1 adoption.
 
 The inherited nonblocking P3 concerning checkpoint-era ADR 0011/Billing authorization wording
 in ADR 0006 and `CORE_FOUNDATION_V1_RESTRUCTURE.md` remains a documentation-maintenance follow-up.
 Those files are unchanged; the follow-up does not alter this accepted contract.
+
+## PAY-1 implementation formal acceptance — 2026-10-11
+
+Status: **FORMALLY ACCEPTED FOR CANONICAL ADOPTION**. Formal acceptance is **COMPLETE**;
+canonical adoption is **PENDING**. ADR 0013 remains **Accepted — Gate PAY-0**; its architecture,
+financial semantics and the earlier contract/implementation chronology are unchanged.
+
+Accepted implementation: `86e15f9f0aea29a07694c251d511e4b60fc6d2ad`, on `pay1-payments`,
+one non-merge commit above canonical `d12f3e8c3a955dd90f1e03f35a30fde789441764`
+(`payments-contract-v1`), subject `feat: implement standalone payments receipts`.
+The owner-supplied independent audit verdict is **FINAL PASS — PAY-1 APPROVED FOR HOSTED CI**.
+Its evidence is recorded separately from the historical implementation-run evidence:
+
+| Independent audit check | Supplied result |
+| --- | --- |
+| Runtime | Python 3.13.16 / Django 5.2.17 / PostgreSQL 17.11 |
+| Payments PostgreSQL suite | 136 passed |
+| Real-lock PostgreSQL concurrency | 22 passed |
+| Full PostgreSQL suite | 1,009 passed |
+| Full SQLite suite | 868 passed / 141 expected PostgreSQL-only skips |
+| Database architecture guard | 222 passed |
+| Independent adversarial probes | 80 passed |
+| JavaScript checks | 21 passed |
+| Responsive browser checks | 18 passed |
+| Fresh bootstrap, Ruff, Django checks, migration drift | PASS |
+| npm, Tailwind and generated CSS reproducibility | PASS |
+
+Hosted implementation **Phase 0 checks #103 — SUCCESS**, run ID `38076354718`
+([run evidence](https://github.com/sahinkhan/djangobusinessos/actions/runs/38076354718)),
+checked out exactly `86e15f9f0aea29a07694c251d511e4b60fc6d2ad` on `pay1-payments`.
+The workflow logs verify fresh PostgreSQL migrations, **1,009 tests passed**, Ruff, zero Django
+system-check issues, no migration drift, `npm ci`, Tailwind build and generated CSS reproducibility.
+This is implementation CI evidence, not CI for this later documentation-only acceptance commit;
+the acceptance commit must separately pass exact-head hosted CI before adoption is considered.
+
+This acceptance changes no runtime, schema, migration, test, UI, dependency or workflow. The
+authoritative models remain PaymentMethod and immutable incoming Payment/Receipt, without a status
+machine, edit/delete, PaymentAllocation, Billing dependency/effect, Accounting or Inventory effect.
+PaymentMethod's immutable company/normalized code, unique company/code, service-mutable name/activity
+and historical snapshots remain unchanged. Exact Decimal(38,8), finite positive amount below `10^30`,
+frozen currency precision 0..8, no float/rounding and redundant-zero semantics remain unchanged.
+Company-scoped canonical retry still requires current authorization; a match returns the original
+without write/audit/snapshot/timestamp refresh, a mismatch conflicts, and an omitted date preserves
+the original receipt date across midnight. Retired/renamed references do not invalidate history.
+
+Canonical `main` remains `d12f3e8c3a955dd90f1e03f35a30fde789441764`; PAY-1 is not yet adopted or
+canonically closed. No new tag is authorized. PAY-INT-1 and ACC-1 are **NOT STARTED**; production
+approval is not implied. Inherited adoption-pending wording is factually normalized only where
+necessary here; favicon 404, eight npm advisories (two moderate, six high), Actions runtime warnings
+and stale Browserslist data remain separate maintenance items, with no runtime fix in this milestone.
 
 ## Authority, baseline and gate boundary
 
@@ -44,8 +94,9 @@ Payments gate, not Billing v1 behavior or Accounting ownership. ADR 0002 governs
 composition; ADR 0006 remains accepted except the explicitly superseded combined Billing scope
 identified in ADR 0011. ADR 0012 governs database execution. Delivery order
 `BILL-1 -> PAY-1 -> ACC-1` is not a hard-dependency graph. Independent PAY-0 contract review and
-formal acceptance and canonical adoption are complete; PAY-1 has separate implementation
-authorization only, not independent acceptance or canonical adoption.
+formal acceptance and canonical adoption are complete. The subsequent PAY-1 implementation has
+independent FINAL PASS and formal acceptance as recorded above; canonical adoption remains pending
+and requires separate authorization.
 
 ## Ownership versus first implementation scope
 
@@ -409,4 +460,5 @@ Party/Reference/Organization supply identities and time; Access authorizes; Core
 execution infrastructure. Payment existence is sufficient for the MVP, so no baseline contract
 requires a speculative status field. No unresolved PAY-1 architecture decision is deliberately
 left within this accepted scope; deferred features require their own future decisions. Gate PAY-0
-is formally accepted, with canonical adoption pending; this is not PAY-1 implementation approval.
+is formally accepted and canonically closed. PAY-1 implementation is separately formally accepted
+for canonical adoption as recorded above, but is not yet adopted or canonically closed.
