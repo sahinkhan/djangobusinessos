@@ -35,6 +35,7 @@ INSTALLED_APPS = [
     "businessos.modules.inventory",
     "businessos.modules.billing",
     "businessos.modules.payments",
+    "businessos.modules.accounting",
 ]
 
 MIDDLEWARE = [
@@ -60,6 +61,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "businessos.core.modules.context_processors.module_navigation",
+                "businessos.modules.accounting.context_processors.accounting_navigation",
             ],
         },
     },

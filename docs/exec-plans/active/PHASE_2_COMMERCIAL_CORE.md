@@ -1,8 +1,14 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — BILL-1 / PAY-0 / PAY-1 CANONICALLY CLOSED; ACC-0 FORMALLY ACCEPTED / ADOPTION PENDING
+Status: IN PROGRESS — BILL-1 / PAY-0 / PAY-1 / ACC-0 CANONICALLY ADOPTED; ACC-1 LOCAL CANDIDATE / INDEPENDENT AUDIT PENDING
 
-Current Accounting milestone: ACC-0 — FORMALLY ACCEPTED, documentation/architecture only, on
+Current Accounting milestone: ACC-1 — local standalone implementation candidate on
+`acc1-accounting`, from adopted `main@d5030e0e807334fdc358a1aa3affce704ef4a0f0` and the
+existing annotated `accounting-contract-v1` checkpoint. Independent implementation audit,
+candidate publication/hosted CI, acceptance, adoption and `accounting-v1` remain separate gates.
+No integration or production-readiness approval is claimed. See the local verification record below.
+
+Historical ACC-0 formal acceptance-stage evidence (retained): documentation/architecture only, on
 `acc0-accounting-contract` from `9ac3f0944fff65f013efd9c3a3e9b841022ce87f`. ADR 0014 is
 Accepted — Gate ACC-0 at contract head `217b7a8f39b628571f616034a7d9d02b436ec03d`, after
 corrective independent FINAL PASS, readiness A, and exact-head remediation CI #108 SUCCESS.
@@ -77,7 +83,7 @@ Before any Phase 2 implementation, read and obey:
 - `docs/decisions/0011-modular-billing-payments-accounting-boundary.md`
 - `docs/decisions/0012-tenant-ready-database-execution-foundation.md`
 - `docs/decisions/0013-standalone-payments-contract.md` (Accepted — Gate PAY-0; canonically closed)
-- `docs/decisions/0014-standalone-accounting-finance-contract.md` (Accepted — Gate ACC-0; canonical adoption pending, not implementation authority)
+- `docs/decisions/0014-standalone-accounting-finance-contract.md` (Accepted — Gate ACC-0; canonically adopted contract, not automatic implementation authority)
 - this execution plan
 
 Do not silently change these architecture contracts.
@@ -94,7 +100,9 @@ Sales post-closure remediation has independent FINAL PASS, formal corrective acc
 canonical adoption; the post-closure corrective cycle is closed.
 BILL-1 was separately authorized and is canonically closed at `409e45e...` (`billing-invoicing-v1`).
 PAY-0 is documentation-only; PAY-1 implementation is canonically closed at `9ac3f094` (`payments-v1`).
-ACC-0 is authorized documentation work only; Accounting runtime and integrations remain unauthorized.
+ACC-0 is canonically adopted contract documentation; separately authorized ACC-1 is a local
+implementation candidate awaiting independent audit. Accounting publication/adoption and all
+integrations remain unauthorized.
 Remaining gates are sequentially
 governed, not automatically launched in parallel.
 
@@ -1506,7 +1514,114 @@ Gate ACC-0 contract                FORMALLY ACCEPTED / ADR 0014 / acc0-accountin
 Gate ACC-0 accepted contract head  217b7a8f39b628571f616034a7d9d02b436ec03d / CI #108 SUCCESS
 Gate ACC-0 corrective review       FINAL PASS / readiness A / F1-F2 resolved / no P0-P3
 Gate ACC-0 formal acceptance       COMPLETE / acceptance commit requires exact-head CI
-Gate ACC-0 canonical adoption      PENDING / accounting-contract-v1 NOT YET CREATED
-Gate ACC-1 implementation          NOT STARTED / not authorized
+Gate ACC-0 canonical adoption      COMPLETE / d5030e0e / accounting-contract-v1
+Gate ACC-1 implementation          LOCAL CANDIDATE / acc1-accounting / independent audit pending
 Optional integrations             not authorized
 ```
+
+## ACC-1 local implementation verification — 2026-10-11
+
+This is developer execution evidence for the single local implementation commit containing this
+record, not independent acceptance or hosted ACC-1 CI. Parent/main remains exactly
+`d5030e0e807334fdc358a1aa3affce704ef4a0f0`. Existing `accounting-contract-v1` tag object
+`7369a26d526e10e9a128b44cf79efca9cf353e89` peels to that SHA. ADR 0014 remains
+**Accepted — Gate ACC-0**; no ACC-1 acceptance or release/foundation tag is created.
+
+### Delivered behavior
+
+- Four Company-owned UUID/timestamp models only: Account, Journal, JournalEntry and
+  JournalEntryLine. Account code/type and Journal code are immutable; reference names/activity
+  may change. Codes normalize by trim/uppercase with a 32-character post-normalization limit;
+  names trim to a required maximum of 160 characters. Memo/description preserve exact blank,
+  non-null, unbounded text. Relationships use PROTECT, with optional same-company Party only.
+- New migrations `accounting.0001_initial` and `0002_register_manifest`; all released migrations
+  are unchanged. Database uniqueness covers Company reference codes, Company entry numbers and
+  entry/position. CHECKs cover Account type, DRAFT/null versus POSTED/non-null posting time,
+  precision 0–8, position 1–2,147,483,647, nonnegative amounts below 10^30 and exactly one positive
+  debit/credit side. Cross-row balance and Company ownership remain validated business rules.
+- Manifest dependencies are exactly `party`, `organization`, `reference`, `access`. Its frozen
+  registration declares eight permissions: `accounting.account.view/manage`,
+  `accounting.journal.view/manage`, and `accounting.entry.view/create/update/post`. Fresh
+  registration is disabled; existing enablement is preserved. HTTP/navigation gating does not
+  disable installed Python services, which still require valid context and RBAC.
+- Ten alias-aware services: create/update Account, create/update Journal, create/update entry,
+  add/update/remove draft line, and post entry. Active Company lock precedes current authorization;
+  then entry, Journal, ordered lines, UUID-ordered Accounts and non-null Parties are locked as
+  applicable. Business transactions/savepoints resolve the selected execution alias at entry.
+- Seven atomic audit actions: `accounting.account.created/updated`,
+  `accounting.journal.created/updated`, `accounting.entry.created/updated/posted`. Line changes
+  use entry.updated with operation, line UUID and changed fields. True no-ops do not rewrite
+  timestamps or create success audit. Audit failure rolls back business mutations.
+- Entry number is `JE-` plus its 32 lowercase UUID hex characters (35 total); three bounded
+  attempts retry only proven generated identity collisions, not unrelated integrity failures.
+  Creation captures Company-local date once if omitted and freezes base code/precision. Existing
+  snapshots do not follow later Currency precision/activity changes.
+- Exact finite Decimal/integer/numeric-string amounts only: no float/bool, no rounding to balance,
+  and no precision loss beyond the frozen precision. Decimal(38,8) stores each side; aggregate
+  arithmetic grows its context for totals above a single-line range. Stable positions allocate
+  highest retained + 1, preserve internal gaps and reject exhaustion before write/audit.
+- Only DRAFT → POSTED exists. Posting requires two or more lines, active referenced Journal/
+  Accounts/optional Parties, compatible Company base currency, and positive exactly equal totals.
+  Posted facts are immutable. Authorized same-entry retry returns the existing posting without
+  another timestamp, ledger effect or audit, even after reference retirement; revoked/inactive
+  current actor/Company authority still denies retry. No external-source idempotency field exists.
+- Public instance save/delete, queryset update/delete, bulk update/create/upsert and corresponding
+  async APIs are guarded. Narrow private persistence/transition paths serve authorized services;
+  stale deleted lines cannot be reinserted. These guards do not pretend to constrain deliberate
+  raw SQL or invocation of Django base-class internals outside the public business API.
+- Selectors expose scoped Accounts, Journals, entries/detail, General Ledger and Trial Balance.
+  GL uses posted lines only, stable ordering, inclusive date bounds and optional same-company
+  Account filtering. Malformed Company/currency provenance fails closed before date filtering.
+  TB groups posted activity by Account, retains inactive and zero-net activity, derives ending
+  debit/credit exactly and displays the maximum contributing frozen precision, not current
+  Currency precision. Ranges are movement/net, not invented opening/closing balances. Reference
+  names are explicitly current labels, not fictional historical snapshots.
+- Existing shell pages include references, draft entry/line editing/removal, detail, posting
+  confirmation and GL/TB. Action GET/POST permissions are explicit; company-bound POSTs use CSRF,
+  no GET mutation, and mutations do not acquire incidental view-permission requirements.
+  Ordinary lists and reports use stable 50-row pagination with safe GET/HTMX behavior.
+
+### Verification evidence
+
+Supported runtime: disposable Linux Docker, Python **3.13.16**, Django **5.2.17**, PostgreSQL **17**.
+Only new synthetic task databases were used; existing demos/customer data were not accessed.
+
+| Check | Actual result |
+| --- | --- |
+| Full PostgreSQL suite (`pytest -q --ds=config.settings.development`) | **1,282 passed**, no skips or teardown warning |
+| Accounting + database architecture guard | **495 passed**: Accounting **273**, guard **222** |
+| Accounting PostgreSQL lock coordination | **56 passed**, real `pg_blocking_pids` observations; worker connections close in finally |
+| Final Accounting HTTP/UI PostgreSQL subset | **34 passed**, including report errors within HTMX swap target |
+| Full SQLite suite (`pytest -q --ds=config.settings.test`) | **1,084 passed, 198 expected skips** (row-lock/exact PostgreSQL numeric cases) |
+| Fresh zero-state PostgreSQL migrations | PASS, including both new Accounting migrations; eight permissions and fresh disabled module verified |
+| Non-default alias | PASS: fresh migration/CRUD/post/retry/rollback/audit/GL/TB; default cursor forbidden during selected-alias operations |
+| Standalone installation | PASS: Party + Core + Accounting only; no other commercial module installed/imported |
+| Existing Billing issue / Payments record | PASS: no Accounting entries, lines or audit effects |
+| Ruff / module formatting / Django checks / migration drift | PASS; no missing migrations |
+| JavaScript syntax / navigation tests | PASS; **21 JavaScript tests** |
+| npm ci / Tailwind / generated CSS reproducibility / whitespace | PASS; no dependency/lockfile change |
+
+Browser verification used only disposable synthetic Accounting data at **390, 768 and 1280 CSS
+pixels**. Boundary fixtures included 32-character code, 160-character reference name, 35-character
+number, 168-character Party label, 12,000-character memo/description and
+`999999999999999999999999999999.99999999` amounts at frozen precision eight. Body scroll widths
+were respectively **380 / 758 / 1270**, with no page-wide overflow; wide tables scroll locally.
+Verified draft header/line edit/remove, Account/Journal creation, visible non-finite amount and
+incomplete-post errors, normal POST and keyboard focus/Tab/Enter, successful posting/read-only
+presentation, GL/TB exact amounts and zero-net row, date-filter errors, 50-row filter/pagination
+query preservation, deep refresh and Back/Forward. Final fresh-origin browser console had no errors.
+Report controls were adjusted only in the Accounting template to avoid clipping on mobile;
+validation messages stay within `#list-results`. Cached QA CSS was identified and the latest
+generated CSS verified on a fresh local origin, without modifying shared cache/security behavior.
+
+Two overlapping intermediate PostgreSQL runs were discarded because their synthetic test-database
+names collided; they are not PASS evidence. Subsequent full/focused runs used distinct primary
+database names and passed. A Windows Python 3.12 attempt was stopped and is not authoritative
+financial/concurrency evidence. Initial sandbox `npm ci` failed DNS; the authorized normal retry
+succeeded. Eight inherited npm advisories (two moderate/six high), favicon 404, stale Browserslist,
+Actions runtime warnings and BILL-1 badge wrapping remain excluded maintenance work.
+
+No Billing/Payments dependency, PaymentAllocation, automatic integration, authoritative mutable
+balance, SaaS activation or production deployment was introduced. `main`, historical branches,
+accepted contracts and existing tags remain unchanged. Only one local implementation commit is
+authorized; no push, merge, acceptance or tag. **Stop for independent ACC-1 implementation audit.**

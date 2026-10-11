@@ -1,0 +1,6 @@
+{% extends "components/form_page.html" %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with current=heading %}{% endblock %}
+{% block form_eyebrow %}Accounting &amp; Finance{% endblock %}
+{% block form_description %}Manual company-base-currency journals. Posting is irreversible in this foundation scope. Exact amounts only; no rounding to balance.{% endblock %}
+{% block form_fields %}{% include "components/form_fields.html" with wide_fields="memo description" %}{% endblock %}
+{% block cancel_action %}<a class="btn-secondary" href="{% url 'home' %}" data-app-nav>Cancel</a>{% endblock %}

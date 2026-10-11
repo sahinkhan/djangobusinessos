@@ -181,12 +181,25 @@ PostgreSQL tests, fresh migrations and all mandatory checks. The owner-supplied 
 corrective verdict is **FINAL PASS — ACC-0 CONTRACT APPROVED FOR FORMAL ACCEPTANCE**, readiness
 **A**; F1/F2 resolved, no new P0/P1/P2/P3. This is contract acceptance, not ACC-1 runtime evidence.
 
-ACC-0 formal acceptance is **COMPLETE**; canonical adoption is **PENDING**, not canonically closed.
-This documentation-only acceptance commit requires its own exact-head hosted CI. Canonical `main`
-remains `9ac3f0944fff65f013efd9c3a3e9b841022ce87f`; `accounting-contract-v1` is not created.
-ACC-1 and PAY-INT-1 are **NOT STARTED**. PaymentAllocation, all integrations and actual SaaS/
-production deployment remain unauthorized. Production Accounting readiness is not claimed;
-full Phase 2 is not complete.
+At the historical ACC-0 acceptance stage, formal acceptance was **COMPLETE** and canonical
+adoption was **PENDING**; that documentation-only commit required its own exact-head hosted CI.
+At that stage `main` remained `9ac3f0944fff65f013efd9c3a3e9b841022ce87f` and
+`accounting-contract-v1` had not been created. This chronology is retained.
+
+**Current ACC-1 implementation checkpoint — 2026-10-11:** ACC-0 is canonically adopted at
+`d5030e0e807334fdc358a1aa3affce704ef4a0f0`. The existing annotated `accounting-contract-v1`
+tag object `7369a26d526e10e9a128b44cf79efca9cf353e89` peels to that baseline. Separately
+authorized standalone Accounting is implemented locally on `acc1-accounting`, pending independent
+implementation audit. Account/Journal, service-only draft editing, immutable balanced posted
+JournalEntry/lines, eight permissions, seven atomic audit actions, and derived GL/TB are included.
+Local verification: **1,282 PostgreSQL tests passed** (Accounting 273, including 56 real-lock
+concurrency cases); **1,084 SQLite tests passed, 198 expected skips**. See the
+[ACC-1 verification record](exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#acc-1-local-implementation-verification--2026-10-11).
+This is implementation-run evidence, not independent approval or hosted candidate CI.
+`main` remains at the baseline; no ACC-1 publication, acceptance, adoption or `accounting-v1`
+tag is authorized. PAY-INT-1, PaymentAllocation, all integrations and actual SaaS/production
+deployment remain unauthorized. Production Accounting readiness and full Phase 2 completion
+are not claimed.
 
 PAY-1 acceptance preserves PaymentMethod and immutable incoming Payment/Receipt only, their
 exact amount/snapshot/authorization/idempotency and omitted-date midnight-retry semantics.
@@ -208,7 +221,7 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | --- | --- | --- |
 | BILL-1 — Billing & Invoicing | Invoice/InvoiceLine, generic lines, snapshots, numbering, DRAFT -> ISSUED, derived original totals | No payment-aware outstanding; no void/credit, Sales automation or journals |
 | PAY-1 — Payments (canonically closed; payments-v1) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Payments-owned PaymentAllocation, applied/unapplied/outstanding, invoice integration, refunds/settlement and journals deferred |
-| ACC-0 formally accepted contract / ACC-1 future implementation | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014 | Canonical adoption pending; ACC-1 not authorized; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
+| ACC-0 canonically adopted / ACC-1 local implementation candidate | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014 | ACC-1 independent audit/publication/adoption pending; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
 generic Payments and Accounting work without Billing. Settlement-adjusted outstanding is a future

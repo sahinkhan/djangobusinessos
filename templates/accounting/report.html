@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }} · BusinessOS{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with current=heading %}{% endblock %}
+{% block page_header %}{% include "components/page_heading.html" with heading=heading description="Posted activity only. Reference names are current labels, not historical snapshots." %}{% endblock %}
+{% block control_tools %}<form method="get" class="grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-4 min-w-0" data-list-filter aria-controls="list-results">{% for field in filter_form %}<div class="min-w-0">{{ field.label_tag }}{{ field }}</div>{% endfor %}<div class="self-end"><button type="submit" class="btn-secondary">Apply range</button></div></form>{% endblock %}
+{% block content %}
+<div class="list-results-shell" data-list-results-shell>
+  {% include "components/list_results_status.html" %}
+  <div id="list-results" data-list-results aria-live="polite" tabindex="-1">
+    {% if filter_form.errors %}<div role="alert">{{ filter_form.non_field_errors }}{% for field in filter_form %}{{ field.errors }}{% endfor %}</div>{% endif %}
+    <section class="record-sheet min-w-0 max-w-full">
+      <p class="record-note">{% if filter_form.from_date.value %}Movement/net within the inclusive date range (not opening/closing balances).{% else %}As-of activity through the inclusive upper date, or all history if no upper date.{% endif %}</p>
+      <div class="table-scroll overflow-x-auto">
+        <table class="data-table">
+          <thead>{% if kind == 'gl' %}
+            <tr><th>Date</th><th>Entry</th><th>Account</th><th>Party</th><th>Description / memo</th><th>Unit / precision</th><th>Debit</th><th>Credit</th></tr>
+          {% else %}
+            <tr><th>Account</th><th>Unit / precision</th><th>Total debit</th><th>Total credit</th><th>Ending debit</th><th>Ending credit</th></tr>
+          {% endif %}</thead>
+          <tbody>{% for row in rows %}{% if kind == 'gl' %}
+            <tr><td>{{ row.journal_entry.entry_date|date:"Y-m-d" }}</td><td><a href="{% url 'accounting:detail' row.journal_entry_id %}" data-app-nav>{{ row.journal_entry.number }}</a></td><td>{{ row.account }}</td><td>{{ row.party|default:'—' }}</td><td style="white-space:pre-wrap;overflow-wrap:anywhere;">{{ row.description }}<p>{{ row.journal_entry.memo }}</p></td><td>{{ row.journal_entry.base_currency_code_snapshot }} / {{ row.journal_entry.base_currency_precision_snapshot }}</td><td>{{ row.formatted_debit }}</td><td>{{ row.formatted_credit }}</td></tr>
+          {% else %}
+            <tr><td>{{ row.account }}</td><td>{{ row.currency_code }} / {{ row.precision }}</td><td>{{ row.formatted_debit }}</td><td>{{ row.formatted_credit }}</td><td>{{ row.formatted_ending_debit }}</td><td>{{ row.formatted_ending_credit }}</td></tr>
+          {% endif %}{% empty %}<tr><td colspan="8">No posted activity in this scope.</td></tr>{% endfor %}</tbody>
+        </table>
+      </div>
+    </section>
+    {% include "components/pagination.html" %}
+  </div>
+</div>
+{% endblock %}
