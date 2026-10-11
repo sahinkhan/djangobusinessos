@@ -1,6 +1,11 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — BILL-1 / PAY-0 CANONICALLY CLOSED; PAY-1 FORMALLY ACCEPTED, ADOPTION PENDING
+Status: IN PROGRESS — BILL-1 / PAY-0 / PAY-1 CANONICALLY CLOSED; ACC-0 CONTRACT PROPOSED
+
+Current Accounting milestone: ACC-0 — documentation candidate only, on `acc0-accounting-contract`
+from `9ac3f0944fff65f013efd9c3a3e9b841022ce87f`. ADR 0014 is Proposed — Gate ACC-0. Candidate
+publication/exact-head CI are authorized; independent audit, acceptance/adoption, tagging and
+ACC-1 implementation are separate gates. No integrations or production deployment are approved.
 
 Current contract milestone: BILL-0 OPTION A CONTRACT — FORMALLY ACCEPTED, 2026-10-07.
 Independent audit FINAL PASS and hosted Phase 0 checks #91 SUCCESS
@@ -24,10 +29,13 @@ exact-head main CI #101 / `37662202308` SUCCESS, 873 PostgreSQL tests.
 Separately authorized PAY-1 implementation `86e15f9f0aea29a07694c251d511e4b60fc6d2ad` on
 `pay1-payments` has independent FINAL PASS and exact-head hosted implementation CI #103 /
 `38076354718` SUCCESS (1,009 PostgreSQL tests and all mandatory checks).
-PAY-1 formal acceptance is COMPLETE, 2026-10-11: **FORMALLY ACCEPTED FOR CANONICAL ADOPTION**.
-Canonical adoption remains PENDING; `main` remains `d12f3e8c3a955dd90f1e03f35a30fde789441764`.
-The acceptance commit must pass separate exact-head hosted CI. PAY-INT-1 and ACC-1 are NOT STARTED;
-integrations and actual SaaS activation are not authorized.
+PAY-1 formal acceptance was COMPLETE, 2026-10-11, with adoption pending at that historical stage.
+Subsequent separately authorized acceptance/adoption checkpoint
+`9ac3f0944fff65f013efd9c3a3e9b841022ce87f` passed acceptance CI #104 / `38077428416`, was adopted
+by normal fast-forward and passed exact-head main CI #105 / `38078381136` SUCCESS (1,009 PostgreSQL
+tests, fresh migrations and all mandatory checks). PAY-1 STANDALONE PAYMENTS is CANONICALLY CLOSED,
+checkpoint `payments-v1`. PAY-INT-1 and ACC-1 are NOT STARTED; integrations and actual SaaS
+activation are not authorized.
 The prior `tenant-db-foundation-v1` and `ui-foundation-v1` checkpoints are preserved.
 Earlier acceptance/audit chronology below is preserved as historical evidence.
 
@@ -66,6 +74,7 @@ Before any Phase 2 implementation, read and obey:
 - `docs/decisions/0011-modular-billing-payments-accounting-boundary.md`
 - `docs/decisions/0012-tenant-ready-database-execution-foundation.md`
 - `docs/decisions/0013-standalone-payments-contract.md` (Accepted — Gate PAY-0; canonically closed)
+- `docs/decisions/0014-standalone-accounting-finance-contract.md` (Proposed — Gate ACC-0; review candidate, not implementation authority)
 - this execution plan
 
 Do not silently change these architecture contracts.
@@ -81,8 +90,9 @@ Gate 4C's historical adoption and post-closure correction are accepted, adopted,
 Sales post-closure remediation has independent FINAL PASS, formal corrective acceptance, and
 canonical adoption; the post-closure corrective cycle is closed.
 BILL-1 was separately authorized and is canonically closed at `409e45e...` (`billing-invoicing-v1`).
-PAY-0 is documentation-only; PAY-1 implementation is formally accepted but canonical adoption is
-pending. Accounting and integrations remain unauthorized. Remaining gates are sequentially
+PAY-0 is documentation-only; PAY-1 implementation is canonically closed at `9ac3f094` (`payments-v1`).
+ACC-0 is authorized documentation work only; Accounting runtime and integrations remain unauthorized.
+Remaining gates are sequentially
 governed, not automatically launched in parallel.
 
 Historical branch recommendations (not current implementation authorization):
@@ -931,6 +941,23 @@ Known separate maintenance items: inherited ADR adoption wording (only necessary
 factually normalized), favicon 404, eight npm advisories (two moderate, six high), Actions runtime
 warnings and stale Browserslist data. No runtime maintenance or production approval is implied.
 
+### PAY-1 post-adoption canonical closure — 2026-10-11
+
+Current status: **PAY-1 STANDALONE PAYMENTS — CANONICALLY CLOSED**. The preceding pending/adoption
+restrictions describe the historical formal-acceptance milestone and are retained as evidence.
+Documentation-only acceptance `9ac3f0944fff65f013efd9c3a3e9b841022ce87f` passed exact-head
+acceptance CI #104 / `38077428416`, then was adopted by normal fast-forward into canonical `main`.
+Main **Phase 0 checks #105 — SUCCESS**
+([run 38078381136](https://github.com/sahinkhan/djangobusinessos/actions/runs/38078381136))
+checked out that exact SHA and passed fresh migrations, **1,009 PostgreSQL tests**, Ruff, Django
+checks, no migration drift and npm/Tailwind/CSS checks. Annotated `payments-v1` object
+`05dcb375d0b05ad6ee9f819faa2c4e57dbfd3a34` peels to that accepted canonical SHA.
+
+No runtime change occurred during acceptance/adoption. PaymentMethod and immutable incoming
+Payment/Receipt remain the only PAY-1 models. Earlier implementation, audit and acceptance evidence
+is not overwritten. PaymentAllocation, PAY-INT-1 and Accounting/integration effects remain absent.
+ACC-0 opens only the next documentation candidate; ACC-1 and production launch are not approved.
+
 ## Deferred allocation and acceptance requirements
 
 PaymentAllocation stays Payments-owned but is NOT implemented in PAY-1. Applied/unapplied amounts,
@@ -951,17 +978,61 @@ absent Billing/Accounting and responsive UI verification. Exact detail is in ADR
 
 Also defer settlement/reconciliation, refund/reversal/chargeback/gateway, outgoing/vendor/AP,
 Accounting posting, FX/revaluation, fees/splitting/advance credit/statements and fiscal/provider
-numbering. PAY-0 is canonically closed. PAY-1 independent review, implementation publication/CI and
-formal acceptance are complete; canonical adoption remains separately gated and pending.
+numbering. PAY-0 and PAY-1 are canonically closed as recorded above. PAY-1 independent review,
+implementation publication/CI, formal acceptance and separately authorized adoption are complete.
 No integration is authorized and no historical experimental runtime is restored.
 
 ---
 
-# Gate ACC-1 — Accounting & Finance Core (formerly Batch 2E)
+# Gate ACC-0 — Standalone Accounting & Finance Contract
 
-Status: future standalone gate, not implementation authorization. The following accepted journal
-scope is preserved. Accounting depends on Party and Core, not Billing or Payments; automation
-consumes separately approved source outcomes through optional composition and public services.
+Status: **PROPOSED — documentation/architecture candidate only**, 2026-10-11.
+Starting canonical `main`: `9ac3f0944fff65f013efd9c3a3e9b841022ce87f` (`payments-v1`).
+Contract branch: `acc0-accounting-contract`. The detailed reviewable specification is
+[ADR 0014](../../decisions/0014-standalone-accounting-finance-contract.md), Proposed — Gate ACC-0.
+No Accounting implementation, registration, migration, test or UI change is authorized here.
+
+Proposed minimum ACC-1 after separately authorized acceptance/adoption and implementation:
+
+- Account and Journal: immutable Company/normalized code, company uniqueness, service-mutable
+  name/activity; immutable Account type ASSET/LIABILITY/EQUITY/INCOME/EXPENSE; no hierarchy/hard delete.
+- JournalEntry/lines: Company-base-currency only, immutable code/precision snapshots 0..8;
+  `JE-<entry UUID hex>` number; Company-local default date; DRAFT -> POSTED only; draft service edits,
+  immutable posted header/lines and protected public ORM bypass paths.
+- Debit/credit Decimal(38,8), finite/nonnegative/below `10^30`, exactly one positive side;
+  frozen-precision exact representability accepts redundant zeros, rejects float/nonfinite/excess
+  nonzero scale, never silently rounds. Posting requires active Journal/Accounts, two valid lines
+  and exact positive equal totals, with sufficiently large arithmetic context.
+- Alias-aware Company lock -> current context/RBAC recheck -> Entry -> deterministic references
+  -> validation -> state and audit in one transaction. Same-Entry post retry reauthorizes and returns
+  original without duplicate timestamp/write/audit/effect. Real PostgreSQL race evidence required.
+- Exactly eight permissions and seven audit actions in ADR 0014. HTTP action GET/POST enforces
+  relevant permission; missing/disabled registry gates HTTP/navigation only, never installed APIs.
+- Derived GL/TB use POSTED lines only, preserve inactive history, exact currency/precision and
+  deterministic Company/date/Account scope. No authoritative Account/Journal/balance cache field.
+- Exact dependencies: `party, organization, reference, access`; approved Core infrastructure only.
+  No Billing/Payments/Catalog/other commercial dependency or effects. PaymentAllocation stays
+  Payments-owned and absent from standalone Accounting.
+
+**Explicit historical refinement:** standalone ACC-1 has no generic external-source header
+idempotency field. Same-Entry transition retry is safe; future external composition must define
+atomic source identity, header, complete lines, amounts and posting/duplicate effects at its own
+integration gate. Upon formal acceptance, ADR 0014 governs detailed ACC-1 and supersedes only
+conflicting Accounting details in older notes. It does not remove ADR 0006's future integration
+retry-safety requirement or change ADR 0011/0013 ownership. While Proposed it is not accepted authority.
+
+Candidate gate: exactly one docs-only commit, normal branch publication and exact-head CI; require
+fresh PostgreSQL bootstrap/full current suite and mandatory checks, then STOP for independent audit.
+No formal acceptance, main adoption, `accounting-contract-v1`, ACC-1, PAY-INT-1 or automatic integration.
+The ADR's acceptance matrix is a future ACC-1 requirement, not executed ACC-0 test evidence.
+
+# Historical Accounting planning notes — formerly Batch 2E / Gate ACC-1
+
+The original minimum journal notes below are retained as historical planning evidence, not the final
+ACC-1 schema/API specification. In particular their optional idempotency-key and external header-key
+bullets do not authorize a standalone key field. ADR 0014 above explicitly proposes that refinement;
+acceptance/adoption and runtime work remain separately gated. Independent Accounting and optional
+public-service composition remain unchanged. No historical experimental Accounting code is restored.
 
 ## Ownership
 
@@ -1402,8 +1473,11 @@ Gate PAY-1 implementation          86e15f9f0aea29a07694c251d511e4b60fc6d2ad / pu
 Gate PAY-1 independent audit       FINAL PASS — PAY-1 APPROVED FOR HOSTED CI
 Gate PAY-1 implementation CI        #103 / 38076354718 SUCCESS / 1,009 PostgreSQL tests
 Gate PAY-1 formal acceptance       COMPLETE / FORMALLY ACCEPTED FOR CANONICAL ADOPTION
-Gate PAY-1 canonical adoption      PENDING / main remains d12f3e8c / not canonically closed
+Gate PAY-1 canonical adoption      CLOSED / 9ac3f0944fff65f013efd9c3a3e9b841022ce87f / payments-v1
+Gate PAY-1 final main CI           #105 / 38078381136 SUCCESS / 1,009 PostgreSQL tests
 Gate PAY-INT-1 implementation       NOT STARTED / not authorized
+Gate ACC-0 contract                PROPOSED / ADR 0014 / acc0-accounting-contract
+Gate ACC-0 review/acceptance       independent audit pending / not Accepted or adopted
 Gate ACC-1 implementation          NOT STARTED / not authorized
 Optional integrations             not authorized
 ```

@@ -76,6 +76,28 @@ approval is not implied. Inherited adoption-pending wording is factually normali
 necessary here; favicon 404, eight npm advisories (two moderate, six high), Actions runtime warnings
 and stale Browserslist data remain separate maintenance items, with no runtime fix in this milestone.
 
+## PAY-1 post-adoption canonical closure — 2026-10-11
+
+Current status: **PAY-1 STANDALONE PAYMENTS — CANONICALLY CLOSED**.
+This factual note records the separately authorized adoption after the formal-acceptance checkpoint
+above; its adoption-pending statements remain evidence of that earlier stage, not current status.
+No accepted Payments semantics or implementation changes accompany this note.
+
+Implementation `86e15f9f0aea29a07694c251d511e4b60fc6d2ad` was formally accepted at
+`9ac3f0944fff65f013efd9c3a3e9b841022ce87f`. Acceptance **Phase 0 checks #104 — SUCCESS**
+([run 38077428416](https://github.com/sahinkhan/djangobusinessos/actions/runs/38077428416))
+preceded the authorized normal fast-forward adoption into canonical `main` at that same SHA.
+Main **Phase 0 checks #105 — SUCCESS**
+([run 38078381136](https://github.com/sahinkhan/djangobusinessos/actions/runs/38078381136))
+checked out exactly `9ac3f0944fff65f013efd9c3a3e9b841022ce87f`: fresh PostgreSQL migrations,
+**1,009 tests passed**, Ruff, Django checks, no migration drift, npm/Tailwind and CSS reproducibility.
+The annotated `payments-v1` tag object is `05dcb375d0b05ad6ee9f819faa2c4e57dbfd3a34`, peeling to
+that canonical SHA. Historical PAY-0 and implementation/audit/acceptance evidence is preserved.
+
+PAY-1 acceptance, canonical adoption and closure are complete. PaymentAllocation, PAY-INT-1,
+Accounting implementation, automatic journals, other integrations, SaaS activation and production
+approval remain separately gated. The ACC-0 documentation proposal does not authorize those.
+
 ## Authority, baseline and gate boundary
 
 The initial Gate PAY-0 instruction authorized a documentation candidate only, not acceptance,
