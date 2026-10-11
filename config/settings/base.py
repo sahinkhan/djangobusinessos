@@ -38,6 +38,11 @@ INSTALLED_APPS = [
     "businessos.modules.accounting",
 ]
 
+# Explicit opt-in deployment composition; base Billing/Payments stay independent.
+INSTALL_PAYMENTS_BILLING = os.getenv("BUSINESSOS_INSTALL_PAYMENTS_BILLING", "0") == "1"
+if INSTALL_PAYMENTS_BILLING:
+    INSTALLED_APPS.append("businessos.modules.payments.integrations.billing")
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -66,6 +71,10 @@ TEMPLATES = [
         },
     },
 ]
+if INSTALL_PAYMENTS_BILLING:
+    TEMPLATES[0]["OPTIONS"]["context_processors"].append(
+        "businessos.modules.payments.integrations.billing.presentation.parent_evidence"
+    )
 
 WSGI_APPLICATION = "config.wsgi.application"
 ASGI_APPLICATION = "config.asgi.application"

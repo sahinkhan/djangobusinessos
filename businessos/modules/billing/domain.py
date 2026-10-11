@@ -44,6 +44,16 @@ def calculate_total(lines, decimal_places):
             raw += line_amount(quantity, unit_price)
             if raw >= AGGREGATE_LIMIT:
                 raise ValueError("Invoice total exceeds the supported aggregate range.")
+        return finalize_total(raw, decimal_places)
+
+
+def finalize_total(raw, decimal_places):
+    """Owner rounding policy, shared by exact Python and SQL-derived raw sums."""
+    currency_precision(decimal_places)
+    with localcontext() as context:
+        context.prec = 60
+        if not raw.is_finite() or not 0 <= raw < AGGREGATE_LIMIT:
+            raise ValueError("Invoice total exceeds the supported aggregate range.")
         rounded = raw.quantize(Decimal(1).scaleb(-decimal_places), rounding=ROUND_HALF_UP)
         if not rounded.is_finite() or not 0 <= rounded < AGGREGATE_LIMIT:
             raise ValueError("Invoice total exceeds the supported aggregate range.")

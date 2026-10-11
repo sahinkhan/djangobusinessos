@@ -1,6 +1,15 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 CANONICALLY CLOSED; PAY-INT-0 FORMALLY ACCEPTED DOCUMENTATION CONTRACT
+Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 / PAY-INT-0 CANONICALLY CLOSED; PAY-INT-1 LOCAL IMPLEMENTATION CANDIDATE / AWAITING INDEPENDENT AUDIT
+
+Current authorized implementation baseline: `9ee4e0bd77350ddeef1e928e2a73b676b4cbb1ee`.
+PAY-INT-0 acceptance CI #116 / `38134694017` and main CI #117 / `38135373053` both succeeded
+against that exact SHA (1,313 PostgreSQL tests each), satisfying the historical completion rule.
+PAY-INT-1 is separately authorized on `payint1-billing-payments-allocation`, **NOT PUBLISHED,
+NOT ACCEPTED, NOT CANONICALLY ADOPTED**. See the [current implementation record](#pay-int-1-local-implementation-and-verification--2026-10-11).
+The PAY-INT-0 acceptance-stage pending/not-authorized wording below is retained as historical
+checkpoint evidence, not a contradiction of this later bounded implementation authorization.
+Accounting automation, other integrations, SaaS activation and deployment remain unauthorized.
 
 Canonical starting baseline / ACC-1 freeze: `00e18a75e27bfe962ea290ab01f0cb0520f4427e`.
 **ACC-1 STANDALONE ACCOUNTING — CANONICALLY CLOSED**, 2026-10-11, following independent
@@ -11,7 +20,7 @@ formatting finding are **RESOLVED**. PR #1 was closed without merging; adoption 
 normal fast-forward flow. No `accounting-v1` tag has been created. The original REVISE, remediation
 and verification chronology below remains historical evidence, not current pending status.
 
-Current contract milestone: **PAY-INT-0 — Billing/Payments Allocation Integration
+Historical acceptance-stage contract milestone: **PAY-INT-0 — Billing/Payments Allocation Integration
 Contract**, documentation only, on `payint0-billing-payments-contract`.
 [ADR 0015](../../decisions/0015-billing-payments-allocation-integration-contract.md) is
 **Accepted — Gate PAY-INT-0**; audited proposal
@@ -64,8 +73,9 @@ Subsequent separately authorized acceptance/adoption checkpoint
 by normal fast-forward and passed exact-head main CI #105 / `38078381136` SUCCESS (1,009 PostgreSQL
 tests, fresh migrations and all mandatory checks). PAY-1 STANDALONE PAYMENTS is CANONICALLY CLOSED,
 checkpoint `payments-v1`. At that historical PAY-1 closure, ACC-1 was not started; it is now
-canonically closed as recorded above. PAY-INT-1, integrations and actual SaaS activation remain
-unauthorized.
+canonically closed as recorded above. At that historical checkpoint PAY-INT-1 was unauthorized;
+its later local-only authority is recorded at the top and in the implementation record. All other
+integrations and actual SaaS activation remain unauthorized.
 The prior `tenant-db-foundation-v1` and `ui-foundation-v1` checkpoints are preserved.
 Earlier acceptance/audit chronology below is preserved as historical evidence.
 
@@ -124,7 +134,8 @@ BILL-1 was separately authorized and is canonically closed at `409e45e...` (`bil
 PAY-0 is documentation-only; PAY-1 implementation is canonically closed at `9ac3f094` (`payments-v1`).
 ACC-0 is canonically adopted contract documentation; separately authorized ACC-1 is now canonically
 closed at `00e18a75...`, with its original REVISE and resolved remediation history retained.
-PAY-INT-0 is formally accepted documentation only; all integration implementation remains unauthorized.
+PAY-INT-0 is a canonically closed documentation contract. Only PAY-INT-1 local implementation is
+separately authorized; publication, acceptance/adoption and all other integration work remain unauthorized.
 Remaining gates are sequentially
 governed, not automatically launched in parallel.
 
@@ -1860,3 +1871,226 @@ No extra closure commit, amendment, force push, merge commit, tag name or releas
 **PAY-INT-1 and Accounting integrations: NOT STARTED / NOT AUTHORIZED. Actual SaaS activation and
 production deployment: NOT AUTHORIZED.** Full Phase 2 is not complete. STOP after the authorized
 publication/adoption verification; no runtime implementation or next milestone begins here.
+
+## PAY-INT-1 local implementation and verification — 2026-10-11
+
+**LOCAL IMPLEMENTATION CANDIDATE / AWAITING INDEPENDENT AUDIT. NOT PUBLISHED / NOT ACCEPTED /
+NOT CANONICALLY ADOPTED.** The owner's separate implementation instruction authorizes one local
+commit, subject `feat: implement PAY-INT-1 payment allocations`, from
+`9ee4e0bd77350ddeef1e928e2a73b676b4cbb1ee` on `payint1-billing-payments-allocation`.
+The resulting exact SHA is reported from Git after verification, not invented inside this commit.
+Canonical local/remote main, historical branches/tags and the prior PAY-INT-0 chronology are
+preserved. This is developer implementation/verification evidence, not an independent audit.
+
+### Optional installation and frozen persistence
+
+Deployment opt-in is `BUSINESSOS_INSTALL_PAYMENTS_BILLING=1`; unset/`0` leaves the optional app,
+routes and parent-evidence context processor uninstalled. The explicit optional Django app under
+`businessos/modules/payments/integrations/billing/` has label/registry code `payments_billing`,
+version `0.1.0`, and dependencies exactly `billing`, `payments`. Its migrations are
+`0001_initial` and `0002_register_manifest`; no released owner/Core migration changes.
+Registration freezes exactly `payments_billing.allocation.view` and
+`payments_billing.allocation.create`, defaults disabled and preserves prior enablement.
+CI's existing PostgreSQL job explicitly opts in so future publication tests the new app rather
+than silently skipping it. Actual hosted CI is not run or claimed in this local-only task.
+
+`PaymentAllocation` contains exactly UUID `id`, PROTECT `company`/`payment`/`invoice`,
+Decimal(38,8) `amount`, required max-128 `idempotency_key`, `created_at`, `updated_at`.
+Checks enforce positive/<10^30 amount and nonblank key bounds; `(company, idempotency_key)` is
+unique, with each parent's Company/created_at/UUID history index. Case-sensitive normalized keys
+permit distinct repeated partial allocations for the same pair. There is no status, copied
+currency/precision, persisted balance, reversal or Accounting marker. Ordinary save/delete,
+QuerySet update/delete, bulk/upsert/convenience and async paths reject; the validated service has
+one private insertion primitive. Public owner models/mutation authorities are unchanged.
+
+### Owner bases, mutation and read contracts
+
+Billing exposes read-only `invoice_financial_basis` and `issued_invoice_basis_query`; Payments
+exposes `payment_receipt_basis` and `receipt_basis_query`, versioned `1`. Requested bases are
+minimal immutable DTOs; whole-history owner validity uses scoped scalar SQL. Billing retains its
+exact SQL quantity*price sum, line integrity checks and once-only HALF_UP original total. The
+existing pure calculation and the new basis share `finalize_total`; no settlement math moves
+into Billing. Frozen Currency provenance is checked without adding reference-activity gates.
+
+`create_payment_allocation` accepts context and IDs/exact data only. It uses the selected-alias
+transaction, active Company lock/current compound authorization, canonical keyed lookup,
+Payment lock/reauthorization, Invoice lock/reauthorization, complete validity/capacity queries,
+private insert and Core `payments.allocation.created` audit in the same transaction. Matching
+retry returns the original UUID/timestamps without new capacity/audit; conflicting payloads fail
+`idempotency_conflict`. Expected company-key and bounded UUID collisions are distinguished in
+alias-aware savepoints; unrelated IntegrityError propagates. New amounts reject float/bool,
+malformed/nonfinite/zero/negative/range/excess-scale values without rounding; redundant zeros
+are canonical. Current authority remains necessary for fully-applied or retired-reference retries.
+
+Reads require allocation.view plus both owner view permissions; creation/retry require
+allocation.create plus both owner views, not allocation.view/record/issue. HTTP admission is
+Company -> ordered registry locks (`billing`, `payments`, `payments_billing`) -> current
+enablement/context/compound RBAC, held through commit. Missing/disabled HTTP prerequisites yield
+404; installed Python APIs remain independent of UI registry state.
+
+`payment_allocation_evidence` / `invoice_allocation_evidence` materialize a bounded tagged DTO
+inside Company -> requested-parent locks. AVAILABLE uses full unfiltered SQL SUM and owner
+EXISTS/scalar integrity, exact applied/remaining values, SQL-filtered count and 50-row history
+ordered created_at/UUID, with LIMIT/OFFSET and joined parent numbers. Corrupt off-page/filtered
+records invalidate evidence. Schema checks cover explicit installation/versions/migration
+coverage, exact columns/non-nullness, unique/FK structure and PostgreSQL numeric(38,8)/validated
+fixed CHECK definitions. No full allocation/description payload is constructed for integrity.
+UNAVAILABLE reasons have null amounts/history/count, never fabricated zero. Direct unauthorized
+and foreign-Company reads fail Core authorization; parent adapters can show forbidden/disabled
+optional evidence while ordinary authorized owner facts remain readable. Invalid filters are
+input errors, not stale evidence; unexpected operational/database errors propagate.
+
+### Bounded UI and verification
+
+The optional form route is `/payments/allocations/new/`, keeping the existing safe GET Payments
+navigation prefix. Parent details include a bounded evidence/history component with an authorized
+allocate action, query-preserving page links, normal GET/POST fallback, Company-bound scope and
+CSRF. Shared navigation behavior/assets/design remain unchanged; only header/sidebar namespace
+recognition is extended to keep the existing Payments active state on the optional form.
+When the app is installed, explicit optional URL composition wraps only the existing owner
+detail views in a selected-alias Company read boundary, held through rendering. Ordinary owner
+permissions still apply and allocation-read authority is not required to see owner facts.
+This prevents an earlier draft total/line snapshot from being combined with later issued
+allocation evidence. Two real PostgreSQL blocking regressions passed with both winner orders:
+read-first renders the intact draft with UNAVAILABLE evidence, while edit/issue-first renders
+the updated issued total and matching outstanding amount. Other owner routes are unchanged;
+standalone owners import no optional integration.
+
+Real-browser verification used a separate localhost-only Linux Docker server and disposable
+two-Company fixtures, a 190-character payer, precision 8, maximum receipt amount, maximum
+quantity*unit-price invoice and 52 allocations. A valid Enter submission added the 53rd fact;
+invalid NaN added none. For receipt and invoice screens at 390/768/1280px, document scroll/client
+widths both measured 380/758/1270px. Form scroll/client widths both measured 390/768/1280px;
+all four input widths matched at each breakpoint (about 325/213/395px). Wide tables scroll locally.
+Visible plum focus ring, Tab order, Enter/normal POST, validation errors, page-one 50/page-two
+remaining rows, query preservation, safe GET swaps, Back/Forward, refresh and foreign-Company
+404 were checked. No QA-origin JavaScript errors were captured. Server HTTP tests separately
+verify non-JS normal fallback, CSRF, missing permissions/module state and stale Company forms.
+
+All runtime tests use new disposable synthetic PostgreSQL/SQLite fixtures on Linux Docker,
+Python 3.13.16, Django 5.2.17, PostgreSQL 17. No demo/customer database or target repository is
+accessed. Final verification results are recorded below after completion.
+
+Earlier provisional checks are not substituted for final evidence: an overly broad captured-SQL
+test assertion was corrected to prove no InvoiceLine object construction; a LIMIT-1 assertion
+was corrected to the actual bounded LIMIT 50 OFFSET 50 page; async worker connection cleanup
+was fixed after a provisional PostgreSQL teardown warning; full-suite verification identified
+and retained Billing's unavailable-payment wording. Final consistency probes align single-receipt
+and full-history canonical receipt identity checks and reject tab/newline-padded historical keys;
+neither requires an owner mutation or schema change. Original contract semantics were not relaxed.
+Final browser route verification also found a missing-Company session could cause the optional
+context processor to repeat the permission error while rendering the owner's 403 template.
+The optional processor now returns no optional context for denied source context; six tests
+cover missing/malformed/inactive Company scope on both parent routes, preserving the normal
+403 page and no evidence leakage. The focused SQLite UI suite passed **34 tests**. After this
+correction the browser confirmed ordinary Company selection/403 behavior and repeated all nine
+parent/form breakpoint measurements above, with no QA-origin console errors.
+Inherited eight npm advisories (two moderate/six high), stale Browserslist data and Actions runtime
+maintenance are not upgraded or claimed resolved. SQLite cannot certify PostgreSQL's exact
+wide NUMERIC arithmetic, real row locks, CHECK-catalog drift or fresh PostgreSQL topology;
+explicit skips describe those actual backend limitations, not substituted concurrency proof.
+
+No invoice issue, receipt or allocation produces an Accounting entry. No automation, refund,
+reversal, external financial reconciliation, FX, mutable balance, generic integration framework,
+new infrastructure, customer migration or production readiness is introduced. **STOP for
+independent PAY-INT-1 audit after the single local candidate commit.**
+
+### Final frozen-candidate verification evidence
+
+Commands ran against the same final runtime/test files in read-only Linux QA containers with
+`BUSINESSOS_INSTALL_PAYMENTS_BILLING=1`. All application databases and output were synthetic and
+task-created. The two status documents alone were updated after runtime freeze.
+
+| Check / actual command | Developer verification result |
+| --- | --- |
+| `pytest --ds=config.settings.development -q` | **1,536 passed**, 1,168.93 seconds, no teardown warning |
+| `pytest --ds=config.settings.test -q` | **1,274 passed, 262 skipped**, 524.82 seconds |
+| `pytest --ds=config.settings.development -q businessos/modules/payments/integrations/billing/tests` | **223 passed**, 553.36 seconds, no teardown warning |
+| New integration PostgreSQL concurrency tests (included above) | **57 passed**, actual backend-PID blocking coordination and clean worker connections |
+| `python manage.py migrate --noinput` | PASS on new zero-state `payint1_final_bootstrap`; all migrations replayed, no cycle |
+| `python manage.py check` | PASS, zero issues |
+| `python manage.py makemigrations --check --dry-run` | PASS, no changes detected |
+| `ruff check . --no-cache` | PASS on locked Linux runtime and local Ruff 0.16.7 |
+| `ruff format --check` against every changed Python path explicitly | PASS, **32 files**, including both new migrations |
+| `npm ci` | PASS with locked dependencies; eight inherited advisories remain separately recorded above |
+| `npm run build:css` and CSS diff/hash comparison | PASS; generated CSS remains byte-for-byte baseline |
+| `node --check static/js/app-navigation.js` | PASS |
+| `node --test tests/js/test_app_navigation.cjs` | **21 passed** |
+| Browser final parent/form route checks | PASS at 390/768/1280px; nine measurements above, normal 403 restored, no console errors |
+| `git diff --check`, strict UTF-8/fences/relative documentation links | PASS |
+
+The SQLite skips total 262: 199 inherited backend-specific cases and 63 integration cases
+(57 real row-lock races, one exact wide-NUMERIC boundary, three PostgreSQL CHECK-catalog
+drift tests and two standalone PostgreSQL bootstraps). These are not claims of SQLite locking
+or exact PostgreSQL monetary storage. The PostgreSQL integration suite executes all 223,
+including both standalone owner backends, missing-owner failures, fresh non-default-alias
+bootstrap/business/audit flows, and default-cursor-leak rejection. Full-suite owner, Accounting,
+database-foundation/architecture and module-registry regressions passed within the final
+1,536-test PostgreSQL suite. The superseded intermediate run was stopped only after its exact
+task-created container/database was identified; it is not counted as final evidence.
+
+Adversarial coverage includes every requested malformed/exact-numeric boundary, mismatched
+Party/Currency/frozen precision, zero-total/draft Invoice, capacity races, immutable public ORM
+and async APIs, idempotency retry/conflict/collision, reference retirement, audit rollback,
+Company-bound HTTP/CSRF/RBAC denial, complete off-page corruption detection, and wide exact
+Billing totals without materializing description/history payloads for integrity checks.
+
+Generated CSS SHA-256:
+`c6dcdd8fd62ca871bc256b08d217cd5f26321cbc96e8100fc62ac2dbe2b8f902`.
+No hosted CI, publication, acceptance, canonical adoption or independent review is claimed.
+After successful final checks, both task QA web-container instances were stopped/removed, and
+the verified task PostgreSQL tmpfs container and its isolated network were removed. This tears
+down all task-created synthetic bootstrap/UI/test databases, including interrupted provisional
+fixtures; that disposable data is intentionally not retained. Agent-created browser tabs were
+closed and viewport overrides reset. Existing demo databases, user servers/containers and
+other worktrees were not changed or removed.
+
+### Candidate file inventory
+
+There are **41 candidate files**, limited to the optional app, explicit opt-in wiring, minimal
+owner read-only bases, bounded presentation, focused tests and these two status documents.
+The paths below are repository-relative for Git review; no additional candidate file is implied.
+
+```text
+.github/workflows/ci.yml
+businessos/modules/billing/domain.py
+businessos/modules/billing/selectors.py
+businessos/modules/payments/selectors.py
+businessos/modules/payments/integrations/__init__.py
+businessos/modules/payments/integrations/billing/__init__.py
+businessos/modules/payments/integrations/billing/admission.py
+businessos/modules/payments/integrations/billing/apps.py
+businessos/modules/payments/integrations/billing/authorization.py
+businessos/modules/payments/integrations/billing/compatibility.py
+businessos/modules/payments/integrations/billing/domain.py
+businessos/modules/payments/integrations/billing/forms.py
+businessos/modules/payments/integrations/billing/manifest.py
+businessos/modules/payments/integrations/billing/migrations/__init__.py
+businessos/modules/payments/integrations/billing/migrations/0001_initial.py
+businessos/modules/payments/integrations/billing/migrations/0002_register_manifest.py
+businessos/modules/payments/integrations/billing/models.py
+businessos/modules/payments/integrations/billing/presentation.py
+businessos/modules/payments/integrations/billing/selectors.py
+businessos/modules/payments/integrations/billing/services.py
+businessos/modules/payments/integrations/billing/tests/__init__.py
+businessos/modules/payments/integrations/billing/tests/conftest.py
+businessos/modules/payments/integrations/billing/tests/test_alias_installation.py
+businessos/modules/payments/integrations/billing/tests/test_allocations.py
+businessos/modules/payments/integrations/billing/tests/test_async.py
+businessos/modules/payments/integrations/billing/tests/test_boundaries.py
+businessos/modules/payments/integrations/billing/tests/test_concurrency.py
+businessos/modules/payments/integrations/billing/tests/test_ui.py
+businessos/modules/payments/integrations/billing/urls.py
+businessos/modules/payments/integrations/billing/views.py
+config/settings/base.py
+config/urls.py
+docs/ROADMAP.md
+docs/exec-plans/active/PHASE_2_COMMERCIAL_CORE.md
+templates/billing/invoice_detail.html
+templates/components/header.html
+templates/components/sidebar.html
+templates/payments/payment_detail.html
+templates/payments_billing/allocation_form.html
+templates/payments_billing/evidence.html
+tests/test_database_foundation.py
+```

@@ -1,0 +1,7 @@
+{% extends "components/form_page.html" %}
+{% block form_eyebrow %}Payments{% endblock %}
+{% block form_description %}Apply recorded money to an issued invoice. No Accounting entry is created. Enter the exact parent UUIDs and amount; keep the request key for retries.{% endblock %}
+{% block form_fields %}{% include "components/form_fields.html" %}{% endblock %}
+{% block save_label %}Record allocation{% endblock %}
+{% block footer_save_label %}Record allocation{% endblock %}
+{% block cancel_action %}<a class="btn-secondary" href="{% url 'payments:list' %}" data-app-nav>Cancel</a>{% endblock %}

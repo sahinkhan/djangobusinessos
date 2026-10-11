@@ -226,7 +226,28 @@ tested the exact frozen SHA. Normal fast-forward adoption passed exact-head main
 These are publication/closure results, not new runtime tests performed by PAY-INT-0.
 Standalone closure is not production Accounting readiness or full Phase 2 completion.
 
-**Current contract milestone: PAY-INT-0 — Billing/Payments Allocation Integration Contract.**
+**Current implementation milestone: PAY-INT-1 — LOCAL IMPLEMENTATION CANDIDATE, AWAITING
+INDEPENDENT AUDIT. NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED.**
+
+Separately authorized implementation starts from canonical PAY-INT-0 freeze
+`9ee4e0bd77350ddeef1e928e2a73b676b4cbb1ee`, on `payint1-billing-payments-allocation`.
+Acceptance CI #116 / `38134694017` and main CI #117 / `38135373053` succeeded against that
+same exact freeze, with 1,313 PostgreSQL tests each. Those hosted results close PAY-INT-0;
+they are **not** PAY-INT-1 hosted implementation evidence. Main is unchanged.
+
+The explicit opt-in Payments-owned `payments_billing` app depends on Billing and Payments,
+without adding reverse owner dependencies. It implements immutable keyed partial allocations,
+compound RBAC, Company -> Payment -> Invoice locking, atomic creation/audit, exact owner-owned
+financial bases and bounded complete-evidence summaries/history. HTTP additionally locks and
+checks all three module registrations; installed Python services do not use UI enablement.
+Only new optional-app migrations are added. No mutable balances, Accounting automation, reversal,
+bank reconciliation, SaaS activation or deployment is implemented. Existing standalone contracts
+and ADR 0015's technical semantics remain intact. Actual local verification and limitations are
+recorded in the [PAY-INT-1 execution record](exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#pay-int-1-local-implementation-and-verification--2026-10-11).
+Independent audit, normal publication/exact-head CI, acceptance and canonical adoption remain
+separate gates; none is performed by this implementation task.
+
+**Historical acceptance checkpoint: PAY-INT-0 — Billing/Payments Allocation Integration Contract.**
 [ADR 0015](decisions/0015-billing-payments-allocation-integration-contract.md) is
 **Accepted — Gate PAY-INT-0**. The original proposal remains intact at audited
 `9d4fa5d3b7a12d4eb0ee2046d6e4ff306957e228`, from the ACC-1 canonical freeze above.
@@ -253,8 +274,8 @@ no tag or release is created. The earlier local-only proposal/preparation stage 
 
 PAY-1 acceptance preserves PaymentMethod and immutable incoming Payment/Receipt only, their
 exact amount/snapshot/authorization/idempotency and omitted-date midnight-retry semantics.
-PaymentAllocation remains absent; no Billing dependency/effect, Accounting or Inventory effect
-is introduced. Known PAY-1 maintenance follow-ups remain inherited ADR status wording (only
+At that standalone PAY-1 checkpoint PaymentAllocation remained absent; no Billing dependency/effect,
+Accounting or Inventory effect was introduced. Known PAY-1 maintenance follow-ups remain inherited ADR status wording (only
 necessary acceptance lines normalized), favicon 404, eight npm advisories (two moderate, six high),
 Actions runtime warnings and stale Browserslist data; no runtime maintenance is authorized here.
 
@@ -272,11 +293,12 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | BILL-1 — Billing & Invoicing | Invoice/InvoiceLine, generic lines, snapshots, numbering, DRAFT -> ISSUED, derived original totals | No payment-aware outstanding; no void/credit, Sales automation or journals |
 | PAY-1 — Payments (canonically closed; payments-v1) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Payments-owned PaymentAllocation, applied/unapplied/outstanding, invoice integration, refunds/settlement and journals deferred |
 | ACC-0 / ACC-1 canonically closed | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014; freeze `00e18a75...` | Historical REVISE retained; ACC1-R1/R2 resolved; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
-| PAY-INT-0 formally accepted documentation contract | Payments retains allocation ownership; Billing retains invoice facts; accepted ADR 0015 freezes opt-in composition only | Adoption pending at acceptance checkpoint; canonical closure requires the completion rule above; PAY-INT-1 not started/authorized; no Accounting automation |
+| PAY-INT-0 canonically closed at `9ee4e0bd...` | Payments retains allocation ownership; Billing retains invoice facts; accepted ADR 0015 freezes opt-in composition | Historical acceptance-stage pending wording retained above; allocation implementation is separately governed; no Accounting automation |
+| PAY-INT-1 local implementation candidate, awaiting independent audit | Opt-in `payments_billing`; immutable allocations, exact composed summaries/history and minimal owner read-only bases | Not published/accepted/adopted; no Accounting, reversals/refunds, FX, bank settlement or other automation |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
-generic Payments and Accounting work without Billing. Settlement-adjusted outstanding is a future
-derived composition of invoice state and valid Payments allocations; absence of integration must
+generic Payments and Accounting work without Billing. Settlement-adjusted outstanding in the local
+optional candidate is a derived composition of invoice state and valid Payments allocations; absence of integration must
 not display an invoice as fully unpaid. No duplicate mutable financial balance is introduced.
 
 Historical audit/adoption records below are retained as evidence of their respective checkpoints.
