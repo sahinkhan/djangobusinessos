@@ -139,7 +139,10 @@ def test_nested_atomic_pins_alias_and_cleans_up_on_failure(aliases, atomic_calls
             pytest.fail("Cross-database explicit atomic accepted")
         raise RuntimeError("rollback")
     assert atomic_calls == [
-        ("enter", "alpha"), ("enter", "alpha"), ("exit", "alpha"), ("exit", "alpha")
+        ("enter", "alpha"),
+        ("enter", "alpha"),
+        ("exit", "alpha"),
+        ("exit", "alpha"),
     ]
     with database_execution("beta"), business_atomic_context():
         assert current_database_alias() == "beta"
@@ -302,14 +305,20 @@ def test_selected_alias_historical_bootstrap_and_business_flows(django_db_blocke
             common = {"order_date": date(2026, 10, 7), "currency_id": company.base_currency_id}
             sales = create_sales_order(context, customer_id=customer.id, **common)
             add_sales_order_line(
-                context, order_id=sales.id, product_variant_id=variant.id,
-                quantity="2", unit_price="10",
+                context,
+                order_id=sales.id,
+                product_variant_id=variant.id,
+                quantity="2",
+                unit_price="10",
             )
             assert confirm_sales_order(context, order_id=sales.id).status == "confirmed"
             purchase = create_purchase_order(context, supplier_id=supplier.id, **common)
             line = add_purchase_order_line(
-                context, order_id=purchase.id, product_variant_id=variant.id,
-                quantity="2", unit_cost="7",
+                context,
+                order_id=purchase.id,
+                product_variant_id=variant.id,
+                quantity="2",
+                unit_cost="7",
             )
             confirm_purchase_order(context, order_id=purchase.id)
             receipt_args = {
@@ -322,20 +331,33 @@ def test_selected_alias_historical_bootstrap_and_business_flows(django_db_blocke
             assert receive_purchase_order(context, **receipt_args).id == receipt.id
             branch = Branch.objects.create(company=company, code="QA", name="QA")
             warehouse = Warehouse.objects.create(
-                company=company, branch=branch, code="QA", name="QA",
+                company=company,
+                branch=branch,
+                code="QA",
+                name="QA",
             )
             movement = create_stock_movement(
-                context, movement_type="receipt", effective_at=timezone.now(),
+                context,
+                movement_type="receipt",
+                effective_at=timezone.now(),
             )
             add_stock_movement_line(
-                context, movement_id=movement.id, product_variant_id=variant.id,
-                quantity="2", destination_warehouse_id=warehouse.id,
+                context,
+                movement_id=movement.id,
+                product_variant_id=variant.id,
+                quantity="2",
+                destination_warehouse_id=warehouse.id,
             )
             assert post_stock_movement(context, movement_id=movement.id).status == "posted"
             assert post_stock_movement(context, movement_id=movement.id).status == "posted"
-            assert stock_balance(
-                context, product_variant_id=variant.id, warehouse_id=warehouse.id,
-            ) == 2
+            assert (
+                stock_balance(
+                    context,
+                    product_variant_id=variant.id,
+                    warehouse_id=warehouse.id,
+                )
+                == 2
+            )
             before = AuditEntry.objects.count()
             with pytest.raises(RuntimeError), business_atomic_context():
                 create_sales_order(context, customer_id=customer.id, **common)

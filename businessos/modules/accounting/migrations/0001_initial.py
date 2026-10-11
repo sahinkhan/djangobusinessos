@@ -7,127 +7,256 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('organization', '0001_initial'),
-        ('party', '0002_register_manifest'),
+        ("organization", "0001_initial"),
+        ("party", "0002_register_manifest"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Account',
+            name="Account",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('code', models.CharField(max_length=32)),
-                ('name', models.CharField(max_length=160)),
-                ('type', models.CharField(choices=[('ASSET', 'Asset'), ('LIABILITY', 'Liability'), ('EQUITY', 'Equity'), ('INCOME', 'Income'), ('EXPENSE', 'Expense')], max_length=9)),
-                ('is_active', models.BooleanField(default=True)),
-                ('company', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='organization.company')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("code", models.CharField(max_length=32)),
+                ("name", models.CharField(max_length=160)),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[
+                            ("ASSET", "Asset"),
+                            ("LIABILITY", "Liability"),
+                            ("EQUITY", "Equity"),
+                            ("INCOME", "Income"),
+                            ("EXPENSE", "Expense"),
+                        ],
+                        max_length=9,
+                    ),
+                ),
+                ("is_active", models.BooleanField(default=True)),
+                (
+                    "company",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT, to="organization.company"
+                    ),
+                ),
             ],
             options={
-                'ordering': ['code', 'id'],
+                "ordering": ["code", "id"],
             },
         ),
         migrations.CreateModel(
-            name='Journal',
+            name="Journal",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('code', models.CharField(max_length=32)),
-                ('name', models.CharField(max_length=160)),
-                ('is_active', models.BooleanField(default=True)),
-                ('company', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='organization.company')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("code", models.CharField(max_length=32)),
+                ("name", models.CharField(max_length=160)),
+                ("is_active", models.BooleanField(default=True)),
+                (
+                    "company",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT, to="organization.company"
+                    ),
+                ),
             ],
             options={
-                'ordering': ['code', 'id'],
+                "ordering": ["code", "id"],
             },
         ),
         migrations.CreateModel(
-            name='JournalEntry',
+            name="JournalEntry",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('number', models.CharField(max_length=35)),
-                ('entry_date', models.DateField()),
-                ('memo', models.TextField(blank=True)),
-                ('status', models.CharField(choices=[('DRAFT', 'Draft'), ('POSTED', 'Posted')], default='DRAFT', max_length=6)),
-                ('base_currency_code_snapshot', models.CharField(max_length=3)),
-                ('base_currency_precision_snapshot', models.PositiveSmallIntegerField()),
-                ('posted_at', models.DateTimeField(blank=True, null=True)),
-                ('company', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='organization.company')),
-                ('journal', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='accounting.journal')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("number", models.CharField(max_length=35)),
+                ("entry_date", models.DateField()),
+                ("memo", models.TextField(blank=True)),
+                (
+                    "status",
+                    models.CharField(
+                        choices=[("DRAFT", "Draft"), ("POSTED", "Posted")],
+                        default="DRAFT",
+                        max_length=6,
+                    ),
+                ),
+                ("base_currency_code_snapshot", models.CharField(max_length=3)),
+                ("base_currency_precision_snapshot", models.PositiveSmallIntegerField()),
+                ("posted_at", models.DateTimeField(blank=True, null=True)),
+                (
+                    "company",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT, to="organization.company"
+                    ),
+                ),
+                (
+                    "journal",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT, to="accounting.journal"
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-entry_date', '-created_at', 'id'],
+                "ordering": ["-entry_date", "-created_at", "id"],
             },
         ),
         migrations.CreateModel(
-            name='JournalEntryLine',
+            name="JournalEntryLine",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('description', models.TextField(blank=True)),
-                ('debit', models.DecimalField(decimal_places=8, max_digits=38)),
-                ('credit', models.DecimalField(decimal_places=8, max_digits=38)),
-                ('position', models.PositiveIntegerField()),
-                ('account', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='accounting.account')),
-                ('company', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, to='organization.company')),
-                ('journal_entry', models.ForeignKey(on_delete=django.db.models.deletion.PROTECT, related_name='lines', to='accounting.journalentry')),
-                ('party', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, to='party.party')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4, editable=False, primary_key=True, serialize=False
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("description", models.TextField(blank=True)),
+                ("debit", models.DecimalField(decimal_places=8, max_digits=38)),
+                ("credit", models.DecimalField(decimal_places=8, max_digits=38)),
+                ("position", models.PositiveIntegerField()),
+                (
+                    "account",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT, to="accounting.account"
+                    ),
+                ),
+                (
+                    "company",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT, to="organization.company"
+                    ),
+                ),
+                (
+                    "journal_entry",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.PROTECT,
+                        related_name="lines",
+                        to="accounting.journalentry",
+                    ),
+                ),
+                (
+                    "party",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.PROTECT,
+                        to="party.party",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['position', 'id'],
+                "ordering": ["position", "id"],
             },
         ),
         migrations.AddConstraint(
-            model_name='account',
-            constraint=models.UniqueConstraint(fields=('company', 'code'), name='accounting_account_code_uniq'),
+            model_name="account",
+            constraint=models.UniqueConstraint(
+                fields=("company", "code"), name="accounting_account_code_uniq"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='account',
-            constraint=models.CheckConstraint(condition=models.Q(('type__in', ['ASSET', 'LIABILITY', 'EQUITY', 'INCOME', 'EXPENSE'])), name='accounting_account_type'),
+            model_name="account",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    ("type__in", ["ASSET", "LIABILITY", "EQUITY", "INCOME", "EXPENSE"])
+                ),
+                name="accounting_account_type",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='journal',
-            constraint=models.UniqueConstraint(fields=('company', 'code'), name='accounting_journal_code_uniq'),
+            model_name="journal",
+            constraint=models.UniqueConstraint(
+                fields=("company", "code"), name="accounting_journal_code_uniq"
+            ),
         ),
         migrations.AddIndex(
-            model_name='journalentry',
-            index=models.Index(fields=['company', 'entry_date', 'status'], name='accounting__company_547358_idx'),
+            model_name="journalentry",
+            index=models.Index(
+                fields=["company", "entry_date", "status"], name="accounting__company_547358_idx"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='journalentry',
-            constraint=models.UniqueConstraint(fields=('company', 'number'), name='accounting_entry_number_uniq'),
+            model_name="journalentry",
+            constraint=models.UniqueConstraint(
+                fields=("company", "number"), name="accounting_entry_number_uniq"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='journalentry',
-            constraint=models.CheckConstraint(condition=models.Q(models.Q(('posted_at__isnull', True), ('status', 'DRAFT')), models.Q(('posted_at__isnull', False), ('status', 'POSTED')), _connector='OR'), name='accounting_entry_lifecycle'),
+            model_name="journalentry",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    models.Q(("posted_at__isnull", True), ("status", "DRAFT")),
+                    models.Q(("posted_at__isnull", False), ("status", "POSTED")),
+                    _connector="OR",
+                ),
+                name="accounting_entry_lifecycle",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='journalentry',
-            constraint=models.CheckConstraint(condition=models.Q(('base_currency_precision_snapshot__gte', 0), ('base_currency_precision_snapshot__lte', 8)), name='accounting_entry_precision'),
+            model_name="journalentry",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    ("base_currency_precision_snapshot__gte", 0),
+                    ("base_currency_precision_snapshot__lte", 8),
+                ),
+                name="accounting_entry_precision",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='journalentryline',
-            constraint=models.UniqueConstraint(fields=('journal_entry', 'position'), name='accounting_line_position_uniq'),
+            model_name="journalentryline",
+            constraint=models.UniqueConstraint(
+                fields=("journal_entry", "position"), name="accounting_line_position_uniq"
+            ),
         ),
         migrations.AddConstraint(
-            model_name='journalentryline',
-            constraint=models.CheckConstraint(condition=models.Q(('position__gt', 0), ('position__lte', 2147483647)), name='accounting_line_position'),
+            model_name="journalentryline",
+            constraint=models.CheckConstraint(
+                condition=models.Q(("position__gt", 0), ("position__lte", 2147483647)),
+                name="accounting_line_position",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='journalentryline',
-            constraint=models.CheckConstraint(condition=models.Q(('credit__gte', 0), ('credit__lt', Decimal('1E+30')), ('debit__gte', 0), ('debit__lt', Decimal('1E+30'))), name='accounting_line_amount_range'),
+            model_name="journalentryline",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    ("credit__gte", 0),
+                    ("credit__lt", Decimal("1E+30")),
+                    ("debit__gte", 0),
+                    ("debit__lt", Decimal("1E+30")),
+                ),
+                name="accounting_line_amount_range",
+            ),
         ),
         migrations.AddConstraint(
-            model_name='journalentryline',
-            constraint=models.CheckConstraint(condition=models.Q(models.Q(('credit', 0), ('debit__gt', 0)), models.Q(('credit__gt', 0), ('debit', 0)), _connector='OR'), name='accounting_line_sides'),
+            model_name="journalentryline",
+            constraint=models.CheckConstraint(
+                condition=models.Q(
+                    models.Q(("credit", 0), ("debit__gt", 0)),
+                    models.Q(("credit__gt", 0), ("debit", 0)),
+                    _connector="OR",
+                ),
+                name="accounting_line_sides",
+            ),
         ),
     ]
