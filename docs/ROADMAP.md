@@ -161,9 +161,9 @@ Annotated checkpoint `payments-v1` has tag object `05dcb375d0b05ad6ee9f819faa2c4
 and peels to that accepted canonical SHA. No implementation changed during acceptance/adoption.
 Earlier implementation, independent audit and candidate/acceptance evidence remain preserved.
 
-**Gate ACC-0 — Standalone Accounting & Finance Contract: PROPOSED**, 2026-10-11, on
+**Gate ACC-0 — Standalone Accounting & Finance Contract: FORMALLY ACCEPTED**, 2026-10-11, on
 `acc0-accounting-contract`, from canonical `9ac3f0944fff65f013efd9c3a3e9b841022ce87f`.
-[ADR 0014](decisions/0014-standalone-accounting-finance-contract.md) is **Proposed — Gate ACC-0**:
+[ADR 0014](decisions/0014-standalone-accounting-finance-contract.md) is **Accepted — Gate ACC-0**:
 Account, Journal, DRAFT -> POSTED JournalEntry/lines, exact base-currency Decimal(38,8), frozen
 precision, balanced immutable postings, derived GL/TB, eight RBAC permissions and seven audit
 actions. Dependencies are exactly Party/organization/reference/access; no Billing/Payments or
@@ -171,10 +171,22 @@ other commercial/vertical dependency. Same-entry post retry is safe; a generic e
 idempotency key is not an ACC-1 field. Complete external-source posting idempotency remains a
 separately approved integration requirement. Older Accounting notes remain historical evidence.
 
-ACC-0 authorizes documentation candidate publication/exact-head CI only. Independent audit,
-formal acceptance and canonical adoption are separate future gates. ADR 0014 is not Accepted;
-`accounting-contract-v1` is not created. ACC-1, PAY-INT-1, PaymentAllocation, all integrations and
-actual SaaS/production deployment remain unauthorized. Full Phase 2 is not complete.
+Original candidate `c9f676349a72c585d16a6d3a467cdd676ee2db1d` passed CI #107 / `38109947735`
+with 1,009 PostgreSQL tests, then received independent **REVISE** for F1/F2, two P2s concerning
+text/identity bounds and position range/exhaustion. That history is preserved. Accepted remediated
+contract head `217b7a8f39b628571f616034a7d9d02b436ec03d` passed exact-head **Phase 0 checks #108 —
+SUCCESS**, run ID `38112122913`
+([evidence](https://github.com/sahinkhan/djangobusinessos/actions/runs/38112122913)), with 1,009
+PostgreSQL tests, fresh migrations and all mandatory checks. The owner-supplied independent
+corrective verdict is **FINAL PASS — ACC-0 CONTRACT APPROVED FOR FORMAL ACCEPTANCE**, readiness
+**A**; F1/F2 resolved, no new P0/P1/P2/P3. This is contract acceptance, not ACC-1 runtime evidence.
+
+ACC-0 formal acceptance is **COMPLETE**; canonical adoption is **PENDING**, not canonically closed.
+This documentation-only acceptance commit requires its own exact-head hosted CI. Canonical `main`
+remains `9ac3f0944fff65f013efd9c3a3e9b841022ce87f`; `accounting-contract-v1` is not created.
+ACC-1 and PAY-INT-1 are **NOT STARTED**. PaymentAllocation, all integrations and actual SaaS/
+production deployment remain unauthorized. Production Accounting readiness is not claimed;
+full Phase 2 is not complete.
 
 PAY-1 acceptance preserves PaymentMethod and immutable incoming Payment/Receipt only, their
 exact amount/snapshot/authorization/idempotency and omitted-date midnight-retry semantics.
@@ -196,7 +208,7 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | --- | --- | --- |
 | BILL-1 — Billing & Invoicing | Invoice/InvoiceLine, generic lines, snapshots, numbering, DRAFT -> ISSUED, derived original totals | No payment-aware outstanding; no void/credit, Sales automation or journals |
 | PAY-1 — Payments (canonically closed; payments-v1) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Payments-owned PaymentAllocation, applied/unapplied/outstanding, invoice integration, refunds/settlement and journals deferred |
-| ACC-0 proposed contract / ACC-1 future implementation | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; proposed ADR 0014 | ACC-1 not authorized; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
+| ACC-0 formally accepted contract / ACC-1 future implementation | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014 | Canonical adoption pending; ACC-1 not authorized; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
 generic Payments and Accounting work without Billing. Settlement-adjusted outstanding is a future
@@ -204,8 +216,8 @@ derived composition of invoice state and valid Payments allocations; absence of 
 not display an invoice as fully unpaid. No duplicate mutable financial balance is introduced.
 
 Historical audit/adoption records below are retained as evidence of their respective checkpoints.
-The future delivery list and accepted ADRs 0011/0013 govern the Payments contract; proposed ADR 0014
-is the detailed Accounting review candidate, not implementation authorization. These contracts do not
+The future delivery list and accepted ADRs 0011/0013 govern the Payments contract; accepted ADR 0014
+is the detailed Accounting contract, not implementation authorization. These contracts do not
 reopen accepted Sales, Procurement, Inventory, UI or Core behavior.
 
 Status: Gate 4A Sales is accepted, adopted, and closed. Gate 4B Procurement implementation

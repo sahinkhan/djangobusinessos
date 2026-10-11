@@ -1,14 +1,15 @@
 # ADR 0014 — Standalone Accounting & Finance Contract
 
-Status: Proposed — Gate ACC-0
+Status: Accepted — Gate ACC-0
 
 Date: 2026-10-11
 
 ## Authority, evidence and gate boundary
 
-This is the documentation-only ACC-0 candidate, not an accepted ADR, Accounting implementation,
-production approval or integration authorization. It is prepared on `acc0-accounting-contract`
-directly from canonical `main` at `9ac3f0944fff65f013efd9c3a3e9b841022ce87f`.
+This is the formally accepted documentation-only ACC-0 contract, not Accounting implementation,
+production approval or integration authorization. Its preserved candidate history was prepared on
+`acc0-accounting-contract` from canonical `main` at `9ac3f0944fff65f013efd9c3a3e9b841022ce87f`.
+Formal acceptance is COMPLETE; canonical adoption is PENDING and separately authorized.
 
 PAY-1 is canonically closed at that baseline. Annotated `payments-v1` has tag object
 `05dcb375d0b05ad6ee9f819faa2c4e57dbfd3a34` and peels to the baseline. Main **Phase 0 checks #105 —
@@ -20,8 +21,9 @@ That evidence verifies the starting baseline, not this later ACC-0 candidate.
 Initial ACC-0 authorization covered one proposed contract commit, normal publication and exact-head CI.
 Independent read-only audit and successful exact-candidate CI are both required before a separately
 authorized documentation acceptance commit. Canonical adoption then requires another authorization.
-ADR 0014 must remain Proposed in this milestone. No `accounting-contract-v1` tag, main update,
-ACC-1 implementation or Billing/Payments/Accounting integration is authorized.
+ADR 0014 remained Proposed during the original candidate and remediation milestones. The separately
+authorized formal acceptance is recorded below. No `accounting-contract-v1` tag, main update,
+ACC-1 implementation or Billing/Payments/Accounting integration is authorized by acceptance.
 
 ### Original audit and F1/F2 remediation history
 
@@ -34,13 +36,13 @@ audit verdict was **REVISE — ACC-0 CONTRACT REQUIRES REMEDIATION**, with exact
 F1 — text/identity persistence bounds insufficiently frozen; F2 — position storage range and
 exhaustion behavior insufficiently frozen. No P0/P1 findings were reported.
 
-Separate authorization permits exactly one additional documentation-only remediation commit above
-that original, not amendment or history rewriting. This follow-up candidate addresses **only F1/F2**:
+Separate remediation authorization permitted exactly one additional documentation-only commit above
+that original, not amendment or history rewriting. That follow-up candidate addressed **only F1/F2**:
 bounded identity/text storage, normalization order, position range/allocation/exhaustion and the
 associated future ACC-1 boundary-test requirements. All previously passed contract domains remain
-unchanged. Remediation needs its own exact-head hosted CI and independent corrective re-audit;
-CI #107 is historical evidence, not remediation CI. Status remains **Proposed — Gate ACC-0**;
-no FINAL PASS, formal acceptance, adoption, tag or implementation is claimed.
+unchanged. Remediation required its own exact-head hosted CI and independent corrective re-audit;
+CI #107 is historical evidence, not remediation CI. At that remediation checkpoint, status remained
+**Proposed — Gate ACC-0**; no FINAL PASS, formal acceptance, adoption, tag or implementation was claimed.
 
 ### Precedence and explicit refinement
 
@@ -48,9 +50,9 @@ no FINAL PASS, formal acceptance, adoption, tag or implementation is claimed.
   Billing / Payments / Accounting ownership separation and optional composition.
 - [ADR 0013](0013-standalone-payments-contract.md) remains authoritative for standalone Payments;
   no Payments behavior or PaymentAllocation ownership changes here.
-- Upon formal acceptance, ADR 0014 is the authoritative detailed ACC-1 standalone Accounting
-  contract. While Proposed, it is the reviewable specification, not permission to override an
-  accepted contract or begin implementation.
+- Following formal acceptance, ADR 0014 is the authoritative detailed ACC-1 standalone Accounting
+  contract. Its earlier Proposed state was a reviewable specification, not permission to override
+  an accepted contract or begin implementation. ACC-1 still needs separate implementation authority.
 - It refines only Accounting details in [ADR 0006](0006-phase-2-commercial-core-contracts.md) and
   the older [Phase 2 plan](../exec-plans/active/PHASE_2_COMMERCIAL_CORE.md). In particular, the old
   optional header idempotency-key proposal is superseded on acceptance by the explicit same-entry
@@ -60,6 +62,52 @@ no FINAL PASS, formal acceptance, adoption, tag or implementation is claimed.
 - Historical documents and checkpoint evidence are retained. Unrelated Core, Party, Catalog,
   Sales, Procurement, Inventory, Billing, Payments, UI, module-gating and execution contracts remain
   unchanged. ADRs 0002, 0005, 0009 and 0012 continue to govern their respective boundaries.
+
+## Formal acceptance — 2026-10-11
+
+The owner explicitly authorized formal acceptance of exact remediated contract head
+`217b7a8f39b628571f616034a7d9d02b436ec03d`. The accepted contract consists of this preserved,
+ordered two-commit candidate history above `9ac3f0944fff65f013efd9c3a3e9b841022ce87f`:
+
+| Order | Candidate SHA | Commit subject |
+| --- | --- | --- |
+| 1 | `c9f676349a72c585d16a6d3a467cdd676ee2db1d` | `docs: freeze standalone accounting finance contract` |
+| 2 | `217b7a8f39b628571f616034a7d9d02b436ec03d` | `docs: remediate ACC-0 persistence bounds` |
+
+Neither candidate is amended, squashed or rewritten. The original CI #107, REVISE verdict and
+F1/F2 findings above remain historical evidence, not retroactively relabeled as a passed audit.
+
+Exact-head remediation **Phase 0 checks #108 — SUCCESS**, run ID `38112122913`
+([evidence](https://github.com/sahinkhan/djangobusinessos/actions/runs/38112122913)), checked out
+`217b7a8f39b628571f616034a7d9d02b436ec03d` on `acc0-accounting-contract`.
+Logs confirm **Python 3.13.16**, fresh PostgreSQL migrations/bootstrap PASS, **1,009 tests passed**,
+Ruff PASS, Django checks PASS, migration drift **no changes detected**, `npm ci` PASS, Tailwind
+PASS and generated CSS reproducibility PASS. These tests exercise the existing runtime; they
+are not Accounting implementation tests. CI #108 is remediation evidence, not acceptance-commit CI.
+
+The owner-supplied independent corrective re-audit verdict is
+**FINAL PASS — ACC-0 CONTRACT APPROVED FOR FORMAL ACCEPTANCE**; implementation readiness **A**.
+It records **F1 resolved**, **F2 resolved**, and no new P0, P1, P2 or P3 findings. This is
+contract/architecture acceptance, not a claim that the auditor executed ACC-1 runtime tests.
+No substantive ownership, dependency, financial, lifecycle, retry, RBAC, audit or integration
+semantics change in this documentation-only acceptance milestone.
+
+Current acceptance state:
+
+| Gate / claim | Status |
+| --- | --- |
+| ACC-0 formal acceptance | **COMPLETE** |
+| Canonical adoption | **PENDING** — separate owner authorization required |
+| `accounting-contract-v1` | **NOT YET CREATED** |
+| ACC-1 | **NOT STARTED** — not authorized |
+| PAY-INT-1 | **NOT STARTED** — not authorized |
+| Billing -> Accounting integration | **NOT STARTED** — not authorized |
+| Payments -> Accounting integration | **NOT STARTED** — not authorized |
+| Production Accounting readiness | **NOT CLAIMED** |
+
+This acceptance commit requires a new successful exact-head hosted CI run before stopping for
+separate canonical-adoption authorization. Do not substitute CI #108, adopt `main`, create a tag
+or begin implementation/integrations in this milestone.
 
 ## Ownership and independent installation
 
@@ -561,11 +609,12 @@ dependency maintenance remain outside ACC-0. No dependency upgrade or `npm audit
 
 ## Consequences and required next decision
 
-This bounded proposal gives ACC-1 a precise manual, Company-isolated, base-currency ledger contract
+This accepted contract gives ACC-1 a precise manual, Company-isolated, base-currency ledger contract
 without invented automatic finance/integration capabilities. Posted mistakes cannot be edited or
 unposted under ACC-1; a later reviewed correction/reversal gate is necessary. Drafts have no generic
 request-key deduplication; only retry on a retained Entry identity is promised. Historical reports
 remain derived even when names/activity/Reference precision later change.
 
-Next: independent read-only review of the exact published ACC-0 candidate and its hosted CI.
-Do not record acceptance, move main, create a tag, implement ACC-1 or begin an integration here.
+Next: verify exact-head hosted CI for this documentation-only acceptance commit, then STOP for
+separate canonical-adoption authorization. Do not move main, create a tag, implement ACC-1 or
+begin an integration here. Formal acceptance does not declare ACC-0 canonically closed.

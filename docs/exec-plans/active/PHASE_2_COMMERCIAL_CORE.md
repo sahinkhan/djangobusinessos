@@ -1,11 +1,14 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — BILL-1 / PAY-0 / PAY-1 CANONICALLY CLOSED; ACC-0 CONTRACT PROPOSED
+Status: IN PROGRESS — BILL-1 / PAY-0 / PAY-1 CANONICALLY CLOSED; ACC-0 FORMALLY ACCEPTED / ADOPTION PENDING
 
-Current Accounting milestone: ACC-0 — documentation candidate only, on `acc0-accounting-contract`
-from `9ac3f0944fff65f013efd9c3a3e9b841022ce87f`. ADR 0014 is Proposed — Gate ACC-0. Candidate
-publication/exact-head CI are authorized; independent audit, acceptance/adoption, tagging and
-ACC-1 implementation are separate gates. No integrations or production deployment are approved.
+Current Accounting milestone: ACC-0 — FORMALLY ACCEPTED, documentation/architecture only, on
+`acc0-accounting-contract` from `9ac3f0944fff65f013efd9c3a3e9b841022ce87f`. ADR 0014 is
+Accepted — Gate ACC-0 at contract head `217b7a8f39b628571f616034a7d9d02b436ec03d`, after
+corrective independent FINAL PASS, readiness A, and exact-head remediation CI #108 SUCCESS.
+Formal acceptance is COMPLETE; canonical adoption is PENDING. This acceptance commit needs its
+own exact-head CI. Main adoption, tagging, ACC-1 and integrations are not authorized;
+production Accounting readiness is not claimed.
 
 Current contract milestone: BILL-0 OPTION A CONTRACT — FORMALLY ACCEPTED, 2026-10-07.
 Independent audit FINAL PASS and hosted Phase 0 checks #91 SUCCESS
@@ -74,7 +77,7 @@ Before any Phase 2 implementation, read and obey:
 - `docs/decisions/0011-modular-billing-payments-accounting-boundary.md`
 - `docs/decisions/0012-tenant-ready-database-execution-foundation.md`
 - `docs/decisions/0013-standalone-payments-contract.md` (Accepted — Gate PAY-0; canonically closed)
-- `docs/decisions/0014-standalone-accounting-finance-contract.md` (Proposed — Gate ACC-0; review candidate, not implementation authority)
+- `docs/decisions/0014-standalone-accounting-finance-contract.md` (Accepted — Gate ACC-0; canonical adoption pending, not implementation authority)
 - this execution plan
 
 Do not silently change these architecture contracts.
@@ -986,21 +989,32 @@ No integration is authorized and no historical experimental runtime is restored.
 
 # Gate ACC-0 — Standalone Accounting & Finance Contract
 
-Status: **PROPOSED — documentation/architecture candidate only**, 2026-10-11.
+Status: **FORMALLY ACCEPTED — documentation/architecture only; canonical adoption PENDING**, 2026-10-11.
 Starting canonical `main`: `9ac3f0944fff65f013efd9c3a3e9b841022ce87f` (`payments-v1`).
-Contract branch: `acc0-accounting-contract`. The detailed reviewable specification is
-[ADR 0014](../../decisions/0014-standalone-accounting-finance-contract.md), Proposed — Gate ACC-0.
+Contract branch: `acc0-accounting-contract`. The detailed accepted specification is
+[ADR 0014](../../decisions/0014-standalone-accounting-finance-contract.md), Accepted — Gate ACC-0.
 No Accounting implementation, registration, migration, test or UI change is authorized here.
 
 ACC-0 audit chronology: original candidate `c9f676349a72c585d16a6d3a467cdd676ee2db1d` passed
 exact-head CI #107 / `38109947735` (1,009 PostgreSQL tests), then received independent **REVISE**
-for F1/F2, two P2s concerning persistence/text bounds and position range/exhaustion. A separately
-authorized follow-up documentation candidate addresses only those findings in ADR 0014, preserving
-the original commit. The one-commit candidate gate below describes the original publication;
-this remediation is one additional commit. Its own exact-head CI and independent corrective
-re-audit are required. ADR 0014 remains Proposed; ACC-1, acceptance/adoption and tags are unauthorized.
+for F1/F2, two P2s concerning persistence/text bounds and position range/exhaustion, with no P0/P1.
+Separately authorized remediation `217b7a8f39b628571f616034a7d9d02b436ec03d`,
+`docs: remediate ACC-0 persistence bounds`, addressed only those findings and preserved the original
+commit. Exact-head **Phase 0 checks #108 — SUCCESS**, run ID `38112122913`
+([evidence](https://github.com/sahinkhan/djangobusinessos/actions/runs/38112122913)), checked out
+that branch/head and passed Python 3.13.16 / **1,009 PostgreSQL tests**, fresh migrations, Ruff,
+Django checks, no migration drift, `npm ci`, Tailwind and CSS reproducibility.
 
-Proposed minimum ACC-1 after separately authorized acceptance/adoption and implementation:
+The owner-supplied corrective independent verdict is **FINAL PASS — ACC-0 CONTRACT APPROVED FOR
+FORMAL ACCEPTANCE**, implementation readiness **A**; F1/F2 resolved, no new P0/P1/P2/P3.
+The exact formally accepted contract head is `217b7a8f39b628571f616034a7d9d02b436ec03d`, with
+the original/remediation two-commit history intact. Formal acceptance is **COMPLETE**; canonical
+adoption is **PENDING** and `accounting-contract-v1` is **NOT YET CREATED**. This docs-only acceptance
+commit requires a new exact-head CI, not reuse of #108. ACC-1, PAY-INT-1, Billing/Payments Accounting
+integrations and production deployment remain unauthorized. The audit is contract/architecture
+acceptance, not executed ACC-1 runtime testing.
+
+Accepted minimum ACC-1 contract, with adoption and implementation still separately authorized:
 
 - Account and Journal: immutable Company/normalized code, company uniqueness, service-mutable
   name/activity; immutable Account type ASSET/LIABILITY/EQUITY/INCOME/EXPENSE; no hierarchy/hard delete.
@@ -1025,13 +1039,17 @@ Proposed minimum ACC-1 after separately authorized acceptance/adoption and imple
 **Explicit historical refinement:** standalone ACC-1 has no generic external-source header
 idempotency field. Same-Entry transition retry is safe; future external composition must define
 atomic source identity, header, complete lines, amounts and posting/duplicate effects at its own
-integration gate. Upon formal acceptance, ADR 0014 governs detailed ACC-1 and supersedes only
+integration gate. Following formal acceptance, ADR 0014 governs detailed ACC-1 and supersedes only
 conflicting Accounting details in older notes. It does not remove ADR 0006's future integration
-retry-safety requirement or change ADR 0011/0013 ownership. While Proposed it is not accepted authority.
+retry-safety requirement or change ADR 0011/0013 ownership. Its earlier Proposed state did not
+constitute accepted authority; acceptance still does not authorize runtime implementation.
 
-Candidate gate: exactly one docs-only commit, normal branch publication and exact-head CI; require
+Historical initial candidate gate: exactly one docs-only commit, normal publication and exact-head CI; require
 fresh PostgreSQL bootstrap/full current suite and mandatory checks, then STOP for independent audit.
-No formal acceptance, main adoption, `accounting-contract-v1`, ACC-1, PAY-INT-1 or automatic integration.
+At that initial stage no acceptance/adoption/tag or implementation was authorized. Remediation and
+formal acceptance subsequently received separate authorization, one additional docs-only commit
+each. Current acceptance publication/CI must STOP before canonical adoption, `accounting-contract-v1`,
+ACC-1, PAY-INT-1 or any integration. No substantive contract semantics change during acceptance.
 The ADR's acceptance matrix is a future ACC-1 requirement, not executed ACC-0 test evidence.
 
 # Historical Accounting planning notes — formerly Batch 2E / Gate ACC-1
@@ -1484,8 +1502,11 @@ Gate PAY-1 formal acceptance       COMPLETE / FORMALLY ACCEPTED FOR CANONICAL AD
 Gate PAY-1 canonical adoption      CLOSED / 9ac3f0944fff65f013efd9c3a3e9b841022ce87f / payments-v1
 Gate PAY-1 final main CI           #105 / 38078381136 SUCCESS / 1,009 PostgreSQL tests
 Gate PAY-INT-1 implementation       NOT STARTED / not authorized
-Gate ACC-0 contract                PROPOSED / ADR 0014 / acc0-accounting-contract
-Gate ACC-0 review/acceptance       independent audit pending / not Accepted or adopted
+Gate ACC-0 contract                FORMALLY ACCEPTED / ADR 0014 / acc0-accounting-contract
+Gate ACC-0 accepted contract head  217b7a8f39b628571f616034a7d9d02b436ec03d / CI #108 SUCCESS
+Gate ACC-0 corrective review       FINAL PASS / readiness A / F1-F2 resolved / no P0-P3
+Gate ACC-0 formal acceptance       COMPLETE / acceptance commit requires exact-head CI
+Gate ACC-0 canonical adoption      PENDING / accounting-contract-v1 NOT YET CREATED
 Gate ACC-1 implementation          NOT STARTED / not authorized
 Optional integrations             not authorized
 ```
