@@ -296,6 +296,8 @@ def report(request, kind):
             )
         except ValidationError as exc:
             _errors(form, exc)
+    # GL stays lazy: Paginator's slice is SQL LIMIT/OFFSET, before payload reads.
+    # TB contains only SQL-aggregated Account rows, never retained ledger lines.
     page = Paginator(rows, 50).get_page(request.GET.get("page"))
     return render(
         request,

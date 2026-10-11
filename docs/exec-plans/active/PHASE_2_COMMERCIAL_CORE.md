@@ -1,11 +1,14 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — BILL-1 / PAY-0 / PAY-1 / ACC-0 CANONICALLY ADOPTED; ACC-1 LOCAL CANDIDATE / INDEPENDENT AUDIT PENDING
+Status: IN PROGRESS — BILL-1 / PAY-0 / PAY-1 / ACC-0 CANONICALLY ADOPTED; ACC-1 INITIAL AUDIT REVISE / LOCAL ACC1-R1 REMEDIATION / INDEPENDENT CORRECTIVE AUDIT PENDING
 
 Current Accounting milestone: ACC-1 — local standalone implementation candidate on
 `acc1-accounting`, from adopted `main@d5030e0e807334fdc358a1aa3affce704ef4a0f0` and the
-existing annotated `accounting-contract-v1` checkpoint. Independent implementation audit,
-candidate publication/hosted CI, acceptance, adoption and `accounting-v1` remain separate gates.
+existing annotated `accounting-contract-v1` checkpoint. Original implementation candidate
+`8eaa084aee58cc7c09e6ce74fe663b1f47c7d9f3` received independent **REVISE**, readiness **C**,
+for **ACC1-R1 — P2** only; local report-retrieval remediation awaits independent corrective audit.
+Candidate publication/hosted CI,
+acceptance, adoption and `accounting-v1` remain separate gates.
 No integration or production-readiness approval is claimed. See the local verification record below.
 
 Historical ACC-0 formal acceptance-stage evidence (retained): documentation/architecture only, on
@@ -101,7 +104,8 @@ canonical adoption; the post-closure corrective cycle is closed.
 BILL-1 was separately authorized and is canonically closed at `409e45e...` (`billing-invoicing-v1`).
 PAY-0 is documentation-only; PAY-1 implementation is canonically closed at `9ac3f094` (`payments-v1`).
 ACC-0 is canonically adopted contract documentation; separately authorized ACC-1 is a local
-implementation candidate awaiting independent audit. Accounting publication/adoption and all
+implementation candidate with original audit REVISE and local ACC1-R1 remediation awaiting
+independent corrective audit. Accounting publication/adoption and all
 integrations remain unauthorized.
 Remaining gates are sequentially
 governed, not automatically launched in parallel.
@@ -1515,7 +1519,8 @@ Gate ACC-0 accepted contract head  217b7a8f39b628571f616034a7d9d02b436ec03d / CI
 Gate ACC-0 corrective review       FINAL PASS / readiness A / F1-F2 resolved / no P0-P3
 Gate ACC-0 formal acceptance       COMPLETE / acceptance commit requires exact-head CI
 Gate ACC-0 canonical adoption      COMPLETE / d5030e0e / accounting-contract-v1
-Gate ACC-1 implementation          LOCAL CANDIDATE / acc1-accounting / independent audit pending
+Gate ACC-1 original audit          REVISE / readiness C / ACC1-R1 P2 / no reported P0/P1
+Gate ACC-1 remediation             LOCAL ONLY / acc1-accounting / independent corrective audit pending
 Optional integrations             not authorized
 ```
 
@@ -1625,3 +1630,102 @@ No Billing/Payments dependency, PaymentAllocation, automatic integration, author
 balance, SaaS activation or production deployment was introduced. `main`, historical branches,
 accepted contracts and existing tags remain unchanged. Only one local implementation commit is
 authorized; no push, merge, acceptance or tag. **Stop for independent ACC-1 implementation audit.**
+
+## ACC1-R1 report-retrieval remediation — 2026-10-11
+
+Original local implementation `8eaa084aee58cc7c09e6ce74fe663b1f47c7d9f3` is preserved unchanged.
+The supplied independent verdict was **REVISE — ACC-1 IMPLEMENTATION REQUIRES REMEDIATION**,
+readiness **C**, with one blocking **ACC1-R1 — P2** and no reported P0/P1. This batch addresses
+that finding only. It is local implementation-run evidence, **awaiting independent corrective
+audit**, not FINAL PASS, publication, acceptance or adoption. The remediation SHA is the local
+commit containing this record; its parent is the original candidate, whose parent/main is
+`d5030e0e807334fdc358a1aa3affce704ef4a0f0`.
+
+### Reproduction and bounded retrieval
+
+Before production edits, two PostgreSQL regressions reproduced the defect with 33 posted entries,
+66 lines and 12,000-character memo/description fields: future-date GL returned no rows but
+constructed **66** JournalEntryLine objects; page one displayed 50 but constructed **66**.
+Both tests failed against the original selector. Inspection confirmed whole-Company `list()`
+materialization before Python filtering/pagination, with TB reusing that list and retaining
+groups of contributing lines.
+
+The corrected reads separate whole-Company integrity from requested payload:
+
+- Two alias-pinned database anomaly probes return `SELECT 1 ... LIMIT 1`, not text/reference/model
+  payload. They inspect either side of line/Entry ownership and reject Company, Account, Journal,
+  optional Party, currency provenance, amount/position or frozen-precision violations before
+  requested filters. The second probe compares amounts to SQL ROUND solely to detect incompatible
+  frozen scale; it does not round returned amounts. Seven corruption classes outside a valid
+  requested date/Account scope are tested for both selectors, with no line-object construction.
+- GL returns an authorized, Company/POSTED-scoped lazy QuerySet with inclusive dates and Account
+  predicates in SQL. Selected execution alias is pinned even for evaluation after scope exit.
+  SQL ordering is Entry date, number, Entry UUID, position, line UUID. Existing 50-row Paginator
+  now performs SQL COUNT plus `LIMIT 50`; the 66-line second page uses `LIMIT 16 OFFSET 50`.
+  Only the requested page's descriptions, memos and references are constructed. An explicit
+  non-UI caller evaluating its entire filtered QuerySet still requests that entire result;
+  callers should slice before evaluation when they need a bounded batch.
+- TB independently pushes the same scope into SQL `GROUP BY Account`, `SUM(debit/credit)` and
+  `MAX(frozen precision)`. It constructs only aggregate Account rows, ordered by code/UUID.
+  PostgreSQL SUM retains unrestricted NUMERIC output through an unbounded Decimal output field;
+  no single-line numeric(38,8) cast, float conversion or silent report quantization is introduced.
+  The 2,002-line boundary fixture proves exact debit/credit sums of
+  `1000999999999999999999999999999999.99998999`, above the single-line range, with zero net.
+  Inactive and zero-net Accounts with activity remain; current Currency precision does not
+  reinterpret frozen history. Existing report-wide maximum precision is retained, at least
+  each contributing Account's maximum.
+
+Python memory for ordinary UI GL is O(page), TB O(aggregate Accounts), integrity O(1) result
+payload. Integrity and aggregate SQL can still scan relevant history inside PostgreSQL; no
+constant database-work or timing guarantee is claimed. No report cache, mutable balance,
+export subsystem, write transaction, schema/index change or dependency was added.
+
+Manual captured-query review independently inspected future-date and Account-filtered GL,
+page one/page two, and TB: predicates precede materialization/aggregation; page SQL has
+LIMIT/OFFSET; TB has SUM/GROUP BY/MAX; integrity SQL selects no memo/description. Ordinary GL/TB
+requests do **not** materialize all Company history in Python. Default-cursor-forbidden alias
+tests also cover lazy evaluation, pagination, filtered empty reports and grouped aggregation.
+
+### Remediation verification
+
+All application fixtures are new disposable synthetic PostgreSQL/SQLite databases on the
+supported Linux Docker runtime (Python 3.13.16, Django 5.2.17, PostgreSQL 17). Existing demos,
+customer deployments and the target repository are untouched.
+
+| Check | Actual remediation result |
+| --- | --- |
+| Focused new report regressions | **31 passed**: 30 selector and one HTTP pagination; existing non-default alias test strengthened and passed in the Accounting suite |
+| Accounting PostgreSQL suite | **304 passed**, including the unchanged **56** real-lock concurrency cases; no teardown warning |
+| Full PostgreSQL suite | **1,313 passed**, no skips or teardown warning |
+| Full SQLite suite | **1,114 passed, 199 expected PostgreSQL-only skips** |
+| Database architecture guard | **222 passed** |
+| Fresh PostgreSQL zero-state migrate / Django check / migration drift | PASS; zero issues / no changes detected; no migration added |
+| Ruff / Accounting formatting / JS syntax / whitespace | PASS |
+| JavaScript navigation tests | **21 passed** |
+| npm ci / Tailwind build / CSS reproducibility | PASS; dependency/lockfiles/CSS unchanged; inherited 8 advisories (2 moderate, 6 high), no upgrades |
+
+Real-browser report verification uses 34 synthetic posted entries/68 lines, 12,000-character
+memo/description, 168-character Party label and maximum supported single-line amounts. At
+**390 / 768 / 1280px**, body scroll widths are **380 / 758 / 1270px**; tables scroll locally,
+controls remain visible and no page-wide overflow is observed. GL page one (50), page two (18),
+Account filter (34), future empty result, reversed-date validation and TB exact large aggregates
+were checked. Desktop Back/Forward and direct refresh retain the correct page; mobile app
+navigation opens/closes normally. Fresh QA-origin console has no Accounting JavaScript errors.
+No UI template, shared navigation, CSS or JavaScript changes are part of this remediation.
+
+Two provisional PostgreSQL suite runs were stopped before their final repeats after strengthening
+the corruption fixture to include valid in-range activity; they are not PASS evidence. An extra
+focused launch used an unsupported DATABASE_URL variable and failed connection setup before
+tests; the corrected launch uses the repository's POSTGRES_* variables. This is harness evidence,
+not a source or production-settings change. Windows bare Ruff was unavailable and Docker's
+read-only source cache rejected a check; final Docker Ruff/format checks passed with `--no-cache`.
+Earlier implementation failures and verification
+remain retained in the preceding historical record.
+
+Only Accounting selectors, two view comments, three Accounting test files and this plan/roadmap
+change. Models, domain, services, authorization, manifests, schemas/migrations, accepted ADR 0014,
+other modules, templates/assets, settings and dependencies remain unchanged. No Billing/Payments
+dependency/effect, PaymentAllocation, external integration, SaaS activation or production
+deployment was introduced. One additional local commit is authorized, subject
+`fix: bound accounting report retrieval`; no push, main update, merge, amendment or tag.
+**Stop for independent ACC-1 corrective audit.**

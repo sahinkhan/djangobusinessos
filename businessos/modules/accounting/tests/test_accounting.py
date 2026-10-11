@@ -1,13 +1,15 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from decimal import Decimal, localcontext
 from unittest.mock import patch
 from uuid import uuid4
 
 import pytest
 from django.core.exceptions import PermissionDenied, ValidationError
+from django.core.paginator import Paginator
 from django.db import IntegrityError, connection, models, transaction
+from django.test.utils import CaptureQueriesContext
 
-from businessos.core.access.models import UserCompanyAccess
+from businessos.core.access.models import RolePermission, UserCompanyAccess
 from businessos.core.audit.models import AuditEntry
 from businessos.core.common.context import BusinessContext
 from businessos.core.organization.models import Company
@@ -231,7 +233,7 @@ def test_number_collisions_and_unrelated_integrity(business_context, journal, en
 def test_posting_retry_retired_references(
     business_context, balanced, account, journal, party, company
 ):
-    assert selectors.general_ledger(business_context) == []
+    assert list(selectors.general_ledger(business_context)) == []
     posted = services.post_journal_entry(business_context, balanced.pk)
     stamp = posted.posted_at
     assert len(selectors.general_ledger(business_context)) == 2
@@ -472,3 +474,352 @@ def test_large_exact_post_sql_python_and_low_context(business_context, journal, 
 def test_database_constraints(balanced, account, model, changes):
     with pytest.raises(IntegrityError), transaction.atomic():
         models.QuerySet.update(model.objects.all(), **changes)
+
+
+@pytest.fixture
+def report_history(business_context, journal, account, party, currency):
+    """66 service-posted lines, with an independent ID/value/order oracle."""
+    other = services.create_account(
+        business_context, code="PAYABLE", name="Historical payable", type="LIABILITY"
+    )
+    expected = []
+    for index in range(33):
+        currency.decimal_places = 2 if index < 16 else 3
+        currency.save()
+        day = date(2026, 10, 1) + timedelta(days=index % 3)
+        memo = f"memo-{index}:" + "m" * 12000
+        entry = services.create_journal_entry(
+            business_context, journal_id=journal.pk, entry_date=day, memo=memo
+        )
+        value = Decimal("1.25") if index < 16 else Decimal("1.234")
+        for position, (target, debit, credit) in enumerate(
+            [(account, value, Decimal(0)), (other, Decimal(0), value)], 1
+        ):
+            description = f"line-{index}-{position}:" + "d" * 12000
+            line = services.add_journal_entry_line(
+                business_context,
+                entry.pk,
+                account_id=target.pk,
+                party_id=party.pk,
+                debit=debit,
+                credit=credit,
+                description=description,
+            )
+            expected.append(
+                dict(
+                    id=line.pk,
+                    entry_id=entry.pk,
+                    account_id=target.pk,
+                    day=day,
+                    number=entry.number,
+                    position=position,
+                    memo=memo,
+                    description=description,
+                    debit=debit,
+                    credit=credit,
+                )
+            )
+        services.post_journal_entry(business_context, entry.pk)
+    services.update_account(business_context, other.pk, is_active=False)
+    expected.sort(
+        key=lambda row: (row["day"], row["number"], row["entry_id"], row["position"], row["id"])
+    )
+    return expected
+
+
+def _payload_queries(captured):
+    return [
+        query["sql"].lower()
+        for query in captured
+        if query["sql"].lstrip().lower().startswith("select")
+        and '"accounting_journalentryline"."description"' in query["sql"].lower()
+    ]
+
+
+def _observe_loaded_lines(monkeypatch):
+    loaded = []
+    original = JournalEntryLine.from_db
+
+    def observe(db, fields, values):
+        loaded.append(values[fields.index("id")])
+        return original(db, fields, values)
+
+    monkeypatch.setattr(JournalEntryLine, "from_db", observe)
+    return loaded
+
+
+def test_report_future_gl_sql_filter(business_context, report_history, monkeypatch):
+    loaded = _observe_loaded_lines(monkeypatch)
+    with CaptureQueriesContext(connection) as queries:
+        rows = list(selectors.general_ledger(business_context, from_date="2027-01-01"))
+    assert rows == []
+    assert loaded == [], f"Empty GL materialized {len(loaded)} posted lines."
+    payload = _payload_queries(queries)
+    assert len(payload) == 1 and "2027-01-01" in payload[0] and ">=" in payload[0]
+
+
+def test_report_gl_page_sql_bound(business_context, report_history, monkeypatch):
+    loaded = _observe_loaded_lines(monkeypatch)
+    with CaptureQueriesContext(connection) as queries:
+        page = Paginator(selectors.general_ledger(business_context), 50).page(1)
+        rows = list(page.object_list)
+    assert len(rows) == 50
+    assert loaded == [row["id"] for row in report_history[:50]]
+    payload = _payload_queries(queries)
+    assert len(payload) == 1 and "limit 50" in payload[0]
+
+
+def _assert_minimal_integrity(queries):
+    probes = [
+        query["sql"].lower()
+        for query in queries
+        if 'from "accounting_journalentryline"' in query["sql"].lower()
+        and query["sql"].lower().startswith("select 1 ")
+    ]
+    assert 1 <= len(probes) <= 2
+    for sql in probes:
+        assert "limit 1" in sql
+        assert "memo" not in sql and "description" not in sql
+    return probes
+
+
+def test_report_gl_page_two_order_and_long_text(business_context, report_history, monkeypatch):
+    loaded = _observe_loaded_lines(monkeypatch)
+    with CaptureQueriesContext(connection) as queries:
+        paginator = Paginator(selectors.general_ledger(business_context), 50)
+        first = list(paginator.page(1).object_list)
+        second = list(paginator.page(2).object_list)
+    assert [line.pk for line in first + second] == [row["id"] for row in report_history]
+    assert not {line.pk for line in first} & {line.pk for line in second}
+    assert len(second) == 16
+    assert loaded == [row["id"] for row in report_history]
+    for line, expected in zip(first + second, report_history, strict=True):
+        assert line.description == expected["description"]
+        assert line.journal_entry.memo == expected["memo"]
+        assert (line.debit, line.credit) == (expected["debit"], expected["credit"])
+    payload = _payload_queries(queries)
+    assert len(payload) == 2
+    assert "limit 50" in payload[0]
+    assert "limit 16" in payload[1] and "offset 50" in payload[1]
+    for sql in payload:
+        order = sql.split("order by", 1)[1]
+        terms = ["entry_date", "number", "journal_entry_id", "position"]
+        assert [order.index(term) for term in terms] == sorted(order.index(t) for t in terms)
+    _assert_minimal_integrity(queries)
+
+
+def test_report_gl_account_and_inclusive_dates_sql(
+    business_context, report_history, account, monkeypatch
+):
+    loaded = _observe_loaded_lines(monkeypatch)
+    with CaptureQueriesContext(connection) as queries:
+        rows = list(
+            selectors.general_ledger(
+                business_context,
+                from_date="2026-10-02",
+                to_date="2026-10-02",
+                account_id=account.pk,
+            )
+        )
+    expected = [
+        row["id"]
+        for row in report_history
+        if row["day"] == date(2026, 10, 2) and row["account_id"] == account.pk
+    ]
+    assert loaded == [line.pk for line in rows] == expected
+    payload = _payload_queries(queries)
+    assert len(payload) == 1
+    where = payload[0].split(" where ", 1)[1].split(" order by ", 1)[0]
+    assert "entry_date" in where and ">=" in where and "<=" in where
+    assert str(account.pk).replace("-", "") in where.replace("-", "")
+    assert '"accounting_journalentryline"."account_id" =' in where
+    _assert_minimal_integrity(queries)
+
+
+def test_report_future_tb_grouped_sql(business_context, report_history, monkeypatch):
+    loaded = _observe_loaded_lines(monkeypatch)
+    with CaptureQueriesContext(connection) as queries:
+        assert selectors.trial_balance(business_context, from_date="2027-01-01") == []
+    assert loaded == [] and _payload_queries(queries) == []
+    aggregates = [q["sql"].lower() for q in queries if "sum(" in q["sql"].lower()]
+    assert len(aggregates) == 1
+    assert "group by" in aggregates[0] and "max(" in aggregates[0]
+    assert "2027-01-01" in aggregates[0] and ">=" in aggregates[0]
+    _assert_minimal_integrity(queries)
+
+
+def test_report_tb_aggregate_history_precision_and_zero_net(
+    business_context, report_history, journal, currency, monkeypatch
+):
+    currency.decimal_places = 8
+    currency.save()
+    zero = services.create_account(business_context, code="ZERO", name="Zero net", type="ASSET")
+    entry = services.create_journal_entry(
+        business_context, journal_id=journal.pk, entry_date="2026-10-02"
+    )
+    for debit, credit in [("0.00000001", "0"), ("0", "0.00000001")]:
+        services.add_journal_entry_line(
+            business_context, entry.pk, account_id=zero.pk, debit=debit, credit=credit
+        )
+    services.post_journal_entry(business_context, entry.pk)
+    currency.decimal_places = 0
+    currency.save()
+    loaded = _observe_loaded_lines(monkeypatch)
+    with CaptureQueriesContext(connection) as queries, localcontext() as ctx:
+        ctx.prec = 2
+        rows = selectors.trial_balance(business_context)
+    assert loaded == [] and _payload_queries(queries) == []
+    assert len(rows) == 3
+    assert [row.account.code for row in rows] == ["CASH", "PAYABLE", "ZERO"]
+    assert rows[0].total_debit == rows[1].total_credit == Decimal("40.978")
+    assert rows[0].ending_debit == rows[1].ending_credit == Decimal("40.978")
+    assert not rows[1].account.is_active
+    assert rows[2].net == rows[2].ending_debit == rows[2].ending_credit == 0
+    assert rows[2].total_debit == rows[2].total_credit == Decimal("0.00000001")
+    assert all(row.precision == 8 for row in rows)
+    assert rows[0].formatted_debit == "40.97800000"
+    aggregates = [q["sql"].lower() for q in queries if "sum(" in q["sql"].lower()]
+    assert len(aggregates) == 1
+    assert "group by" in aggregates[0] and "max(" in aggregates[0]
+    assert "memo" not in aggregates[0] and "description" not in aggregates[0]
+    _assert_minimal_integrity(queries)
+
+
+def test_report_tb_account_date_predicates(business_context, report_history, account, monkeypatch):
+    loaded = _observe_loaded_lines(monkeypatch)
+    with CaptureQueriesContext(connection) as queries:
+        rows = selectors.trial_balance(
+            business_context,
+            account_id=account.pk,
+            from_date="2026-10-02",
+            to_date="2026-10-02",
+        )
+    assert loaded == [] and len(rows) == 1
+    expected = sum(
+        (r["debit"] for r in report_history if r["day"] == date(2026, 10, 2)), Decimal(0)
+    )
+    assert rows[0].account.pk == account.pk and rows[0].total_debit == expected
+    aggregate = next(q["sql"].lower() for q in queries if "sum(" in q["sql"].lower())
+    where = aggregate.split(" where ", 1)[1].split(" group by ", 1)[0]
+    assert "entry_date" in where and ">=" in where and "<=" in where
+    assert '"accounting_journalentryline"."account_id" =' in where
+    assert str(account.pk).replace("-", "") in where.replace("-", "")
+
+
+@pytest.mark.parametrize("selector", [selectors.general_ledger, selectors.trial_balance])
+@pytest.mark.parametrize(
+    "corrupt", ["line_company", "entry_company", "account", "journal", "party", "currency", "scale"]
+)
+def test_report_outside_filter_corruption_minimal_fail_closed(
+    business_context, balanced, account, journal, party, company, selector, corrupt, monkeypatch
+):
+    services.update_journal_entry(business_context, balanced.pk, memo="m" * 12000)
+    services.post_journal_entry(business_context, balanced.pk)
+    requested = services.create_account(
+        business_context, code="REQUESTED", name="Requested", type="ASSET"
+    )
+    requested_journal = services.create_journal(
+        business_context, code="REQUESTED", name="Requested journal"
+    )
+    valid_entry = services.create_journal_entry(
+        business_context, journal_id=requested_journal.pk, entry_date="2027-01-01"
+    )
+    for debit, credit in [(1, 0), (0, 1)]:
+        services.add_journal_entry_line(
+            business_context, valid_entry.pk, account_id=requested.pk, debit=debit, credit=credit
+        )
+    services.post_journal_entry(business_context, valid_entry.pk)
+    valid_scope = selector(business_context, from_date="2027-01-01", account_id=requested.pk)
+    assert len(valid_scope) == (2 if selector == selectors.general_ledger else 1)
+    other = Company.objects.create(
+        code="OTHER",
+        name="Other",
+        base_currency=company.base_currency,
+        country=company.country,
+        default_language=company.default_language,
+    )
+    if corrupt == "line_company":
+        models.QuerySet.update(balanced.lines.all(), company_id=other.pk)
+    elif corrupt == "entry_company":
+        models.QuerySet.update(JournalEntry.objects.filter(pk=balanced.pk), company_id=other.pk)
+    elif corrupt in {"account", "journal", "party"}:
+        row = {"account": account, "journal": journal, "party": party}[corrupt]
+        models.QuerySet.update(type(row).objects.filter(pk=row.pk), company_id=other.pk)
+    elif corrupt == "currency":
+        models.QuerySet.update(
+            JournalEntry.objects.filter(pk=balanced.pk), base_currency_code_snapshot="XXX"
+        )
+    else:
+        models.QuerySet.update(
+            JournalEntry.objects.filter(pk=balanced.pk), base_currency_precision_snapshot=0
+        )
+    loaded = _observe_loaded_lines(monkeypatch)
+    with CaptureQueriesContext(connection) as queries, pytest.raises(ValidationError):
+        selector(business_context, from_date="2027-01-01", account_id=requested.pk)
+    assert loaded == [] and _payload_queries(queries) == []
+    _assert_minimal_integrity(queries)
+
+
+@pytest.mark.skipif(connection.vendor != "postgresql", reason="Exact PostgreSQL numeric SUM.")
+def test_report_large_tb_without_ledger_objects(
+    business_context, balanced, account, currency, monkeypatch
+):
+    currency.decimal_places = 8
+    currency.save()
+    entry = services.create_journal_entry(
+        business_context, journal_id=balanced.journal_id, entry_date="2026-10-03"
+    )
+    maximum = Decimal("999999999999999999999999999999.99999999")
+    stamp = entry.created_at
+    # Test-only storage fixture: 2,002 individually valid one-sided lines.
+    # Bypassing public ORM here avoids timing writes; report behavior is the subject.
+    lines = [
+        JournalEntryLine(
+            company_id=entry.company_id,
+            journal_entry=entry,
+            account=account,
+            debit=maximum if i % 2 == 0 else 0,
+            credit=maximum if i % 2 else 0,
+            description="d" * 12000,
+            position=i + 1,
+            created_at=stamp,
+            updated_at=stamp,
+        )
+        for i in range(2002)
+    ]
+    models.QuerySet.bulk_create(JournalEntryLine.objects.all(), lines, batch_size=100)
+    services.post_journal_entry(business_context, entry.pk)
+    loaded = _observe_loaded_lines(monkeypatch)
+    with CaptureQueriesContext(connection) as queries, localcontext() as ctx:
+        ctx.prec = 2
+        rows = selectors.trial_balance(business_context)
+    assert loaded == [] and _payload_queries(queries) == [] and len(rows) == 1
+    expected = Decimal("1000999999999999999999999999999999.99998999")
+    assert rows[0].total_debit == rows[0].total_credit == expected
+    assert rows[0].net == 0 and rows[0].precision == 8
+    aggregate = next(q["sql"].lower() for q in queries if "sum(" in q["sql"].lower())
+    assert "numeric(38" not in aggregate and "float" not in aggregate
+    _assert_minimal_integrity(queries)
+
+
+@pytest.mark.parametrize("selector", [selectors.general_ledger, selectors.trial_balance])
+@pytest.mark.parametrize("revoked", ["permission", "access", "actor", "company"])
+def test_report_authorization_before_payload(
+    business_context, balanced, company, operator, accounting_role, selector, revoked, monkeypatch
+):
+    services.post_journal_entry(business_context, balanced.pk)
+    if revoked == "permission":
+        RolePermission.objects.filter(
+            role=accounting_role, permission__code="accounting.entry.view"
+        ).delete()
+    elif revoked == "access":
+        UserCompanyAccess.objects.filter(user=operator, company=company).delete()
+    else:
+        row = operator if revoked == "actor" else company
+        row.is_active = False
+        row.save()
+    loaded = _observe_loaded_lines(monkeypatch)
+    with CaptureQueriesContext(connection) as queries, pytest.raises(PermissionDenied):
+        selector(business_context)
+    assert loaded == [] and _payload_queries(queries) == []
+    assert not any("accounting_journalentryline" in query["sql"] for query in queries)

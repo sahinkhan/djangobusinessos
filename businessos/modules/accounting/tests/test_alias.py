@@ -3,6 +3,7 @@ from uuid import uuid4
 
 import pytest
 from django.contrib.auth import get_user_model
+from django.core.paginator import Paginator
 from django.db import connections
 from django.db.migrations.executor import MigrationExecutor
 
@@ -109,11 +110,30 @@ def test_nondefault_full_workflow(django_db_blocker, monkeypatch):
                     assert selectors.journal_entry_detail(context, entry.pk)._state.db == alias
                     assert len(selectors.general_ledger(context)) == 2
                     assert selectors.trial_balance(context)[0].net == 0
+                    lazy_page = selectors.general_ledger(
+                        context, account_id=account.pk, to_date=entry.entry_date
+                    )[:1]
+                    assert lazy_page.db == alias
+                    page = Paginator(selectors.general_ledger(context), 1).page(2)
+                    assert len(page.object_list) == 1
+                    assert (
+                        selectors.trial_balance(context, account_id=account.pk)[0].account._state.db
+                        == alias
+                    )
+                    assert not list(selectors.general_ledger(context, from_date="9999-01-01"))
+                    assert selectors.trial_balance(context, from_date="9999-01-01") == []
                     assert JournalEntry.objects.count() == 1
                     assert all(a._state.db == alias for a in AuditEntry.objects.all())
                 assert any("SAVEPOINT" in statement for statement in statements)
                 if postgres:
                     assert any("FOR UPDATE" in statement for statement in statements)
+                assert any("LIMIT 1 OFFSET 1" in statement for statement in statements)
+                assert any(
+                    "SUM(" in statement and "GROUP BY" in statement for statement in statements
+                )
+            # Deferred GL evaluation cannot switch to default after context exit.
+            with django_db_blocker.unblock():
+                assert list(lazy_page)[0]._state.db == alias
     finally:
         connections[alias].close()
         del connections[alias]

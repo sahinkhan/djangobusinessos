@@ -2,9 +2,11 @@ from dataclasses import dataclass
 from decimal import Decimal
 
 from django.core.exceptions import ValidationError
-from django.db.models import Q
+from django.db.models import DecimalField, F, Max, Q, Sum
+from django.db.models.functions import Round
 
 from businessos.core.access.policies import require_permission
+from businessos.core.database import current_database_alias
 from businessos.core.organization.models import Company
 
 from . import domain
@@ -59,8 +61,9 @@ def _date(value):
         raise ValidationError(str(exc)) from exc
 
 
-def general_ledger(context, *, from_date=None, to_date=None, account_id=None):
+def _report_scope(context, *, from_date=None, to_date=None, account_id=None):
     require_permission(context, VIEW_ENTRIES)
+    alias = current_database_alias()
     start, end = _date(from_date), _date(to_date)
     if start and end and start > end:
         raise ValidationError("From date must not follow to date.")
@@ -69,49 +72,87 @@ def general_ledger(context, *, from_date=None, to_date=None, account_id=None):
             account_id = domain.identity(account_id)
         except ValueError as exc:
             raise ValidationError(str(exc)) from exc
-        if not Account.objects.filter(pk=account_id, company_id=context.company_id).exists():
+        if (
+            not Account.objects.using(alias)
+            .filter(pk=account_id, company_id=context.company_id)
+            .exists()
+        ):
             raise ValidationError("Account filter is outside this company.")
     code = (
-        Company.objects.select_related("base_currency")
+        Company.objects.using(alias)
+        .values_list("base_currency__code", flat=True)
         .get(pk=context.company_id)
-        .base_currency.code
     )
-    # Include either ownership side, then FAIL rather than hide malformed history.
-    rows = list(
-        JournalEntryLine.objects.filter(
-            Q(company_id=context.company_id) | Q(journal_entry__company_id=context.company_id),
-            journal_entry__status=JournalEntry.Status.POSTED,
-        )
-        .select_related("journal_entry", "journal_entry__journal", "account", "party")
-        .order_by(
-            "journal_entry__entry_date",
-            "journal_entry__number",
-            "journal_entry_id",
-            "position",
-            "id",
-        )
+    _validate_report_history(context.company_id, code, alias)
+    rows = JournalEntryLine.objects.using(alias).filter(
+        company_id=context.company_id,
+        journal_entry__company_id=context.company_id,
+        journal_entry__status=JournalEntry.Status.POSTED,
     )
-    for row in rows:
-        entry = row.journal_entry
-        if (
-            row.company_id != context.company_id
-            or entry.company_id != context.company_id
-            or row.account.company_id != context.company_id
-            or entry.journal.company_id != context.company_id
-            or (row.party_id and row.party.company_id != context.company_id)
-            or entry.base_currency_code_snapshot != code
-        ):
-            raise ValidationError(
-                "Accounting history has incompatible company/currency provenance."
-            )
-        row.clean()
-    return [
-        row
-        for row in rows
-        if (not start or row.journal_entry.entry_date >= start)
-        and (not end or row.journal_entry.entry_date <= end)
-        and (account_id is None or row.account_id == account_id)
-    ]
+    if start:
+        rows = rows.filter(journal_entry__entry_date__gte=start)
+    if end:
+        rows = rows.filter(journal_entry__entry_date__lte=end)
+    if account_id is not None:
+        rows = rows.filter(account_id=account_id)
+    return rows, code
+
+
+def _validate_report_history(company_id, code, alias):
+    # Include either ownership side, including corruption OUTSIDE requested filters.
+    # EXISTS returns one constant, never memo/description/reference/model payloads.
+    history = JournalEntryLine.objects.using(alias).filter(
+        Q(company_id=company_id) | Q(journal_entry__company_id=company_id),
+        journal_entry__status=JournalEntry.Status.POSTED,
+    )
+    valid = (
+        Q(
+            company_id=company_id,
+            journal_entry__company_id=company_id,
+            account__company_id=company_id,
+            journal_entry__journal__company_id=company_id,
+            journal_entry__base_currency_code_snapshot=code,
+            journal_entry__base_currency_precision_snapshot__gte=0,
+            journal_entry__base_currency_precision_snapshot__lte=8,
+            position__gte=1,
+            position__lte=domain.MAX_POSITION,
+            debit__gte=0,
+            debit__lt=domain.AMOUNT_LIMIT,
+            credit__gte=0,
+            credit__lt=domain.AMOUNT_LIMIT,
+        )
+        & (Q(party_id__isnull=True) | Q(party__company_id=company_id))
+        & (Q(debit__gt=0, credit=0) | Q(credit__gt=0, debit=0))
+    )
+    if history.exclude(valid).exists():
+        raise ValidationError("Accounting history has incompatible company/currency provenance.")
+    # Preserve line.clean's exact frozen-scale validation without Python line reads.
+    # SQL ROUND is only an equality probe; report amounts are NEVER rounded.
+    if (
+        history.alias(
+            valid_debit=Round("debit", F("journal_entry__base_currency_precision_snapshot")),
+            valid_credit=Round("credit", F("journal_entry__base_currency_precision_snapshot")),
+        )
+        .exclude(debit=F("valid_debit"), credit=F("valid_credit"))
+        .exists()
+    ):
+        raise ValidationError("Accounting history exceeds frozen currency precision.")
+
+
+def general_ledger(context, *, from_date=None, to_date=None, account_id=None):
+    """Authorized, scoped lazy payload. Slice/Paginator BEFORE evaluating rows.
+
+    Pin the alias at authorization time, even if evaluated after execution scope exit.
+    Whole-history integrity is separate from SQL-filtered/page-bounded payload reads.
+    """
+    rows, _ = _report_scope(context, from_date=from_date, to_date=to_date, account_id=account_id)
+    return rows.select_related("journal_entry", "account", "party").order_by(
+        "journal_entry__entry_date",
+        "journal_entry__number",
+        "journal_entry_id",
+        "position",
+        "id",
+    )
 
 
 @dataclass(frozen=True)
@@ -143,25 +184,40 @@ class TrialBalanceRow:
 
 
 def trial_balance(context, **filters):
-    lines = general_ledger(context, **filters)
-    grouped = {}
-    places = max((line.journal_entry.base_currency_precision_snapshot for line in lines), default=0)
-    for line in lines:
-        grouped.setdefault(line.account_id, []).append(line)
+    lines, code = _report_scope(context, **filters)
+    # PostgreSQL SUM(numeric) has no single-line typmod. A deliberately unbounded
+    # output field preserves its exact Decimal; never cast to numeric(38,8) or float.
+    account_fields = [field.attname for field in Account._meta.concrete_fields]
+    grouped = list(
+        lines.order_by()
+        .values(*(f"account__{field}" for field in account_fields))
+        .annotate(
+            total_debit=Sum("debit", output_field=DecimalField()),
+            total_credit=Sum("credit", output_field=DecimalField()),
+            precision=Max("journal_entry__base_currency_precision_snapshot"),
+        )
+        .order_by("account__code", "account__id")
+    )
+    # Existing presentation uses one report-wide maximum, >= each Account maximum.
+    places = max((row["precision"] for row in grouped), default=0)
     result = []
-    for group in grouped.values():
-        debit, credit = domain.totals((line.debit, line.credit) for line in group)
+    for group in grouped:
+        debit, credit = group["total_debit"], group["total_credit"]
         net = domain.net(debit, credit)
         result.append(
             TrialBalanceRow(
-                group[0].account,
+                Account.from_db(
+                    lines.db,
+                    account_fields,
+                    [group[f"account__{field}"] for field in account_fields],
+                ),
                 debit,
                 credit,
                 net,
                 max(net, Decimal(0)),
                 max(domain.net(Decimal(0), net), Decimal(0)),
-                group[0].journal_entry.base_currency_code_snapshot,
+                code,
                 places,
             )
         )
-    return sorted(result, key=lambda row: (row.account.code, row.account.pk))
+    return result

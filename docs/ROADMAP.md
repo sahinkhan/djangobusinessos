@@ -189,13 +189,22 @@ At that stage `main` remained `9ac3f0944fff65f013efd9c3a3e9b841022ce87f` and
 **Current ACC-1 implementation checkpoint — 2026-10-11:** ACC-0 is canonically adopted at
 `d5030e0e807334fdc358a1aa3affce704ef4a0f0`. The existing annotated `accounting-contract-v1`
 tag object `7369a26d526e10e9a128b44cf79efca9cf353e89` peels to that baseline. Separately
-authorized standalone Accounting is implemented locally on `acc1-accounting`, pending independent
-implementation audit. Account/Journal, service-only draft editing, immutable balanced posted
+authorized standalone Accounting is implemented locally on `acc1-accounting`. Original candidate
+`8eaa084aee58cc7c09e6ce74fe663b1f47c7d9f3` received **REVISE — ACC-1 IMPLEMENTATION REQUIRES
+REMEDIATION**, readiness **C**, with one blocking **ACC1-R1 — P2** report-retrieval finding and
+no reported P0/P1. Narrow local remediation is awaiting independent corrective audit.
+Account/Journal, service-only draft editing, immutable balanced posted
 JournalEntry/lines, eight permissions, seven atomic audit actions, and derived GL/TB are included.
-Local verification: **1,282 PostgreSQL tests passed** (Accounting 273, including 56 real-lock
+Original implementation-run verification: **1,282 PostgreSQL tests passed** (Accounting 273, including 56 real-lock
 concurrency cases); **1,084 SQLite tests passed, 198 expected skips**. See the
 [ACC-1 verification record](exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#acc-1-local-implementation-verification--2026-10-11).
-This is implementation-run evidence, not independent approval or hosted candidate CI.
+See the [ACC1-R1 remediation record](exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#acc1-r1-report-retrieval-remediation--2026-10-11)
+for reproduced failures, SQL-bounded retrieval and subsequent verification. These are
+implementation-run records, not independent corrective approval or hosted candidate CI.
+Remediation verification: **1,313 PostgreSQL tests passed** (Accounting **304**, including
+**56** concurrency cases), **31** focused new report cases, **1,114 SQLite tests passed / 199
+expected skips**, and **222** database architecture guards. Fresh bootstrap, quality/frontend
+checks and real-browser report verification at 390/768/1280px passed.
 `main` remains at the baseline; no ACC-1 publication, acceptance, adoption or `accounting-v1`
 tag is authorized. PAY-INT-1, PaymentAllocation, all integrations and actual SaaS/production
 deployment remain unauthorized. Production Accounting readiness and full Phase 2 completion
@@ -221,7 +230,7 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | --- | --- | --- |
 | BILL-1 — Billing & Invoicing | Invoice/InvoiceLine, generic lines, snapshots, numbering, DRAFT -> ISSUED, derived original totals | No payment-aware outstanding; no void/credit, Sales automation or journals |
 | PAY-1 — Payments (canonically closed; payments-v1) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Payments-owned PaymentAllocation, applied/unapplied/outstanding, invoice integration, refunds/settlement and journals deferred |
-| ACC-0 canonically adopted / ACC-1 local implementation candidate | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014 | ACC-1 independent audit/publication/adoption pending; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
+| ACC-0 canonically adopted / ACC-1 local remediation candidate | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014 | Original ACC-1 audit REVISE; ACC1-R1 independent corrective audit/publication/adoption pending; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
 generic Payments and Accounting work without Billing. Settlement-adjusted outstanding is a future

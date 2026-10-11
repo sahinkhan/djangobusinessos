@@ -2,6 +2,8 @@ from uuid import uuid4
 
 import pytest
 from django.core.exceptions import PermissionDenied
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 from django.urls import reverse
 
 from businessos.core.access.context import SESSION_COMPANY_KEY
@@ -237,3 +239,27 @@ def test_boundary_detail_layout_and_posted_actions(logged, business_context, bal
         assert response.content.index(
             b"From date must not follow to date."
         ) > response.content.index(b'id="list-results"')
+
+
+def test_gl_http_report_payload_is_sql_paginated(logged, business_context, journal, account):
+    # Page integration regression, distinct from direct-selector query assertions.
+    for _ in range(33):
+        entry = services.create_journal_entry(business_context, journal_id=journal.pk)
+        for debit, credit in [(1, 0), (0, 1)]:
+            services.add_journal_entry_line(
+                business_context, entry.pk, account_id=account.pk, debit=debit, credit=credit
+            )
+        services.post_journal_entry(business_context, entry.pk)
+    url = reverse("accounting:gl")
+    first = logged.get(url, {"account": str(account.pk)})
+    with CaptureQueriesContext(connection) as queries:
+        second = logged.get(url, {"account": str(account.pk), "page": 2}, HTTP_HX_REQUEST="true")
+    assert len(first.context["rows"]) == 50 and len(second.context["rows"]) == 16
+    assert not {r.pk for r in first.context["rows"]} & {r.pk for r in second.context["rows"]}
+    assert b"account=" in second.content and b'id="list-results"' in second.content
+    payloads = [
+        query["sql"].lower()
+        for query in queries
+        if '"accounting_journalentryline"."description"' in query["sql"].lower()
+    ]
+    assert len(payloads) == 1 and "limit 16" in payloads[0] and "offset 50" in payloads[0]
