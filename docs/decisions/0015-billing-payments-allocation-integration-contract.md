@@ -1,13 +1,14 @@
 # ADR 0015 — Billing/Payments Allocation Integration Contract
 
-Status: Proposed — Gate PAY-INT-0
+Status: Accepted — Gate PAY-INT-0
 
 Date: 2026-10-11
 
 ## Authority and exact starting point
 
-This is a reviewable documentation contract candidate, **not an accepted decision or implemented
-capability**. Local branch: `payint0-billing-payments-contract`. Canonical starting main and ACC-1
+This documentation contract is **formally accepted, not an implemented capability**. The original
+proposal remains intact at `9d4fa5d3b7a12d4eb0ee2046d6e4ff306957e228` on
+`payint0-billing-payments-contract`. Canonical starting main and ACC-1
 freeze: `00e18a75e27bfe962ea290ab01f0cb0520f4427e`. Independent ACC-1 final reconciliation was
 **PASS — ACC-1 IMPLEMENTATION APPROVED FOR PUBLICATION**; ACC1-R1 substantive retrieval and
 ACC1-R2 P3 formatting findings are resolved. Candidate push CI #112 / `38127289623` and exact-head
@@ -16,7 +17,7 @@ main CI #114 / `38127960676` succeeded, the latter with **1,313 PostgreSQL tests
 Those are prior baseline/publication results, not PAY-INT-0 runtime test evidence. No
 `accounting-v1` tag has been created. PR #1 was closed without merging.
 
-The proposed contract follows accepted [ADR 0002](0002-hard-dependencies-and-optional-integrations.md),
+The contract follows accepted [ADR 0002](0002-hard-dependencies-and-optional-integrations.md),
 [ADR 0006](0006-phase-2-commercial-core-contracts.md),
 [ADR 0011](0011-modular-billing-payments-accounting-boundary.md),
 [ADR 0013](0013-standalone-payments-contract.md) and
@@ -29,6 +30,33 @@ Governance: local candidate -> independent audit -> separately authorized public
 hosted CI -> formal acceptance -> canonical normal fast-forward adoption. No PR is required.
 **PAY-INT-1 implementation needs separate explicit authorization after contract approval/adoption.**
 No source, test, schema, migration, permission, audit-action or UI implementation occurs here.
+
+### Formal acceptance and canonical completion rule — 2026-10-11
+
+The owner-supplied independent verdict for the exact proposal is **FINAL PASS — PAY-INT-0 CONTRACT
+APPROVED FOR FORMAL ACCEPTANCE**, readiness **A**, with **no actionable candidate-owned P0, P1,
+P2 or P3 findings**. This records the supplied independent review, not an audit performed by this
+acceptance author. Normal branch publication preserved the reviewed proposal byte-for-byte.
+
+Hosted candidate **Phase 0 checks #115 / 38133793295 — SUCCESS**
+([run evidence](https://github.com/sahinkhan/djangobusinessos/actions/runs/38133793295)) checked out
+exact `9d4fa5d3b7a12d4eb0ee2046d6e4ff306957e228`: **1,313 PostgreSQL tests**, fresh migrations,
+Ruff, Django checks, no migration drift, npm/Tailwind and generated CSS reproducibility passed.
+Inherited eight npm advisories and Actions runtime warnings remain separate maintenance items;
+no dependency/security maintenance or new allocation runtime test evidence is claimed.
+
+**PAY-INT-0 formal acceptance: COMPLETE. Canonical adoption: PENDING at this acceptance checkpoint.**
+The separately authorized publication flow requires this documentation-only acceptance commit's
+own successful exact-head branch CI, then normal fast-forward adoption into unchanged canonical
+main, then a separate successful exact-head main push CI. Only after all three steps succeed does
+this same acceptance commit become the **PAY-INT-0 canonical freeze / CANONICALLY CLOSED** checkpoint.
+The pending wording describes the acceptance stage, not a claim about a subsequently verified main.
+Actual acceptance/main run IDs and the resulting commit SHA are reported after verification;
+future CI evidence is not fabricated or retroactively inserted by amending this commit.
+
+No exact PAY-INT-0 checkpoint tag is specified; no tag or release is created. **PAY-INT-1 and
+Accounting automation: NOT STARTED / NOT AUTHORIZED. SaaS activation and production deployment:
+NOT AUTHORIZED.** Acceptance/adoption authorizes no runtime work or full Phase 2 completion.
 
 ## Verified baseline and ownership
 
@@ -452,12 +480,12 @@ Strict same-Party/same-frozen-precision eligibility deliberately excludes some f
 cases; matching historical retries and faithful reference retirement remain supported. No generic
 framework, mutable financial duplicate or Accounting automation is needed.
 
-Independent architecture audit must review this exact candidate, particularly optional-app
-ownership/dependencies, compound RBAC, HTTP-only serialized admission, owner financial-basis
-read participation and complete-evidence semantics. This author has not performed that independent
-audit or manufactured acceptance. Accepted ADRs 0011/0013/0014 are not edited; no substantive
-override is proposed. Older milestone-stage authorization wording remains historical, while the
-current roadmap/plan records ACC-1 closure and PAY-INT-0 proposal.
+The original proposal requested independent architecture review and stopped before publication or
+acceptance. That chronology is retained at the audited proposal SHA. The supplied independent
+FINAL PASS and exact-head candidate CI above now support formal acceptance without changing the
+reviewed technical body or its future acceptance matrix. Accepted ADRs 0011/0013/0014 remain
+unedited; no substantive override or runtime implementation occurs during this acceptance.
 
-**Next: STOP for independent PAY-INT-0 contract audit. NOT ACCEPTED. NOT PUBLISHED.
+**Next within the separately authorized publication flow: acceptance exact-head CI, normal
+fast-forward adoption and separate main exact-head CI; then canonical freeze and STOP.
 PAY-INT-1 NOT STARTED / NOT AUTHORIZED.**

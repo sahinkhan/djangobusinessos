@@ -226,15 +226,30 @@ tested the exact frozen SHA. Normal fast-forward adoption passed exact-head main
 These are publication/closure results, not new runtime tests performed by PAY-INT-0.
 Standalone closure is not production Accounting readiness or full Phase 2 completion.
 
-**Next proposed milestone: PAY-INT-0 — Billing/Payments Allocation Integration Contract.**
+**Current contract milestone: PAY-INT-0 — Billing/Payments Allocation Integration Contract.**
 [ADR 0015](decisions/0015-billing-payments-allocation-integration-contract.md) is
-**Proposed — Gate PAY-INT-0**, a local documentation candidate from that canonical freeze.
-It proposes a Payments-owned optional allocation component, immutable partial allocations,
-explicit RBAC/audit, same-alias locking/retry and complete-evidence derived balances. Neither
-this draft nor ACC-1 closure authorizes runtime work. **PAY-INT-1: NOT STARTED / NOT AUTHORIZED**.
+**Accepted — Gate PAY-INT-0**. The original proposal remains intact at audited
+`9d4fa5d3b7a12d4eb0ee2046d6e4ff306957e228`, from the ACC-1 canonical freeze above.
+Owner-supplied independent verdict: **FINAL PASS — PAY-INT-0 CONTRACT APPROVED FOR FORMAL
+ACCEPTANCE**, readiness **A**, no actionable candidate-owned P0–P3. Normal candidate publication
+passed exact-head **Phase 0 checks #115 / 38133793295 — SUCCESS**
+([candidate evidence](https://github.com/sahinkhan/djangobusinessos/actions/runs/38133793295)):
+**1,313 PostgreSQL tests**, fresh migrations and all mandatory checks passed. This is hosted
+existing-runtime regression evidence, not executed allocation implementation tests.
+
+**Formal acceptance: COMPLETE. Canonical adoption: PENDING at this acceptance checkpoint.**
+The acceptance metadata commit must pass its own exact-head branch CI before normal fast-forward
+adoption, followed by separate exact-head main CI. Once that authorized sequence succeeds, the
+same acceptance commit is the **PAY-INT-0 canonical freeze / CANONICALLY CLOSED** checkpoint;
+the pending statement remains historical acceptance-stage evidence. See ADR 0015's
+[completion rule](decisions/0015-billing-payments-allocation-integration-contract.md#formal-acceptance-and-canonical-completion-rule--2026-10-11).
+No future CI result is claimed here. The reviewed Payments-owned optional component, immutable
+partial allocations, explicit RBAC/audit, same-alias locking/retry and complete-evidence derived
+balances are unchanged. **PAY-INT-1: NOT STARTED / NOT AUTHORIZED**.
 Accounting integrations, other integrations, actual SaaS activation and production deployment
-remain **NOT STARTED / NOT AUTHORIZED**. Publication, contract acceptance and canonical adoption
-require separate gates; no PR, main update or tag is authorized by PAY-INT-0 preparation.
+remain **NOT STARTED / NOT AUTHORIZED**. No runtime work or full Phase 2 completion is authorized.
+This publication/adoption flow uses no PR or force push. No exact PAY-INT-0 tag is specified;
+no tag or release is created. The earlier local-only proposal/preparation stage remains historical.
 
 PAY-1 acceptance preserves PaymentMethod and immutable incoming Payment/Receipt only, their
 exact amount/snapshot/authorization/idempotency and omitted-date midnight-retry semantics.
@@ -257,7 +272,7 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | BILL-1 — Billing & Invoicing | Invoice/InvoiceLine, generic lines, snapshots, numbering, DRAFT -> ISSUED, derived original totals | No payment-aware outstanding; no void/credit, Sales automation or journals |
 | PAY-1 — Payments (canonically closed; payments-v1) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Payments-owned PaymentAllocation, applied/unapplied/outstanding, invoice integration, refunds/settlement and journals deferred |
 | ACC-0 / ACC-1 canonically closed | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014; freeze `00e18a75...` | Historical REVISE retained; ACC1-R1/R2 resolved; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
-| PAY-INT-0 proposed documentation candidate | Payments retains allocation ownership; Billing retains invoice facts; ADR 0015 proposes opt-in composition only | Not accepted or published; PAY-INT-1 not started/authorized; no Accounting automation |
+| PAY-INT-0 formally accepted documentation contract | Payments retains allocation ownership; Billing retains invoice facts; accepted ADR 0015 freezes opt-in composition only | Adoption pending at acceptance checkpoint; canonical closure requires the completion rule above; PAY-INT-1 not started/authorized; no Accounting automation |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
 generic Payments and Accounting work without Billing. Settlement-adjusted outstanding is a future
