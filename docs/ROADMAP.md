@@ -147,7 +147,8 @@ checks. The detailed independent evidence is recorded in ADR 0013, separately fr
 implementation verification. Formal acceptance is **COMPLETE**; canonical adoption is **PENDING**.
 The documentation-only acceptance commit requires its own exact-head hosted CI. Canonical `main`
 remains `d12f3e8c3a955dd90f1e03f35a30fde789441764`; PAY-1 is not canonically closed or tagged.
-PAY-INT-1 and ACC-1 are **NOT STARTED**; integrations and actual SaaS activation remain unauthorized.
+At that historical acceptance stage PAY-INT-1 and ACC-1 were **NOT STARTED**; integrations and
+actual SaaS activation were unauthorized. Current Accounting closure is recorded below.
 This is not production approval.
 
 **Current PAY-1 status: PAY-1 STANDALONE PAYMENTS — CANONICALLY CLOSED**, 2026-10-11.
@@ -186,13 +187,13 @@ adoption was **PENDING**; that documentation-only commit required its own exact-
 At that stage `main` remained `9ac3f0944fff65f013efd9c3a3e9b841022ce87f` and
 `accounting-contract-v1` had not been created. This chronology is retained.
 
-**Current ACC-1 implementation checkpoint — 2026-10-11:** ACC-0 is canonically adopted at
+**Historical ACC-1 implementation/remediation checkpoint — 2026-10-11:** ACC-0 was canonically adopted at
 `d5030e0e807334fdc358a1aa3affce704ef4a0f0`. The existing annotated `accounting-contract-v1`
 tag object `7369a26d526e10e9a128b44cf79efca9cf353e89` peels to that baseline. Separately
-authorized standalone Accounting is implemented locally on `acc1-accounting`. Original candidate
+authorized standalone Accounting was implemented locally on `acc1-accounting`. Original candidate
 `8eaa084aee58cc7c09e6ce74fe663b1f47c7d9f3` received **REVISE — ACC-1 IMPLEMENTATION REQUIRES
 REMEDIATION**, readiness **C**, with one blocking **ACC1-R1 — P2** report-retrieval finding and
-no reported P0/P1. Narrow local remediation is awaiting independent corrective audit.
+no reported P0/P1. At that checkpoint narrow local remediation awaited independent corrective audit.
 Account/Journal, service-only draft editing, immutable balanced posted
 JournalEntry/lines, eight permissions, seven atomic audit actions, and derived GL/TB are included.
 Original implementation-run verification: **1,282 PostgreSQL tests passed** (Accounting 273, including 56 real-lock
@@ -205,10 +206,35 @@ Remediation verification: **1,313 PostgreSQL tests passed** (Accounting **304**,
 **56** concurrency cases), **31** focused new report cases, **1,114 SQLite tests passed / 199
 expected skips**, and **222** database architecture guards. Fresh bootstrap, quality/frontend
 checks and real-browser report verification at 390/768/1280px passed.
-`main` remains at the baseline; no ACC-1 publication, acceptance, adoption or `accounting-v1`
-tag is authorized. PAY-INT-1, PaymentAllocation, all integrations and actual SaaS/production
-deployment remain unauthorized. Production Accounting readiness and full Phase 2 completion
-are not claimed.
+At that historical checkpoint `main` remained at the baseline; no ACC-1 publication, acceptance,
+adoption or `accounting-v1` tag was authorized. Subsequent closure is recorded below, without
+rewriting the original audit or implementation-run evidence.
+
+**Current ACC-1 status: ACC-1 STANDALONE ACCOUNTING — CANONICALLY CLOSED**, 2026-10-11.
+Canonical freeze: `00e18a75e27bfe962ea290ab01f0cb0520f4427e`.
+ACC1-R1 substantive report-retrieval finding is **RESOLVED** at
+`0aa759cbbc881ce8c3488f2a98c2095e8c9d2797`; ACC1-R2 P3 changed-file formatting is **RESOLVED**
+at the frozen head. Independent final reconciliation returned
+**PASS — ACC-1 IMPLEMENTATION APPROVED FOR PUBLICATION**. Candidate push
+**Phase 0 checks #112 / 38127289623 — SUCCESS**
+([candidate evidence](https://github.com/sahinkhan/djangobusinessos/actions/runs/38127289623))
+tested the exact frozen SHA. Normal fast-forward adoption passed exact-head main
+**Phase 0 checks #114 / 38127960676 — SUCCESS**
+([main evidence](https://github.com/sahinkhan/djangobusinessos/actions/runs/38127960676)):
+**1,313 PostgreSQL tests**, fresh migrations and all mandatory checks passed. PR #1 was closed
+**without merging**; it was not the adoption route. No `accounting-v1` tag exists or is claimed.
+These are publication/closure results, not new runtime tests performed by PAY-INT-0.
+Standalone closure is not production Accounting readiness or full Phase 2 completion.
+
+**Next proposed milestone: PAY-INT-0 — Billing/Payments Allocation Integration Contract.**
+[ADR 0015](decisions/0015-billing-payments-allocation-integration-contract.md) is
+**Proposed — Gate PAY-INT-0**, a local documentation candidate from that canonical freeze.
+It proposes a Payments-owned optional allocation component, immutable partial allocations,
+explicit RBAC/audit, same-alias locking/retry and complete-evidence derived balances. Neither
+this draft nor ACC-1 closure authorizes runtime work. **PAY-INT-1: NOT STARTED / NOT AUTHORIZED**.
+Accounting integrations, other integrations, actual SaaS activation and production deployment
+remain **NOT STARTED / NOT AUTHORIZED**. Publication, contract acceptance and canonical adoption
+require separate gates; no PR, main update or tag is authorized by PAY-INT-0 preparation.
 
 PAY-1 acceptance preserves PaymentMethod and immutable incoming Payment/Receipt only, their
 exact amount/snapshot/authorization/idempotency and omitted-date midnight-retry semantics.
@@ -230,7 +256,8 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | --- | --- | --- |
 | BILL-1 — Billing & Invoicing | Invoice/InvoiceLine, generic lines, snapshots, numbering, DRAFT -> ISSUED, derived original totals | No payment-aware outstanding; no void/credit, Sales automation or journals |
 | PAY-1 — Payments (canonically closed; payments-v1) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Payments-owned PaymentAllocation, applied/unapplied/outstanding, invoice integration, refunds/settlement and journals deferred |
-| ACC-0 canonically adopted / ACC-1 local remediation candidate | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014 | Original ACC-1 audit REVISE; ACC1-R1 independent corrective audit/publication/adoption pending; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
+| ACC-0 / ACC-1 canonically closed | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014; freeze `00e18a75...` | Historical REVISE retained; ACC1-R1/R2 resolved; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
+| PAY-INT-0 proposed documentation candidate | Payments retains allocation ownership; Billing retains invoice facts; ADR 0015 proposes opt-in composition only | Not accepted or published; PAY-INT-1 not started/authorized; no Accounting automation |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
 generic Payments and Accounting work without Billing. Settlement-adjusted outstanding is a future
