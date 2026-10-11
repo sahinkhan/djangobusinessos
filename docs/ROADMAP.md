@@ -101,6 +101,33 @@ Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contract
 
 ## Phase 2 — Commercial Core
 
+Current milestone — 2026-10-12: **PAY-INT-1 CANONICALLY CLOSED** at
+`a1079985a2ef5645dfed338e3e58af54f5242e1a` after normal fast-forward adoption and successful
+exact-head main CI. Original implementation `4b8a072da4426a48988d4605641bf1fc846c06ee`,
+corrective implementation `bef50fe8b20f97aaeefb8c610a46d412e9a05402` and the original independent
+REVISE / readiness C history are preserved. Corrective independent FINAL PASS / readiness A closed
+**PAYINT1-R1, PAYINT1-R2, PAYINT1-R3 and PAYINT1-R4: RESOLVED**.
+Hosted Phase 0 checks
+[implementation #118 / 38162359131](https://github.com/sahinkhan/djangobusinessos/actions/runs/38162359131),
+[acceptance #119 / 38163571737](https://github.com/sahinkhan/djangobusinessos/actions/runs/38163571737)
+and [main #120 / 38164395135](https://github.com/sahinkhan/djangobusinessos/actions/runs/38164395135)
+all succeeded with **1,613 PostgreSQL tests each**, fresh migrations and all mandatory checks.
+#118 tested the corrective SHA; #119/#120 tested the canonical freeze. No PAY-INT-1 tag is claimed.
+Earlier adoption-pending statements below describe their historical acceptance stage.
+
+**ACC-INT-0 — Billing / Payments Outcomes -> Accounting Posting Contract: PROPOSED**, local
+documentation only on `accint0-accounting-outcomes-contract`, from that exact canonical main.
+[ADR 0016](decisions/0016-accounting-commercial-outcomes-integration-contract.md) proposes two
+Accounting-owned opt-in apps: invoice AR/Revenue independently of Payments, and allocation Cash/AR
+after a valid invoice Accounting posting. Explicit Journal/Account IDs, immutable source/effect
+bindings, owner financial bases, complete evidence and atomic public-service composition are
+specified, not implemented or accepted. Independent architecture audit is next; no publication,
+acceptance, runtime, permission, migration or UI change is authorized by this gate.
+**ACC-INT-1: NOT STARTED / NOT AUTHORIZED. Phase 2: NOT COMPLETE. Phase 3: NOT AUTHORIZED.**
+This is the final currently proposed Accounting composition gate before a later Phase 2 completion
+review, unless independent audit identifies a prerequisite gap. Other optional integrations remain
+separately governed; SaaS activation and production deployment are not approved.
+
 Current future-work contract: **Option A — separate horizontal modules**, selected by the owner.
 [ADR 0011](decisions/0011-modular-billing-payments-accounting-boundary.md) is **Accepted — Gate BILL-0**
 as of 2026-10-07. Independent audit FINAL PASS and hosted Phase 0 checks #91 SUCCESS
@@ -226,7 +253,7 @@ tested the exact frozen SHA. Normal fast-forward adoption passed exact-head main
 These are publication/closure results, not new runtime tests performed by PAY-INT-0.
 Standalone closure is not production Accounting readiness or full Phase 2 completion.
 
-**Current implementation milestone: PAY-INT-1 — FORMALLY ACCEPTED FOR CANONICAL ADOPTION,
+**Historical acceptance-stage milestone: PAY-INT-1 — FORMALLY ACCEPTED FOR CANONICAL ADOPTION,
 2026-10-12. Formal acceptance: COMPLETE. Canonical adoption: PENDING at this acceptance checkpoint.**
 
 Separately authorized implementation starts from canonical PAY-INT-0 freeze
@@ -316,7 +343,8 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | PAY-1 — Payments (canonically closed; payments-v1) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Payments-owned PaymentAllocation, applied/unapplied/outstanding, invoice integration, refunds/settlement and journals deferred |
 | ACC-0 / ACC-1 canonically closed | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014; freeze `00e18a75...` | Historical REVISE retained; ACC1-R1/R2 resolved; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
 | PAY-INT-0 canonically closed at `9ee4e0bd...` | Payments retains allocation ownership; Billing retains invoice facts; accepted ADR 0015 freezes opt-in composition | Historical acceptance-stage pending wording retained above; allocation implementation is separately governed; no Accounting automation |
-| PAY-INT-1 formally accepted for canonical adoption | Opt-in `payments_billing`; immutable allocations, complete-evidence profile and intrinsic stored-parent retries; original REVISE / C preserved; corrective FINAL PASS / A; implementation CI #118 SUCCESS | Acceptance COMPLETE; adoption PENDING at this checkpoint, subject to acceptance/main CI; no Accounting, reversals/refunds, FX, bank settlement or other automation |
+| PAY-INT-1 canonically closed at `a1079985...` | Opt-in `payments_billing`; immutable allocations, complete-evidence profile and intrinsic stored-parent retries; original REVISE / C preserved; corrective FINAL PASS / A; R1-R4 RESOLVED; CI #118/#119/#120 SUCCESS | No Accounting effect, reversal/refund, FX, bank settlement or other automatic posting; earlier acceptance-stage pending chronology retained |
+| ACC-INT-0 proposed; local only | ADR 0016 defines invoice AR/Revenue and allocation Cash/AR through Accounting-owned optional apps, explicit accounts, protected source/effect identity and atomic public services | Independent contract audit pending; NOT ACCEPTED / NOT PUBLISHED; ACC-INT-1 NOT STARTED / NOT AUTHORIZED; no Phase 2 exit or Phase 3 authorization |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
 generic Payments and Accounting work without Billing. Settlement-adjusted outstanding in the local
