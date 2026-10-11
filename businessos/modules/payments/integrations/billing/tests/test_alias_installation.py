@@ -6,6 +6,7 @@ from uuid import uuid4
 
 import pytest
 from django.apps import apps
+from django.core.exceptions import ValidationError
 from django.db import connections
 from django.db.migrations.executor import MigrationExecutor
 
@@ -140,8 +141,9 @@ def test_selected_alias_complete_flow(django_db_blocker, monkeypatch):
     from businessos.modules.party.models import Party
     from businessos.modules.payments import services as payments
 
-    from .. import selectors, services
+    from .. import compatibility, selectors, services
     from ..models import PaymentAllocation
+    from .test_evidence_retry_integrity import restricted_reader
 
     alias = "payint1_selected_alias"
     config = dict(connections.databases["default"])
@@ -245,6 +247,40 @@ def test_selected_alias_complete_flow(django_db_blocker, monkeypatch):
                     assert payment_evidence.applied == invoice_evidence.applied == 51
                     assert all(row._state.db == alias for row in PaymentAllocation.objects.all())
                     assert all(row._state.db == alias for row in AuditEntry.objects.all())
+                if postgres:
+                    # Real limited role and RLS on the selected database. The
+                    # default cursor remains forbidden for the entire probe.
+                    with connections[alias].cursor() as cursor:
+                        cursor.execute(
+                            "ALTER TABLE payments_billing_paymentallocation "
+                            "ENABLE ROW LEVEL SECURITY"
+                        )
+                        cursor.execute(
+                            "CREATE POLICY hidden_alias_allocations ON "
+                            "payments_billing_paymentallocation USING (false)"
+                        )
+                    try:
+                        with restricted_reader(connections[alias]):
+                            assert not PaymentAllocation.objects.exists()
+                            assert compatibility.evidence_profile() == "incompatible"
+                            result = selectors.payment_allocation_evidence(context, receipt.pk)
+                            assert result.applied is result.history is result.count is None
+                            with pytest.raises(ValidationError, match="unavailable"):
+                                services.create_payment_allocation(
+                                    context, **(args | {"idempotency_key": "hidden"})
+                                )
+                        assert PaymentAllocation.objects.count() == 51
+                    finally:
+                        with connections[alias].cursor() as cursor:
+                            cursor.execute(
+                                "DROP POLICY hidden_alias_allocations ON "
+                                "payments_billing_paymentallocation"
+                            )
+                            cursor.execute(
+                                "ALTER TABLE payments_billing_paymentallocation "
+                                "DISABLE ROW LEVEL SECURITY"
+                            )
+                    assert compatibility.evidence_profile() is None
                 assert any("LIMIT 50 OFFSET 50" in statement for statement in statements)
                 if postgres:
                     assert any("FOR UPDATE" in statement for statement in statements)

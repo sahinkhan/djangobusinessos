@@ -37,6 +37,86 @@ POSTGRES_CHECKS = {
     ),
 }
 
+# Only relations read by the financial basis/completeness proof (plus its
+# migration coverage and Company provenance). Resolve their actual identities
+# on this connection; do not assume public or compare unqualified FK names.
+FINANCIAL_RELATIONS = (
+    ("payments_billing", "PaymentAllocation"),
+    ("payments", "Payment"),
+    ("payments", "PaymentMethod"),
+    ("billing", "Invoice"),
+    ("billing", "InvoiceLine"),
+    ("party", "Party"),
+    ("reference", "Currency"),
+    ("organization", "Company"),
+)
+# Django PROTECT is a Python deletion rule; the installed PostgreSQL backstop
+# is a validated NO ACTION FK. These are the fixed edges used by this proof.
+FINANCIAL_FOREIGN_KEYS = {
+    "PaymentAllocation": {"company": "Company", "payment": "Payment", "invoice": "Invoice"},
+    "Payment": {
+        "company": "Company",
+        "payer_party": "Party",
+        "currency": "Currency",
+        "payment_method": "PaymentMethod",
+    },
+    "Invoice": {"company": "Company", "bill_to_party": "Party", "currency": "Currency"},
+    "InvoiceLine": {"company": "Company", "invoice": "Invoice"},
+    "PaymentMethod": {"company": "Company"},
+    "Party": {"company": "Company"},
+}
+
+
+def _postgres_financial_profile(cursor):
+    models = {name: apps.get_model(app, name) for app, name in FINANCIAL_RELATIONS}
+    tables = {name: model._meta.db_table for name, model in models.items()}
+    tables["Migration"] = MigrationRecorder.Migration._meta.db_table
+    cursor.execute(
+        "SELECT rolsuper, rolbypassrls FROM pg_catalog.pg_roles WHERE rolname = current_user"
+    )
+    role = cursor.fetchone()
+    if role is None:
+        return "incompatible"
+    unrestricted = any(role)
+    identities = {}
+    for name, table in tables.items():
+        cursor.execute(
+            "SELECT oid, relkind, relrowsecurity, relforcerowsecurity "
+            "FROM pg_catalog.pg_class WHERE oid = pg_catalog.to_regclass(%s)",
+            [table],
+        )
+        relation = cursor.fetchone()
+        if relation is None:
+            return "incomplete"
+        oid, kind, rls, force_rls = relation
+        if kind != "r" or ((rls or force_rls) and not unrestricted):
+            return "incompatible"
+        identities[name] = oid
+    for source, edges in FINANCIAL_FOREIGN_KEYS.items():
+        cursor.execute(
+            "SELECT ARRAY(SELECT a.attname FROM unnest(c.conkey) WITH ORDINALITY k(num, pos) "
+            "JOIN pg_catalog.pg_attribute a ON a.attrelid=c.conrelid AND a.attnum=k.num "
+            "ORDER BY k.pos), c.confrelid, "
+            "ARRAY(SELECT a.attname FROM unnest(c.confkey) WITH ORDINALITY k(num, pos) "
+            "JOIN pg_catalog.pg_attribute a ON a.attrelid=c.confrelid AND a.attnum=k.num "
+            "ORDER BY k.pos), c.confdeltype, c.convalidated "
+            "FROM pg_catalog.pg_constraint c WHERE c.conrelid=%s AND c.contype='f'",
+            [identities[source]],
+        )
+        constraints = list(cursor)
+        for field, target in edges.items():
+            expected = (
+                [models[source]._meta.get_field(field).column],
+                identities[target],
+                [models[target]._meta.pk.column],
+                "a",
+                True,
+            )
+            matching = [row for row in constraints if row[0] == expected[0]]
+            if matching != [expected]:
+                return "incompatible"
+    return None
+
 
 def evidence_profile():
     if not apps.is_installed("businessos.modules.payments.integrations.billing"):
@@ -51,6 +131,10 @@ def evidence_profile():
         return "incompatible"
     connection = connections[current_database_alias()]
     with connection.cursor() as cursor:
+        if connection.vendor == "postgresql":
+            reason = _postgres_financial_profile(cursor)
+            if reason:
+                return reason
         tables = connection.introspection.table_names(cursor)
         if "django_migrations" not in tables:
             return "incomplete"

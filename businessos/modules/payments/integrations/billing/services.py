@@ -34,7 +34,38 @@ def _collision(error):
     return None
 
 
-def _recover(existing, payment_id, invoice_id, amount):
+def _bases(context, payment_id, invoice_id):
+    payment = payment_receipt_basis(context, payment_id)
+    authorize(context, CREATE_ALLOCATIONS)
+    invoice = invoice_financial_basis(context, invoice_id)
+    authorize(context, CREATE_ALLOCATIONS)
+    if (payment.payer_party_id, payment.currency_id, payment.currency_code, payment.precision) != (
+        invoice.bill_to_party_id,
+        invoice.currency_id,
+        invoice.currency_code,
+        invoice.precision,
+    ):
+        raise ValidationError(
+            {"invoice_id": "Invoice and receipt must share Party, currency and frozen precision."}
+        )
+    return payment, invoice
+
+
+def _recover(context, existing, payment_id, invoice_id, amount):
+    # The committed fact, not a conflicting request, supplies the lock/basis IDs.
+    # Intrinsic historical validity is not a NEW unused-capacity calculation.
+    payment, invoice = _bases(context, existing.payment_id, existing.invoice_id)
+    stored_amount = value("amount", domain.amount, existing.amount, payment.precision)
+    if (
+        existing.company_id != context.company_id
+        or existing.company_id != payment.company_id
+        or existing.company_id != invoice.company_id
+        or existing.payment_id != payment.id
+        or existing.invoice_id != invoice.id
+        or stored_amount > payment.amount
+        or stored_amount > invoice.original_total
+    ):
+        raise ValidationError("Allocation historical fact is intrinsically incompatible.")
     if (existing.payment_id, existing.invoice_id, existing.amount) != (
         payment_id,
         invoice_id,
@@ -62,22 +93,10 @@ def create_payment_allocation(context, *, payment_id, invoice_id, amount, idempo
         .filter(company_id=context.company_id, idempotency_key=key)
         .first()
     )
-    payment = payment_receipt_basis(context, payment_id)
-    authorize(context, CREATE_ALLOCATIONS)
-    invoice = invoice_financial_basis(context, invoice_id)
-    authorize(context, CREATE_ALLOCATIONS)
-    amount = value("amount", domain.amount, amount, payment.precision)
-    if (payment.payer_party_id, payment.currency_id, payment.currency_code, payment.precision) != (
-        invoice.bill_to_party_id,
-        invoice.currency_id,
-        invoice.currency_code,
-        invoice.precision,
-    ):
-        raise ValidationError(
-            {"invoice_id": "Invoice and receipt must share Party, currency and frozen precision."}
-        )
     if existing is not None:
-        return _recover(existing, payment_id, invoice_id, amount)
+        return _recover(context, existing, payment_id, invoice_id, amount)
+    payment, invoice = _bases(context, payment_id, invoice_id)
+    amount = value("amount", domain.amount, amount, payment.precision)
     history = validate_history(context)
     if amount > domain.subtract(payment.amount, applied(history.filter(payment_id=payment_id))):
         raise ValidationError("Payment capacity exceeded.", code="payment_capacity_exceeded")
@@ -106,7 +125,7 @@ def create_payment_allocation(context, *, payment_id, invoice_id, amount, idempo
                     .first()
                 )
                 if existing is not None:
-                    return _recover(existing, payment_id, invoice_id, amount)
+                    return _recover(context, existing, payment_id, invoice_id, amount)
             if (
                 collision != "id"
                 or not PaymentAllocation.objects.using(alias).filter(pk=allocation.pk).exists()

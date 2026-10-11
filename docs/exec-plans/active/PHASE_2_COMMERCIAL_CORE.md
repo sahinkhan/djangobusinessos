@@ -1,12 +1,13 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 / PAY-INT-0 CANONICALLY CLOSED; PAY-INT-1 LOCAL IMPLEMENTATION CANDIDATE / AWAITING INDEPENDENT AUDIT
+Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 / PAY-INT-0 CANONICALLY CLOSED; PAY-INT-1 LOCAL CORRECTIVE CANDIDATE / AWAITING INDEPENDENT CORRECTIVE RE-AUDIT
 
 Current authorized implementation baseline: `9ee4e0bd77350ddeef1e928e2a73b676b4cbb1ee`.
 PAY-INT-0 acceptance CI #116 / `38134694017` and main CI #117 / `38135373053` both succeeded
 against that exact SHA (1,313 PostgreSQL tests each), satisfying the historical completion rule.
 PAY-INT-1 is separately authorized on `payint1-billing-payments-allocation`, **NOT PUBLISHED,
-NOT ACCEPTED, NOT CANONICALLY ADOPTED**. See the [current implementation record](#pay-int-1-local-implementation-and-verification--2026-10-11).
+NOT ACCEPTED, NOT CANONICALLY ADOPTED**. See the [original implementation record](#pay-int-1-local-implementation-and-verification--2026-10-11)
+and [current corrective evidence](#pay-int-1-local-corrective-remediation--2026-10-11).
 The PAY-INT-0 acceptance-stage pending/not-authorized wording below is retained as historical
 checkpoint evidence, not a contradiction of this later bounded implementation authorization.
 Accounting automation, other integrations, SaaS activation and deployment remain unauthorized.
@@ -1874,8 +1875,9 @@ publication/adoption verification; no runtime implementation or next milestone b
 
 ## PAY-INT-1 local implementation and verification — 2026-10-11
 
-**LOCAL IMPLEMENTATION CANDIDATE / AWAITING INDEPENDENT AUDIT. NOT PUBLISHED / NOT ACCEPTED /
-NOT CANONICALLY ADOPTED.** The owner's separate implementation instruction authorizes one local
+**HISTORICAL ORIGINAL IMPLEMENTATION CHECKPOINT / BEFORE THE SUPPLIED REVISE AUDIT.
+NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED.** The owner's separate implementation
+instruction authorizes one local
 commit, subject `feat: implement PAY-INT-1 payment allocations`, from
 `9ee4e0bd77350ddeef1e928e2a73b676b4cbb1ee` on `payint1-billing-payments-allocation`.
 The resulting exact SHA is reported from Git after verification, not invented inside this commit.
@@ -2094,3 +2096,128 @@ templates/payments_billing/allocation_form.html
 templates/payments_billing/evidence.html
 tests/test_database_foundation.py
 ```
+
+## PAY-INT-1 local corrective remediation — 2026-10-11
+
+**LOCAL ONLY / AWAITING INDEPENDENT CORRECTIVE RE-AUDIT. NOT PUBLISHED / NOT ACCEPTED /
+NOT CANONICALLY ADOPTED.** Original candidate
+`4b8a072da4426a48988d4605641bf1fc846c06ee` is preserved exactly. The supplied independent
+verdict was **REVISE — PAY-INT-1 IMPLEMENTATION REQUIRES SUBSTANTIVE REDESIGN / Readiness C**.
+It identified PAYINT1-R1 P1, PAYINT1-R2 P1, PAYINT1-R3 P2 and PAYINT1-R4 P2. The owner's
+subsequent instruction authorizes only corrective implementation, fresh verification and one
+separate local commit above that candidate. Its exact corrective SHA is reported from Git after
+checks, not fabricated or self-referentially embedded here. Only a future independent corrective
+auditor may close the findings; developer verification below is not acceptance.
+
+### Corrected evidence and retry implementation
+
+- **PAYINT1-R1 P1 — remediated locally, independent verification pending.** The selected
+  PostgreSQL connection resolves actual relation OIDs from Django table metadata. Its current
+  role and each relation's kind/RLS/forced-RLS flags are checked before migration/financial reads.
+  Unsupported RLS for a non-superuser/non-BYPASSRLS reader makes evidence incompatible; no
+  policy is guessed safe, privileged connection selected or security setting altered. The exact
+  proof set is PaymentAllocation, Payment, PaymentMethod, Invoice, InvoiceLine, Party, Currency,
+  Company and the migration recorder: the actual financial, provenance and coverage reads, not
+  unrelated module data. A genuine nonprivileged non-RLS deployment is also verified.
+- **PAYINT1-R2 P1 — remediated locally, independent verification pending.** Fourteen relied-on
+  FK edges are checked by actual source/target OIDs, ordered source/target columns, validated
+  state and PostgreSQL NO ACTION delete backstop (Django PROTECT remains unchanged). Missing,
+  NOT VALID or incompatible constraints fail closed. Raw scoped allocation EXISTS probes reject
+  either missing endpoint before joined history validation. Allocation Company and either
+  endpoint's Company can bring a row into the integrity scope; malformed off-page/filtered
+  facts cannot disappear. Integrity/aggregation/pagination remain SQL-bounded.
+- **PAYINT1-R3 P2 — remediated locally, independent verification pending.** A found Company/key
+  fact supplies authoritative stored Payment then Invoice IDs for locking and current authority
+  rechecks. Only after validating that stored basis/fact is the canonical requested tuple compared.
+  Valid canonical changed parents, including draft/incompatible/nonexistent UUIDs, produce
+  deterministic `idempotency_conflict` without inspecting or locking those requested parents.
+- **PAYINT1-R4 P2 — remediated locally, independent verification pending.** Matching retry
+  validates owner financial bases, Company/Party/Currency/frozen code/precision provenance and
+  exact stored amount/range/scale, including amount <= each immutable original parent capacity.
+  Impossible facts fail closed without mutation/audit. This is intrinsic historical validity,
+  not a new remaining-capacity check: valid 60 + 40 histories still recover the original 60 fact,
+  UUID and timestamps when either/both endpoints are now fully applied.
+
+Accepted ADR 0015, exact eight-field schema, Decimal(38,8), migrations, PROTECT references,
+two permission identities, registration defaults/enablement preservation and owner/Core
+contracts are unchanged. New allocation retains Company -> Payment -> Invoice/current RBAC,
+atomic insertion/audit and no Accounting effects. SQLite retains explicit backend limitations;
+it is not represented as proving PostgreSQL RLS, catalog, numeric or row-lock properties.
+
+### Fresh corrective developer verification
+
+All application data is new disposable synthetic data on the isolated Linux Docker QA network;
+source is bind-mounted read-only, PostgreSQL storage is task-created tmpfs, and no demo/customer
+or target database is accessed. Runtime/test files remained unchanged through the final runs.
+Python 3.13.16 / Django 5.2.17 / PostgreSQL 17 are used. Commands below have
+`BUSINESSOS_INSTALL_PAYMENTS_BILLING=1` unless explicitly probing a standalone topology.
+
+| Actual check | Developer result |
+| --- | --- |
+| New `test_evidence_retry_integrity.py` plus `test_alias_installation.py`, PostgreSQL | **84 passed**, 104.33 seconds; 77 new R1-R4 cases plus 7 existing alias/topology cases |
+| Complete integration suite, `pytest --ds=config.settings.development -q businessos/modules/payments/integrations/billing/tests` | **300 passed**, 526.72 seconds, no teardown warning |
+| Existing real-blocking concurrency/security suite, included above | **57 passed**: 18 capacity, 4 keyed, 12 Company-wait revocations, 6 parent-wait authorization rechecks, 4 issue/edit, 6 HTTP admission, 4 coherent summaries, 2 parent-page snapshots, 1 rollback/response-loss |
+| Full PostgreSQL, `pytest --ds=config.settings.development -q` | **1,613 passed**, 1,215.66 seconds, no skips or teardown warning; includes Billing/Payments/Accounting, Access/security, database foundation/architecture and module registry |
+| Full SQLite, `pytest --ds=config.settings.test -q` | **1,297 passed, 316 skipped**, 405.79 seconds |
+| Fresh `python manage.py migrate --noinput` | PASS on new `payint_remediation_bootstrap`; zero-state optional schema initialized |
+| `python manage.py check`; `python manage.py makemigrations --check --dry-run` | PASS, zero issues / no changes |
+| Registration replay / standalone Billing and Payments / non-default execution alias | PASS within 300 integration cases; selected-alias RLS is real and default cursor remains forbidden |
+| Standalone Accounting PostgreSQL bootstrap/posting/readback | PASS using the unchanged existing standalone probe against a separate fresh synthetic database |
+| `ruff check . --no-cache` | PASS, local and locked Linux runtime |
+| Explicit `ruff format --check` on every baseline-to-candidate Python path, including migrations | PASS, **33 files** |
+| `npm ci`; `npm run build:css`; generated CSS comparison | PASS; CSS remains byte-for-byte original. Eight inherited npm advisories (2 moderate, 6 high) remain; no dependency upgrade authorized |
+| `node --check static/js/app-navigation.js`; `node --test tests/js/test_app_navigation.cjs` | PASS / **21 passed** |
+| Responsive browser parent/form/unavailable/denied paths | PASS at 390 / 768 / 1280px, details below |
+| `git diff --check`, strict UTF-8, balanced fences and local links/anchors | PASS |
+
+New case counts are R1 **10** (9 actual relation RLS states and 1 supported nonprivileged
+non-RLS reader), R2 **44** (14 FK edges x 3 drifts, plus either orphan endpoint), R3 **8**
+canonical conflict shapes and R4 **15** (3 impossible capacities, 3 fully-applied retry shapes,
+9 immutable-basis corruptions). In addition, the existing selected-alias test now reproduces
+hidden RLS evidence on the non-default database without permitting default cursor access.
+The 316 SQLite skips are 199 inherited plus 117 integration cases: the original 63 integration
+backend limitations plus 54 new RLS/catalog/FK tests. The remaining 23 new retry cases run on
+both backends. Full PostgreSQL executes those catalog and blocking cases, not simulated skips.
+
+Browser QA used only `localhost:8022`, two synthetic Companies (the QA actor sees only its
+Company), a 190-character payer and 51 initial allocation facts. Receipt/invoice document
+scroll/client widths matched **380 / 758 / 1270px**, and form widths matched
+**390 / 768 / 1280px**; all four form fields were aligned at each size. Initial exact summaries
+showed applied 5.10 / remaining 94.90. Invalid NaN was rejected; Tab moved amount -> request key,
+the plum focus ring remained visible, and Enter/normal POST added exactly one fact/audit,
+showing 6.10 / 93.90. Page 1 contained 50 history rows, page 2 contained 2, query parameters
+survived pagination and direct refresh. With synthetic allocation permissions withdrawn,
+ordinary owner facts stayed readable but evidence was `UNAVAILABLE(forbidden)` with no fabricated
+remaining amount; the action route displayed the normal access-required page. A synthetic
+NOT VALID FK produced `UNAVAILABLE(incompatible)` at all sizes and a normal POST validation
+error without adding a fact/audit. The fixture FK was restored afterwards. No QA JavaScript
+console errors were captured. A CSRF-enforcing localhost server-client probe returned 403
+without a token and retained 52 facts/52 allocation audits. Existing HTTP cases cover ordinary
+non-JavaScript GET/POST, stale Company forms, permissions and module denial. No UI/assets changed.
+
+Superseded failures are retained, not counted as passes: the initial 67-case run reported
+51 fixture failures / 16 passes because PostgreSQL deferred FK triggers were pending before
+test ALTER TABLE; explicitly checking pending constraints in the test harness corrected this.
+An isolated first reproduction failed for that same harness reason, then the intermediate
+67 cases passed before the final 77-case expansion. The first browser seed lacked integration
+grants; its continuation initially used an unnormalized role code. The final fixture setup
+used the persisted role and exact registered grants. A preliminary standalone CSRF probe used
+disallowed `testserver` and returned 400; the corrected localhost probe verified actual 403.
+The first sandboxed npm install failed registry DNS; approved official-registry access succeeded.
+One preliminary JavaScript invocation used the wrong test filename; the discovered repository
+path above ran all 21 tests successfully. None of these setup errors changed production code
+or is substituted for final successful evidence. Inherited Browserslist/advisory warnings remain.
+
+Corrective paths are only `compatibility.py`, `selectors.py`, `services.py`,
+`tests/test_alias_installation.py`, new `tests/test_evidence_retry_integrity.py` under the optional
+integration, and this plan plus `docs/ROADMAP.md`. No owner/Core code, migration, configuration,
+manifest, frontend or ADR file changes. Final whitespace/documentation/ref verification passed.
+The verified task web server, PostgreSQL tmpfs container and isolated network were removed,
+tearing down all task-created synthetic databases/output. The cleanup guard initially stopped
+on a PowerShell property-collection count; fresh network inspection and an explicit dictionary
+membership check confirmed the sole task container before removal. The QA tab was closed and
+viewport reset. Existing demos/user resources and other worktrees remain untouched. No hosted
+CI or publication is claimed.
+
+**STOP FOR INDEPENDENT CORRECTIVE RE-AUDIT. All four findings remain pending independent
+verification; no acceptance, canonical adoption, Accounting automation or production approval.**

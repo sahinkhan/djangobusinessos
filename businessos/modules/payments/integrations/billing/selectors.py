@@ -3,11 +3,13 @@ from decimal import Decimal
 from uuid import UUID
 
 from django.core.exceptions import ValidationError
-from django.db.models import DecimalField, F, OuterRef, Q, Subquery, Sum
+from django.db.models import DecimalField, Exists, F, OuterRef, Q, Subquery, Sum
 from django.db.models.functions import Length, Round, Trim
 
 from businessos.core.database import business_atomic, current_database_alias
+from businessos.modules.billing.models import Invoice
 from businessos.modules.billing.selectors import invoice_financial_basis, issued_invoice_basis_query
+from businessos.modules.payments.models import Payment
 from businessos.modules.payments.selectors import payment_receipt_basis, receipt_basis_query
 
 from . import domain
@@ -31,11 +33,17 @@ def validate_history(context):
     model payload is constructed. A corrupt off-page fact invalidates the result.
     """
     alias = current_database_alias()
+    payments_by_id = Payment.objects.using(alias).filter(pk=OuterRef("payment_id"))
+    invoices_by_id = Invoice.objects.using(alias).filter(pk=OuterRef("invoice_id"))
     rows = PaymentAllocation.objects.using(alias).filter(
         Q(company_id=context.company_id)
-        | Q(payment__company_id=context.company_id)
-        | Q(invoice__company_id=context.company_id)
+        | Exists(payments_by_id.filter(company_id=context.company_id))
+        | Exists(invoices_by_id.filter(company_id=context.company_id))
     )
+    # Check the raw ledger before any joins: malformed FK facts must not vanish
+    # from the validity proof, even outside the requested page/filter.
+    if rows.filter(~Exists(payments_by_id) | ~Exists(invoices_by_id)).exists():
+        raise ValidationError("Missing allocation parent history.")
     valid = Q(
         company_id=context.company_id,
         payment__company_id=context.company_id,

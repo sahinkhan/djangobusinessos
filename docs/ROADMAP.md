@@ -226,8 +226,8 @@ tested the exact frozen SHA. Normal fast-forward adoption passed exact-head main
 These are publication/closure results, not new runtime tests performed by PAY-INT-0.
 Standalone closure is not production Accounting readiness or full Phase 2 completion.
 
-**Current implementation milestone: PAY-INT-1 — LOCAL IMPLEMENTATION CANDIDATE, AWAITING
-INDEPENDENT AUDIT. NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED.**
+**Current implementation milestone: PAY-INT-1 — LOCAL CORRECTIVE CANDIDATE, AWAITING
+INDEPENDENT CORRECTIVE RE-AUDIT. NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED.**
 
 Separately authorized implementation starts from canonical PAY-INT-0 freeze
 `9ee4e0bd77350ddeef1e928e2a73b676b4cbb1ee`, on `payint1-billing-payments-allocation`.
@@ -244,8 +244,16 @@ Only new optional-app migrations are added. No mutable balances, Accounting auto
 bank reconciliation, SaaS activation or deployment is implemented. Existing standalone contracts
 and ADR 0015's technical semantics remain intact. Actual local verification and limitations are
 recorded in the [PAY-INT-1 execution record](exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#pay-int-1-local-implementation-and-verification--2026-10-11).
-Independent audit, normal publication/exact-head CI, acceptance and canonical adoption remain
-separate gates; none is performed by this implementation task.
+The supplied independent audit of original candidate
+`4b8a072da4426a48988d4605641bf1fc846c06ee` returned **REVISE / Readiness C**:
+PAYINT1-R1 P1 (RLS-hidden evidence), PAYINT1-R2 P1 (unvalidated FK/orphan history),
+PAYINT1-R3 P2 (requested-parent retry ordering), PAYINT1-R4 P2 (intrinsically impossible retry).
+The separately authorized correction is local only; developer tests do not close those findings.
+Its [corrective evidence](exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#pay-int-1-local-corrective-remediation--2026-10-11)
+records selected-alias catalog checks, raw orphan probes and stored-parent intrinsic retry
+validation without changing accepted ADR 0015 or migrations. Independent corrective re-audit is
+**PENDING**. Normal publication/exact-head CI, acceptance and canonical adoption remain separate
+gates; none is performed by this corrective task.
 
 **Historical acceptance checkpoint: PAY-INT-0 — Billing/Payments Allocation Integration Contract.**
 [ADR 0015](decisions/0015-billing-payments-allocation-integration-contract.md) is
@@ -294,7 +302,7 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | PAY-1 — Payments (canonically closed; payments-v1) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Payments-owned PaymentAllocation, applied/unapplied/outstanding, invoice integration, refunds/settlement and journals deferred |
 | ACC-0 / ACC-1 canonically closed | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014; freeze `00e18a75...` | Historical REVISE retained; ACC1-R1/R2 resolved; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
 | PAY-INT-0 canonically closed at `9ee4e0bd...` | Payments retains allocation ownership; Billing retains invoice facts; accepted ADR 0015 freezes opt-in composition | Historical acceptance-stage pending wording retained above; allocation implementation is separately governed; no Accounting automation |
-| PAY-INT-1 local implementation candidate, awaiting independent audit | Opt-in `payments_billing`; immutable allocations, exact composed summaries/history and minimal owner read-only bases | Not published/accepted/adopted; no Accounting, reversals/refunds, FX, bank settlement or other automation |
+| PAY-INT-1 local corrective candidate, awaiting independent corrective re-audit | Opt-in `payments_billing`; immutable allocations, complete-evidence profile and intrinsic stored-parent retries; original audit REVISE / C preserved | Findings not independently closed; not published/accepted/adopted; no Accounting, reversals/refunds, FX, bank settlement or other automation |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
 generic Payments and Accounting work without Billing. Settlement-adjusted outstanding in the local
