@@ -6,7 +6,8 @@ Date: 2026-10-11
 
 ## Authority and exact starting point
 
-This documentation contract is **formally accepted, not an implemented capability**. The original
+At the PAY-INT-0 checkpoint this documentation contract was **formally accepted, not an implemented
+capability**. The original
 proposal remains intact at `9d4fa5d3b7a12d4eb0ee2046d6e4ff306957e228` on
 `payint0-billing-payments-contract`. Canonical starting main and ACC-1
 freeze: `00e18a75e27bfe962ea290ab01f0cb0520f4427e`. Independent ACC-1 final reconciliation was
@@ -57,6 +58,39 @@ future CI evidence is not fabricated or retroactively inserted by amending this 
 No exact PAY-INT-0 checkpoint tag is specified; no tag or release is created. **PAY-INT-1 and
 Accounting automation: NOT STARTED / NOT AUTHORIZED. SaaS activation and production deployment:
 NOT AUTHORIZED.** Acceptance/adoption authorizes no runtime work or full Phase 2 completion.
+
+### PAY-INT-1 implementation acceptance and completion rule — 2026-10-12
+
+The contract status remains **Accepted — Gate PAY-INT-0**. The separately authorized PAY-INT-1
+implementation is now **FORMALLY ACCEPTED FOR CANONICAL ADOPTION**, 2026-10-12. Formal acceptance
+is **COMPLETE**; canonical adoption is **PENDING at this acceptance checkpoint**. The technical
+body and acceptance matrix below remain the exact accepted PAY-INT-0 specification at its pinned
+baseline, including its historical future-API/not-started wording, not current implementation status.
+
+Original implementation `4b8a072da4426a48988d4605641bf1fc846c06ee` received independent
+**REVISE / readiness C**, with PAYINT1-R1 P1, R2 P1, R3 P2 and R4 P2. Corrective implementation
+`bef50fe8b20f97aaeefb8c610a46d412e9a05402` received the owner-supplied independent **FINAL PASS —
+PAY-INT-1 CORRECTIVE IMPLEMENTATION APPROVED FOR HOSTED CI**, readiness **A**: all four findings
+are **RESOLVED**, with no new actionable candidate-owned P0–P3 finding. Both audited commits
+remain intact above PAY-INT-0 canonical freeze `9ee4e0bd77350ddeef1e928e2a73b676b4cbb1ee`.
+
+Hosted implementation **Phase 0 checks #118 / 38162359131 — SUCCESS**
+([run](https://github.com/sahinkhan/djangobusinessos/actions/runs/38162359131)) checked out the
+exact corrective SHA, passing **1,613 PostgreSQL tests**, fresh migrations, Ruff, Django checks,
+no migration drift and npm/Tailwind/CSS reproducibility. Supplied independent evidence and
+historical developer runs remain separately identified in the
+[acceptance record](../exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#pay-int-1-independent-corrective-approval-and-formal-acceptance--2026-10-12).
+Inherited npm/Actions/Browserslist maintenance is not claimed resolved.
+
+This docs-only acceptance commit requires its own successful exact-head branch push CI, then
+unchanged-main ancestry verification, normal fast-forward adoption and separate successful
+exact-head main push CI. Only then is this same commit the **PAY-INT-1 canonical freeze /
+CANONICALLY CLOSED** checkpoint; pending wording remains historical acceptance-stage evidence.
+Actual subsequent run IDs and freeze SHA are reported after verification, not invented here.
+No accepted technical semantics or runtime/test/schema/migration/UI changes accompany acceptance.
+**Production readiness: NOT CLAIMED. Accounting automation: NOT STARTED / NOT AUTHORIZED.
+SaaS activation and production deployment: NOT AUTHORIZED.** No exact PAY-INT-1 tag is specified;
+**NO TAG CREATED**, no release. STOP after authorized verification; no next milestone begins.
 
 ## Verified baseline and ownership
 

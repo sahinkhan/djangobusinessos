@@ -226,8 +226,8 @@ tested the exact frozen SHA. Normal fast-forward adoption passed exact-head main
 These are publication/closure results, not new runtime tests performed by PAY-INT-0.
 Standalone closure is not production Accounting readiness or full Phase 2 completion.
 
-**Current implementation milestone: PAY-INT-1 — LOCAL CORRECTIVE CANDIDATE, AWAITING
-INDEPENDENT CORRECTIVE RE-AUDIT. NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED.**
+**Current implementation milestone: PAY-INT-1 — FORMALLY ACCEPTED FOR CANONICAL ADOPTION,
+2026-10-12. Formal acceptance: COMPLETE. Canonical adoption: PENDING at this acceptance checkpoint.**
 
 Separately authorized implementation starts from canonical PAY-INT-0 freeze
 `9ee4e0bd77350ddeef1e928e2a73b676b4cbb1ee`, on `payint1-billing-payments-allocation`.
@@ -248,12 +248,26 @@ The supplied independent audit of original candidate
 `4b8a072da4426a48988d4605641bf1fc846c06ee` returned **REVISE / Readiness C**:
 PAYINT1-R1 P1 (RLS-hidden evidence), PAYINT1-R2 P1 (unvalidated FK/orphan history),
 PAYINT1-R3 P2 (requested-parent retry ordering), PAYINT1-R4 P2 (intrinsically impossible retry).
-The separately authorized correction is local only; developer tests do not close those findings.
+At the historical corrective checkpoint, the correction was local only; developer tests did not
+close those findings.
 Its [corrective evidence](exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#pay-int-1-local-corrective-remediation--2026-10-11)
 records selected-alias catalog checks, raw orphan probes and stored-parent intrinsic retry
-validation without changing accepted ADR 0015 or migrations. Independent corrective re-audit is
-**PENDING**. Normal publication/exact-head CI, acceptance and canonical adoption remain separate
-gates; none is performed by this corrective task.
+validation without changing accepted ADR 0015 or migrations. The owner-supplied independent
+corrective verdict for `bef50fe8b20f97aaeefb8c610a46d412e9a05402` is **FINAL PASS — PAY-INT-1
+CORRECTIVE IMPLEMENTATION APPROVED FOR HOSTED CI**, readiness **A**. PAYINT1-R1 P1, R2 P1,
+R3 P2 and R4 P2 are **RESOLVED**, with no new actionable candidate-owned P0–P3 finding.
+Normal publication preserved that exact candidate. **Phase 0 checks #118 / 38162359131 — SUCCESS**
+([implementation CI](https://github.com/sahinkhan/djangobusinessos/actions/runs/38162359131))
+checked out the exact corrective SHA and passed **1,613 PostgreSQL tests**, fresh migrations,
+Ruff, Django checks, no migration drift, npm/Tailwind and generated CSS reproducibility.
+The [formal acceptance record](exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#pay-int-1-independent-corrective-approval-and-formal-acceptance--2026-10-12)
+separates supplied independent evidence, historical developer runs and hosted CI. This docs-only
+acceptance commit must pass its own exact-head branch CI before normal fast-forward adoption;
+separate exact-head main CI must then succeed. Only then is the same acceptance commit the
+**PAY-INT-1 canonical freeze / CANONICALLY CLOSED** checkpoint. Pending wording remains historical
+acceptance-stage evidence; no future run or result is claimed here. **Production readiness is
+NOT CLAIMED. Accounting automation is NOT STARTED / NOT AUTHORIZED. SaaS activation and production
+deployment are NOT AUTHORIZED.** No exact PAY-INT-1 tag is specified; no tag or release is created.
 
 **Historical acceptance checkpoint: PAY-INT-0 — Billing/Payments Allocation Integration Contract.**
 [ADR 0015](decisions/0015-billing-payments-allocation-integration-contract.md) is
@@ -302,7 +316,7 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | PAY-1 — Payments (canonically closed; payments-v1) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Payments-owned PaymentAllocation, applied/unapplied/outstanding, invoice integration, refunds/settlement and journals deferred |
 | ACC-0 / ACC-1 canonically closed | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014; freeze `00e18a75...` | Historical REVISE retained; ACC1-R1/R2 resolved; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
 | PAY-INT-0 canonically closed at `9ee4e0bd...` | Payments retains allocation ownership; Billing retains invoice facts; accepted ADR 0015 freezes opt-in composition | Historical acceptance-stage pending wording retained above; allocation implementation is separately governed; no Accounting automation |
-| PAY-INT-1 local corrective candidate, awaiting independent corrective re-audit | Opt-in `payments_billing`; immutable allocations, complete-evidence profile and intrinsic stored-parent retries; original audit REVISE / C preserved | Findings not independently closed; not published/accepted/adopted; no Accounting, reversals/refunds, FX, bank settlement or other automation |
+| PAY-INT-1 formally accepted for canonical adoption | Opt-in `payments_billing`; immutable allocations, complete-evidence profile and intrinsic stored-parent retries; original REVISE / C preserved; corrective FINAL PASS / A; implementation CI #118 SUCCESS | Acceptance COMPLETE; adoption PENDING at this checkpoint, subject to acceptance/main CI; no Accounting, reversals/refunds, FX, bank settlement or other automation |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
 generic Payments and Accounting work without Billing. Settlement-adjusted outstanding in the local

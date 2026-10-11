@@ -1,13 +1,20 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 / PAY-INT-0 CANONICALLY CLOSED; PAY-INT-1 LOCAL CORRECTIVE CANDIDATE / AWAITING INDEPENDENT CORRECTIVE RE-AUDIT
+Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 / PAY-INT-0 CANONICALLY CLOSED; PAY-INT-1 FORMALLY ACCEPTED FOR CANONICAL ADOPTION / ADOPTION PENDING AT ACCEPTANCE CHECKPOINT
 
 Current authorized implementation baseline: `9ee4e0bd77350ddeef1e928e2a73b676b4cbb1ee`.
 PAY-INT-0 acceptance CI #116 / `38134694017` and main CI #117 / `38135373053` both succeeded
 against that exact SHA (1,313 PostgreSQL tests each), satisfying the historical completion rule.
-PAY-INT-1 is separately authorized on `payint1-billing-payments-allocation`, **NOT PUBLISHED,
-NOT ACCEPTED, NOT CANONICALLY ADOPTED**. See the [original implementation record](#pay-int-1-local-implementation-and-verification--2026-10-11)
-and [current corrective evidence](#pay-int-1-local-corrective-remediation--2026-10-11).
+PAY-INT-1 is **FORMALLY ACCEPTED FOR CANONICAL ADOPTION** on
+`payint1-billing-payments-allocation`: corrective candidate
+`bef50fe8b20f97aaeefb8c610a46d412e9a05402`, independent FINAL PASS / readiness A, exact-head
+implementation CI #118 / `38162359131` SUCCESS (**1,613 PostgreSQL tests**).
+**Formal acceptance: COMPLETE. Canonical adoption: PENDING at this acceptance checkpoint.**
+This docs-only acceptance commit becomes the canonical freeze only after its own exact-head
+branch CI, normal fast-forward adoption and separate exact-head main CI succeed. See the
+[acceptance record and completion rule](#pay-int-1-independent-corrective-approval-and-formal-acceptance--2026-10-12),
+[historical original implementation](#pay-int-1-local-implementation-and-verification--2026-10-11)
+and [historical corrective evidence](#pay-int-1-local-corrective-remediation--2026-10-11).
 The PAY-INT-0 acceptance-stage pending/not-authorized wording below is retained as historical
 checkpoint evidence, not a contradiction of this later bounded implementation authorization.
 Accounting automation, other integrations, SaaS activation and deployment remain unauthorized.
@@ -135,8 +142,10 @@ BILL-1 was separately authorized and is canonically closed at `409e45e...` (`bil
 PAY-0 is documentation-only; PAY-1 implementation is canonically closed at `9ac3f094` (`payments-v1`).
 ACC-0 is canonically adopted contract documentation; separately authorized ACC-1 is now canonically
 closed at `00e18a75...`, with its original REVISE and resolved remediation history retained.
-PAY-INT-0 is a canonically closed documentation contract. Only PAY-INT-1 local implementation is
-separately authorized; publication, acceptance/adoption and all other integration work remain unauthorized.
+PAY-INT-0 is a canonically closed documentation contract. PAY-INT-1 corrective implementation
+has independent FINAL PASS, hosted implementation CI SUCCESS and formal acceptance. The owner
+separately authorizes acceptance CI -> normal fast-forward adoption -> exact-head main CI only;
+no other integration work is authorized.
 Remaining gates are sequentially
 governed, not automatically launched in parallel.
 
@@ -1558,7 +1567,7 @@ Gate PAY-1 implementation CI        #103 / 38076354718 SUCCESS / 1,009 PostgreSQ
 Gate PAY-1 formal acceptance       COMPLETE / FORMALLY ACCEPTED FOR CANONICAL ADOPTION
 Gate PAY-1 canonical adoption      CLOSED / 9ac3f0944fff65f013efd9c3a3e9b841022ce87f / payments-v1
 Gate PAY-1 final main CI           #105 / 38078381136 SUCCESS / 1,009 PostgreSQL tests
-Gate PAY-INT-1 implementation       NOT STARTED / not authorized
+Gate PAY-INT-1 original audit       4b8a072d; REVISE / readiness C / R1-R4 retained
 Gate ACC-0 contract                FORMALLY ACCEPTED / ADR 0014 / acc0-accounting-contract
 Gate ACC-0 accepted contract head  217b7a8f39b628571f616034a7d9d02b436ec03d / CI #108 SUCCESS
 Gate ACC-0 corrective review       FINAL PASS / readiness A / F1-F2 resolved / no P0-P3
@@ -1575,8 +1584,12 @@ Gate PAY-INT-0 audited proposal    9d4fa5d3b7a12d4eb0ee2046d6e4ff306957e228 / in
 Gate PAY-INT-0 independent audit   FINAL PASS / readiness A / no actionable candidate-owned P0-P3
 Gate PAY-INT-0 candidate push CI   #115 / 38133793295 SUCCESS / 1,313 PostgreSQL tests
 Gate PAY-INT-0 formal acceptance   COMPLETE / Accepted ADR 0015 / metadata only
-Gate PAY-INT-0 canonical adoption  PENDING at acceptance checkpoint / completion rule above
-Gate PAY-INT-1 implementation       NOT STARTED / NOT AUTHORIZED
+Gate PAY-INT-0 canonical adoption  CLOSED / 9ee4e0bd / acceptance CI #116 / main CI #117 SUCCESS
+Gate PAY-INT-1 corrective candidate bef50fe8b20f97aaeefb8c610a46d412e9a05402 / published intact
+Gate PAY-INT-1 corrective review    FINAL PASS / readiness A / R1-R4 RESOLVED / no new P0-P3
+Gate PAY-INT-1 implementation CI    #118 / 38162359131 SUCCESS / 1,613 PostgreSQL tests
+Gate PAY-INT-1 formal acceptance    COMPLETE / FORMALLY ACCEPTED FOR CANONICAL ADOPTION
+Gate PAY-INT-1 canonical adoption   PENDING at acceptance checkpoint / final completion rule below
 Accounting integrations            NOT STARTED / NOT AUTHORIZED
 Other integration implementation   not authorized
 ```
@@ -2099,7 +2112,8 @@ tests/test_database_foundation.py
 
 ## PAY-INT-1 local corrective remediation — 2026-10-11
 
-**LOCAL ONLY / AWAITING INDEPENDENT CORRECTIVE RE-AUDIT. NOT PUBLISHED / NOT ACCEPTED /
+**HISTORICAL CORRECTIVE CHECKPOINT: LOCAL ONLY / AWAITING INDEPENDENT CORRECTIVE RE-AUDIT.
+NOT PUBLISHED / NOT ACCEPTED /
 NOT CANONICALLY ADOPTED.** Original candidate
 `4b8a072da4426a48988d4605641bf1fc846c06ee` is preserved exactly. The supplied independent
 verdict was **REVISE — PAY-INT-1 IMPLEMENTATION REQUIRES SUBSTANTIVE REDESIGN / Readiness C**.
@@ -2221,3 +2235,56 @@ CI or publication is claimed.
 
 **STOP FOR INDEPENDENT CORRECTIVE RE-AUDIT. All four findings remain pending independent
 verification; no acceptance, canonical adoption, Accounting automation or production approval.**
+
+## PAY-INT-1 independent corrective approval and formal acceptance — 2026-10-12
+
+This later acceptance record preserves the original REVISE and all corrective developer evidence
+above. It records the owner-supplied independent review, not an audit performed by this author.
+
+| Preserved checkpoint | Disposition |
+| --- | --- |
+| Canonical baseline `9ee4e0bd77350ddeef1e928e2a73b676b4cbb1ee` | PAY-INT-0 freeze, unchanged before adoption |
+| Original implementation `4b8a072da4426a48988d4605641bf1fc846c06ee` | Independent REVISE / readiness C; R1 P1, R2 P1, R3 P2, R4 P2 |
+| Corrective implementation `bef50fe8b20f97aaeefb8c610a46d412e9a05402` | FINAL PASS — PAY-INT-1 CORRECTIVE IMPLEMENTATION APPROVED FOR HOSTED CI; readiness A |
+
+PAYINT1-R1 P1, PAYINT1-R2 P1, PAYINT1-R3 P2 and PAYINT1-R4 P2 are **RESOLVED**.
+The supplied review reports no new actionable candidate-owned P0–P3 finding. Its fresh evidence
+is **55 independent corrective/adversarial scenarios**, **57 PostgreSQL concurrency/security
+tests**, **300 complete integration tests**, **1,613 full PostgreSQL tests**, **1,297 SQLite tests
+with 316 classified backend-specific skips**, **33 changed Python files format-clean**, and
+**21 JavaScript tests**, all passed. Fresh migrations/checks/drift and real-browser checks at
+390/768/1280px passed. These are supplied independent results, not hosted CI or new local runs
+performed during acceptance. The earlier full-suite tables remain developer-run evidence.
+
+Normal publication created only `payint1-billing-payments-allocation`, preserving both audited
+commits and their direct ancestry. Hosted **Phase 0 checks #118 / 38162359131 — SUCCESS**
+([run](https://github.com/sahinkhan/djangobusinessos/actions/runs/38162359131)), event `push`,
+checked out exactly `bef50fe8b20f97aaeefb8c610a46d412e9a05402`. Job `test` and every mandatory
+step succeeded: fresh PostgreSQL migrations (including both optional-app migrations), **1,613
+tests passed**, Ruff, Django checks (zero issues), migration drift (no changes), `npm ci`,
+Tailwind build and generated CSS reproducibility. Inherited eight npm advisories (two moderate,
+six high), stale Browserslist and Actions runtime warnings remain separate maintenance work.
+
+**PAY-INT-1 IMPLEMENTATION: FORMALLY ACCEPTED FOR CANONICAL ADOPTION. Formal acceptance:
+COMPLETE. Canonical adoption: PENDING at this acceptance checkpoint. Production readiness:
+NOT CLAIMED.** Only the roadmap, this plan and ADR 0015's factual implementation-acceptance
+metadata change. Its accepted PAY-INT-0 technical body/matrix and all runtime, tests, schemas,
+migrations, manifests, settings and frontend assets remain unchanged.
+
+### Canonical completion rule
+
+This acceptance commit must pass its **own** exact-head branch push CI; implementation CI #118
+cannot substitute for it. Immediately before adoption, remote main must still equal the pinned
+baseline above and be an ancestor with no divergence. The authorized established flow is normal
+fast-forward-only adoption and non-force main push, then a **separate** successful exact-head
+main push CI. Only after all those checks succeed is this same acceptance commit the
+**PAY-INT-1 CANONICAL FREEZE / CANONICALLY CLOSED** checkpoint. The adoption-pending wording then
+remains historical acceptance-stage evidence. Actual later acceptance/main run IDs and freeze SHA
+are reported after verification; no future CI success is fabricated or amended into this commit.
+
+No PR, merge commit, squash, rebase, amendment, force push or extra closure commit is introduced.
+No exact PAY-INT-1 checkpoint tag is specified: **NO TAG CREATED**, no release. Accounting
+automation, Invoice/Payment/Allocation -> JournalEntry, refunds/reversals, settlement/FX,
+Sales-to-Billing or Procurement/AP automation are **NOT STARTED / NOT AUTHORIZED**. Actual SaaS
+activation and production deployment remain **NOT AUTHORIZED**; full Phase 2 is not complete.
+STOP after the authorized acceptance/adoption verification; do not begin another milestone.
