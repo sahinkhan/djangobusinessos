@@ -992,6 +992,14 @@ Contract branch: `acc0-accounting-contract`. The detailed reviewable specificati
 [ADR 0014](../../decisions/0014-standalone-accounting-finance-contract.md), Proposed — Gate ACC-0.
 No Accounting implementation, registration, migration, test or UI change is authorized here.
 
+ACC-0 audit chronology: original candidate `c9f676349a72c585d16a6d3a467cdd676ee2db1d` passed
+exact-head CI #107 / `38109947735` (1,009 PostgreSQL tests), then received independent **REVISE**
+for F1/F2, two P2s concerning persistence/text bounds and position range/exhaustion. A separately
+authorized follow-up documentation candidate addresses only those findings in ADR 0014, preserving
+the original commit. The one-commit candidate gate below describes the original publication;
+this remediation is one additional commit. Its own exact-head CI and independent corrective
+re-audit are required. ADR 0014 remains Proposed; ACC-1, acceptance/adoption and tags are unauthorized.
+
 Proposed minimum ACC-1 after separately authorized acceptance/adoption and implementation:
 
 - Account and Journal: immutable Company/normalized code, company uniqueness, service-mutable

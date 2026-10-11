@@ -17,11 +17,30 @@ SUCCESS**, run ID `38078381136`
 that exact SHA and passed fresh migrations, **1,009 PostgreSQL tests** and mandatory checks.
 That evidence verifies the starting baseline, not this later ACC-0 candidate.
 
-ACC-0 authorizes one proposed contract commit, normal branch publication and exact-head hosted CI.
+Initial ACC-0 authorization covered one proposed contract commit, normal publication and exact-head CI.
 Independent read-only audit and successful exact-candidate CI are both required before a separately
 authorized documentation acceptance commit. Canonical adoption then requires another authorization.
 ADR 0014 must remain Proposed in this milestone. No `accounting-contract-v1` tag, main update,
 ACC-1 implementation or Billing/Payments/Accounting integration is authorized.
+
+### Original audit and F1/F2 remediation history
+
+Original candidate: `c9f676349a72c585d16a6d3a467cdd676ee2db1d`,
+`docs: freeze standalone accounting finance contract`. Exact-head **Phase 0 checks #107 — SUCCESS**,
+run ID `38109947735`
+([evidence](https://github.com/sahinkhan/djangobusinessos/actions/runs/38109947735)), passed
+fresh migrations, **1,009 PostgreSQL tests** and mandatory checks. The owner-supplied independent
+audit verdict was **REVISE — ACC-0 CONTRACT REQUIRES REMEDIATION**, with exactly two blocking P2s:
+F1 — text/identity persistence bounds insufficiently frozen; F2 — position storage range and
+exhaustion behavior insufficiently frozen. No P0/P1 findings were reported.
+
+Separate authorization permits exactly one additional documentation-only remediation commit above
+that original, not amendment or history rewriting. This follow-up candidate addresses **only F1/F2**:
+bounded identity/text storage, normalization order, position range/allocation/exhaustion and the
+associated future ACC-1 boundary-test requirements. All previously passed contract domains remain
+unchanged. Remediation needs its own exact-head hosted CI and independent corrective re-audit;
+CI #107 is historical evidence, not remediation CI. Status remains **Proposed — Gate ACC-0**;
+no FINAL PASS, formal acceptance, adoption, tag or implementation is claimed.
 
 ### Precedence and explicit refinement
 
@@ -101,6 +120,46 @@ code/number and Entry-position uniqueness, precision range, line-side nonnegativ
 and DRAFT-null / POSTED-non-null posted_at consistency. Cross-row balance and reference eligibility
 remain authoritative service validations; a database constraint is not a substitute for those.
 
+### F1: fixed text and identity persistence bounds
+
+| Field | Persistence / nullability | Exact application/storage boundary |
+| --- | --- | --- |
+| `Account.code` | Bounded character data, CharField-equivalent; non-null | Maximum 32 normalized characters; storage maximum 32 |
+| `Account.name` | Bounded character data, CharField-equivalent; non-null | Maximum 160 trimmed characters; storage maximum 160 |
+| `Journal.code` | Bounded character data, CharField-equivalent; non-null | Maximum 32 normalized characters; storage maximum 32 |
+| `Journal.name` | Bounded character data, CharField-equivalent; non-null | Maximum 160 trimmed characters; storage maximum 160 |
+| `JournalEntry.number` | Bounded character data; non-null | Complete `JE-<32 lowercase UUID hex characters>`: exactly 35 characters, stored without truncation |
+| `JournalEntry.memo` | Text / Django TextField-equivalent; non-null | Blank string allowed; deliberately no ACC-1 application-level character maximum |
+| `JournalEntryLine.description` | Text / Django TextField-equivalent; non-null | Blank string allowed; deliberately no ACC-1 application-level character maximum |
+
+Account/Journal code validation order is exactly:
+
+1. Require textual string input; reject null, non-text and implicit string coercion.
+2. Trim outer whitespace.
+3. Uppercase.
+4. Reject blank.
+5. Enforce at most 32 characters on the **normalized** value.
+6. Perform company-scoped uniqueness validation/persistence.
+
+Account/Journal name validation order is exactly:
+
+1. Require textual string input.
+2. Trim outer whitespace.
+3. Reject blank.
+4. Enforce at most 160 characters on that **trimmed** value.
+5. Persist.
+
+Length means normalized characters, not raw-input length or encoded byte length. An uppercase
+transformation that expands a code beyond 32 characters rejects; never truncate it to fit. No form,
+service, model or database may silently truncate these fields. These Accounting-owned bounds align
+with the established PaymentMethod code/name convention; no shared generic coded-reference model.
+
+Memo and description are ordinary user-entered textual content, not bounded CharField identities.
+Null is rejected; blank text is valid. Neither receives a 32/160/200-character domain ceiling or
+silent truncation. Normal deployment/request-size/security controls may exist outside Accounting,
+but ACC-1 must not invent a smaller silent persistence ceiling. The unchanged service-generated
+35-character Entry number must fit completely; no client-supplied alternative format is permitted.
+
 ### Account
 
 Types are exactly `ASSET`, `LIABILITY`, `EQUITY`, `INCOME`, `EXPENSE`. Company, code and type are
@@ -165,6 +224,35 @@ Entry lock, with database uniqueness `(journal_entry, position)`. Positions incr
 largest retained position; removals leave gaps and never renumber surviving rows. There is no
 client-supplied position or reordering endpoint. Reads order by position then UUID. Every header
 and line selection, relationship validation and lock is scoped by the authoritative Company.
+
+### F2: position storage, allocation and exhaustion
+
+`JournalEntryLine.position` has Django PositiveIntegerField-equivalent storage semantics with the
+Accounting-valid domain **1 through 2,147,483,647 inclusive**. Zero, negatives and larger values are
+invalid. Persisted schema enforces that range (including strictly positive positions); application
+validation prevents overflow before an invalid insert reaches the database. ACC-1 must not use
+BigIntegerField, SmallIntegerField, float, Decimal or string position storage.
+
+Position is internal-only: callers cannot supply or change it. Allocate from the authoritative
+retained line set while holding the Entry aggregate lock, never from an unlocked earlier scan:
+
+- No retained lines: next position is 1.
+- Otherwise, if the largest retained position is below 2,147,483,647: next position is that value + 1.
+- If the largest retained position equals 2,147,483,647: reject add-line deterministically using
+  the established ValidationError/domain-validation style before attempting insertion. Exact
+  human-readable wording is not a public API; exhaustion semantics are.
+
+Exhaustion cannot wrap to zero/negative, truncate, renumber survivors, recycle an occupied position,
+mutate another line or use a database overflow error as the intended validation path. There is no
+partial requested line or `accounting.entry.updated` success audit; failed mutation/audit state
+rolls back together under the existing transaction contract.
+
+Existing positions remain immutable, `(journal_entry, position)` remains unique, reads remain
+position then UUID and removals never renumber survivors. Gaps are not actively compacted. If the
+highest-position line is legitimately removed while DRAFT, subsequent insertion uses the **current
+largest retained position + 1** (or 1 if empty), even if that number belonged to the deleted line.
+No deleted-position tombstone reservation or reorder endpoint exists in ACC-1. Thus exhaustion may
+clear after legitimate draft tail removal, without changing surviving rows or posted immutability.
 
 ## Financial Decimal contract
 
@@ -434,6 +522,9 @@ manual ledger capability is not complete finance/compliance capability or produc
 | --- | --- |
 | Ownership/dependencies | Exactly four models, four manifest dependencies and eight permissions; no upstream module imports/FKs/effects; manual workflow with other commercial modules absent |
 | Account/Journal | Code normalization/company uniqueness and concurrent collisions; immutable identity/type; active selection/posting; inactive historical report inclusion; no hard-delete/bulk bypass |
+| F1 identity bounds | Both Account/Journal codes: normalized 32 accepted, 33 rejected, outer whitespace and uppercase expansion checked after normalization; both names: trimmed 160 accepted, 161/blank rejected; no form/service/model/database truncation |
+| F1 text/number storage | Memo/description blank accepted and null rejected; representative long text well above typical CharField limits round-trips without a 32/160/200 ceiling or truncation; complete service-generated 35-character Entry number preserved |
+| F2 position bounds | First position 1, deterministic increment, immutable positions and real Entry-lock concurrent allocation; 2,147,483,647 valid, zero/negative/overflow invalid; maximum-retained exhaustion yields validation failure with no partial line/success audit/wrap/truncation/renumber; legitimate draft tail removal permits current-largest-retained + 1 without tombstones |
 | Entry identity/date | JE-UUID identity, bounded savepoint-safe collision handling, Company-local omitted-date behavior including midnight/timezones, canonical explicit date, immutable number/currency snapshots |
 | Monetary boundaries | Precision 0..8; redundant zeros including beyond storage exponent; max representable amount; `10^30`, excess nonzero scale, malformed strings, bool/float, NaN/sNaN and infinities reject field-specifically without mutation/audit |
 | Balanced posting | Two or more valid lines, duplicate Accounts allowed, exact large sums, one-sided line validation, positive equal totals, imbalance that only rounds to equality rejects, snapshots never refreshed |
