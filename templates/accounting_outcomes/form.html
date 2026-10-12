@@ -1,0 +1,8 @@
+{% extends "components/form_page.html" %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with current=heading %}{% endblock %}
+{% block form_eyebrow %}Accounting outcome{% endblock %}
+{% block form_description %}{{ description }}{% endblock %}
+{% block save_label %}Post Accounting outcome{% endblock %}
+{% block footer_save_label %}Post Accounting outcome{% endblock %}
+{% block form_note %}<p class="form-help">Posting is explicit and irreversible in this scope. No stock movement or additional commercial document is created.</p>{% endblock %}
+{% block cancel_action %}<a class="btn-secondary" href="{% url 'home' %}" data-app-nav>Cancel</a>{% endblock %}

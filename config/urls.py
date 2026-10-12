@@ -16,6 +16,29 @@ if apps.is_installed("businessos.modules.payments.integrations.billing"):
     billing_urlconf = (billing_urlpatterns, "billing")
     payments_urlconf = (payments_urlpatterns, "payments")
 
+if apps.is_installed("businessos.modules.accounting.integrations.billing"):
+    from businessos.modules.accounting.integrations.billing.views import invoice_detail
+    from businessos.modules.billing.urls import urlpatterns as invoice_patterns
+
+    billing_urlconf = (
+        [
+            path("invoices/<uuid:invoice_id>/", invoice_detail, name="detail"),
+            *(pattern for pattern in invoice_patterns if pattern.name != "detail"),
+        ],
+        "billing",
+    )
+if apps.is_installed("businessos.modules.accounting.integrations.payments_billing"):
+    from businessos.modules.accounting.integrations.payments_billing.views import payment_detail
+    from businessos.modules.payments.urls import urlpatterns as receipt_patterns
+
+    payments_urlconf = (
+        [
+            path("receipts/<uuid:payment_id>/", payment_detail, name="detail"),
+            *(pattern for pattern in receipt_patterns if pattern.name != "detail"),
+        ],
+        "payments",
+    )
+
 urlpatterns = [
     path("admin/", businessos_admin_site.urls),
     path(
@@ -40,5 +63,19 @@ if apps.is_installed("businessos.modules.payments.integrations.billing"):
         path(
             "payments/allocations/",
             include("businessos.modules.payments.integrations.billing.urls"),
+        )
+    ]
+if apps.is_installed("businessos.modules.accounting.integrations.billing"):
+    urlpatterns += [
+        path(
+            "accounting/invoice-outcomes/",
+            include("businessos.modules.accounting.integrations.billing.urls"),
+        )
+    ]
+if apps.is_installed("businessos.modules.accounting.integrations.payments_billing"):
+    urlpatterns += [
+        path(
+            "accounting/allocation-outcomes/",
+            include("businessos.modules.accounting.integrations.payments_billing.urls"),
         )
     ]

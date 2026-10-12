@@ -1,0 +1,4 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }} · BusinessOS{% endblock %}
+{% block page_header %}{% include "components/page_heading.html" with heading=heading %}{% endblock %}
+{% block content %}{% include "accounting_outcomes/status.html" with status=accounting_status %}{% endblock %}

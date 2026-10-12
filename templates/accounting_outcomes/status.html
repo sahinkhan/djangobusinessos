@@ -1,0 +1,14 @@
+<section class="record-section min-w-0 max-w-full" style="overflow-wrap: anywhere;" data-accounting-outcome>
+  <h3>Accounting outcome</h3>
+  {% if status.state == 'POSTED' %}
+    <p>Posted · {{ status.currency_code }} {{ status.formatted_amount }}</p>
+    <a class="btn-secondary" href="{% url 'accounting:detail' status.journal_entry_id %}" data-app-nav>{{ status.entry_number }}</a>
+  {% elif status.state == 'NO_ACCOUNTING_EFFECT' %}
+    <p>No accounting effect</p>
+  {% elif status.state == 'NOT_POSTED' %}
+    <p data-outcome-reason="{{ status.reason|default:'' }}">Not posted{% if status.reason == 'invoice_accounting_not_posted' %} · Post the Invoice accounting outcome first.{% endif %}</p>
+  {% else %}
+    <p class="record-note" data-outcome-reason="{{ status.reason }}">{% if status.reason == 'forbidden' %}You do not have permission to view Accounting evidence.{% elif status.reason == 'not_installed' %}Accounting integration is not installed.{% elif status.reason == 'http_disabled' %}Accounting integration is disabled.{% elif status.reason == 'stale' %}Reload to view current Accounting evidence.{% elif status.reason == 'incomplete' %}Accounting evidence is incomplete.{% else %}Accounting evidence unavailable.{% endif %}</p>
+  {% endif %}
+  {% if post_url %}<a class="btn-primary" href="{{ post_url }}" data-app-nav>Post Accounting outcome</a>{% endif %}
+</section>

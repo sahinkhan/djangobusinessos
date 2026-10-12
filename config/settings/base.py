@@ -43,6 +43,15 @@ INSTALL_PAYMENTS_BILLING = os.getenv("BUSINESSOS_INSTALL_PAYMENTS_BILLING", "0")
 if INSTALL_PAYMENTS_BILLING:
     INSTALLED_APPS.append("businessos.modules.payments.integrations.billing")
 
+INSTALL_ACCOUNTING_BILLING = os.getenv("BUSINESSOS_INSTALL_ACCOUNTING_BILLING", "0") == "1"
+INSTALL_ACCOUNTING_PAYMENTS_BILLING = (
+    os.getenv("BUSINESSOS_INSTALL_ACCOUNTING_PAYMENTS_BILLING", "0") == "1"
+)
+if INSTALL_ACCOUNTING_BILLING:
+    INSTALLED_APPS.append("businessos.modules.accounting.integrations.billing")
+if INSTALL_ACCOUNTING_PAYMENTS_BILLING:
+    INSTALLED_APPS.append("businessos.modules.accounting.integrations.payments_billing")
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -74,6 +83,14 @@ TEMPLATES = [
 if INSTALL_PAYMENTS_BILLING:
     TEMPLATES[0]["OPTIONS"]["context_processors"].append(
         "businessos.modules.payments.integrations.billing.presentation.parent_evidence"
+    )
+if INSTALL_ACCOUNTING_BILLING:
+    TEMPLATES[0]["OPTIONS"]["context_processors"].append(
+        "businessos.modules.accounting.integrations.billing.presentation.invoice_panel"
+    )
+if INSTALL_ACCOUNTING_PAYMENTS_BILLING:
+    TEMPLATES[0]["OPTIONS"]["context_processors"].append(
+        "businessos.modules.accounting.integrations.payments_billing.presentation.allocation_links"
     )
 
 WSGI_APPLICATION = "config.wsgi.application"

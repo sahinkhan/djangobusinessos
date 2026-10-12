@@ -1,8 +1,10 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 / PAY-INT-0 / PAY-INT-1 CANONICALLY CLOSED; ACC-INT-0 FORMALLY ACCEPTED / CANONICAL ADOPTION PENDING AT ACCEPTANCE CHECKPOINT; ACC-INT-1 NOT STARTED / NOT AUTHORIZED
+Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 / PAY-INT-0 / PAY-INT-1 / ACC-INT-0 CANONICALLY CLOSED; ACC-INT-1 LOCAL IMPLEMENTATION CANDIDATE / AWAITING INDEPENDENT AUDIT / NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED
 
-Current canonical baseline: `a1079985a2ef5645dfed338e3e58af54f5242e1a`.
+Current canonical baseline: `4419bdc4f0210894065400923741dd5449ffd158`.
+**ACC-INT-0 CANONICALLY CLOSED.** The following PAY-INT-1 and ACC-INT-0 acceptance-stage
+records retain their historical baselines and completion rules.
 **PAY-INT-1 CANONICALLY CLOSED** after acceptance CI #119 / `38163571737` and main
 CI #120 / `38164395135` SUCCESS at that exact SHA; implementation CI #118 / `38162359131`
 SUCCESS tested corrective `bef50fe8b20f97aaeefb8c610a46d412e9a05402`.
@@ -11,7 +13,7 @@ Original `4b8a072da4426a48988d4605641bf1fc846c06ee` / REVISE / readiness C is pr
 corrective independent FINAL PASS / readiness A resolved PAYINT1-R1/R2/R3/R4. See
 [canonical closure](#pay-int-1-post-adoption-canonical-closure--2026-10-12).
 
-Current bounded task: **ACC-INT-0 formal acceptance and controlled canonical adoption**,
+Historical bounded task: **ACC-INT-0 formal acceptance and controlled canonical adoption**,
 documentation only. Supplied independent FINAL PASS / readiness A approved exact proposal
 `207c78096f419b4d924326df256355a356a3f3d7`; hosted candidate CI #125 / `38203841663` SUCCESS
 tested that exact SHA (**1,613 PostgreSQL tests**, fresh migrations and mandatory checks).
@@ -22,7 +24,13 @@ Contract branch `accint0-accounting-outcomes-contract` starts from the exact can
 The authorized remaining sequence is exact-head acceptance CI, unchanged-main/ancestry
 revalidation, direct fast-forward normal push and separate exact-head main CI; no runtime.
 See [formal acceptance and completion rule](#acc-int-0-independent-approval-and-formal-acceptance--2026-10-12).
-**ACC-INT-1 NOT STARTED / NOT AUTHORIZED; PHASE 2 NOT COMPLETE; PHASE 3 NOT AUTHORIZED.**
+Current bounded task: separately authorized **ACC-INT-1 LOCAL IMPLEMENTATION CANDIDATE**
+on `accint1-accounting-outcomes`, from canonical base `4419bdc4f0210894065400923741dd5449ffd158`.
+**AWAITING INDEPENDENT AUDIT / NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED.**
+The implementation preserves accepted ADR 0016: two Accounting-owned opt-in apps, owner read
+contracts, immutable source/effect bindings, explicit public-service composition and bounded UI.
+Local verification is implementation evidence; no independent implementation audit or hosted
+candidate CI is claimed. **PHASE 2 NOT COMPLETE; PHASE 3 NOT AUTHORIZED.**
 SaaS activation and deployment remain unauthorized. No PAY-INT-1 tag is invented.
 
 Historical PAY-INT-1 implementation/acceptance-stage baseline:
@@ -1631,9 +1639,10 @@ Gate PAY-INT-1 acceptance CI        #119 / 38163571737 SUCCESS / 1,613 PostgreSQ
 Gate PAY-INT-1 main CI              #120 / 38164395135 SUCCESS / 1,613 PostgreSQL tests
 Gate ACC-INT-0 independent review  FINAL PASS / readiness A / no candidate-owned P0-P3
 Gate ACC-INT-0 proposal CI         #125 / 38203841663 SUCCESS / 1,613 PostgreSQL tests
-Gate ACC-INT-0 formal acceptance   COMPLETE / canonical adoption PENDING at acceptance checkpoint
-Gate ACC-INT-1                     NOT STARTED / NOT AUTHORIZED
-Accounting integration runtime     NOT STARTED / NOT AUTHORIZED
+Gate ACC-INT-0 formal acceptance   COMPLETE / CANONICALLY CLOSED / canonical base 4419bdc4...
+Gate ACC-INT-1                     LOCAL IMPLEMENTATION CANDIDATE / AWAITING INDEPENDENT AUDIT
+                                  NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED
+Accounting integration runtime     LOCAL IMPLEMENTATION CANDIDATE / AWAITING INDEPENDENT AUDIT
 Phase 2                            NOT COMPLETE
 Phase 3                            NOT AUTHORIZED
 Other integration implementation   not authorized
@@ -2469,3 +2478,56 @@ force push. No exact checkpoint tag name is specified: **NO TAG CREATED**, no Gi
 PHASE 2 NOT COMPLETE; final completion review NOT YET PERFORMED. PHASE 3 NOT AUTHORIZED.
 SaaS activation and production deployment NOT AUTHORIZED; production readiness NOT CLAIMED.**
 STOP after publication/adoption verification; no next milestone begins here.
+
+## ACC-INT-1 local implementation verification — 2026-10-12
+
+**LOCAL IMPLEMENTATION CANDIDATE / AWAITING INDEPENDENT AUDIT. NOT PUBLISHED / NOT ACCEPTED /
+NOT CANONICALLY ADOPTED.** Branch `accint1-accounting-outcomes`, canonical parent
+`4419bdc4f0210894065400923741dd5449ffd158`. The candidate is the single local implementation
+commit containing this record; its exact SHA is frozen and reported after committing. This is
+developer verification, not independent audit, hosted CI, formal acceptance or canonical adoption.
+**ACC-INT-0 CANONICALLY CLOSED. PHASE 2 NOT COMPLETE. PHASE 3 NOT AUTHORIZED.** Earlier
+acceptance-stage statements above retain their historical meaning.
+
+Two Accounting-owned opt-in apps implement explicit Invoice AR/Revenue and Allocation Cash/AR
+posting through public owner services, protected immutable source/effect bindings, atomic audit
+composition, intrinsic retries, complete-evidence admission and bounded company-scoped UI.
+Accepted ADR 0016, Core, owner financial semantics and released owner migrations are unchanged.
+
+Verification used disposable synthetic PostgreSQL 17 and SQLite databases with all three
+integration installation flags enabled. Source was mounted read-only into the verification
+containers. The final full PostgreSQL run was serial and used development settings plus the
+existing project test-only `django.contrib.auth.hashers.MD5PasswordHasher` from
+`config.settings.test`, set in an external disposable settings module. Production repository
+password-hasher configuration was not changed. The runner module contained only:
+
+```python
+from config.settings.development import *
+PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
+```
+
+| Local check | Actual result |
+|---|---|
+| Full PostgreSQL suite, serial disposable test settings | **2,530 passed; zero failures, zero skips** |
+| ACC-INT-1 tests included in that full run | **917 passed**, including 228 actual PostgreSQL concurrency cases and 442 schema/security profile cases |
+| Full supported SQLite suite | **1,525 passed; 1,005 backend-only skips**: 482 actual PostgreSQL lock cases, 502 catalog/DDL/RLS/security cases, 8 exact numeric cases, 13 fresh PostgreSQL bootstrap cases |
+| Installation topology / selected execution alias | **22 topology cases plus one complete fresh non-default alias case passed**; unsupported combinations rejected, default cursor forbidden, both effects/status/retries/rollback/audit verified |
+| Ruff / formatting | `ruff check . --no-cache` PASS; all **56 changed Python files**, including new migrations, pass `ruff format --check` |
+| Django / migration drift | `manage.py check` PASS with zero issues; `makemigrations --check --dry-run` reports no changes |
+| JavaScript / Tailwind | Node syntax check PASS; **21 JavaScript tests passed**; `npm ci` and Tailwind build PASS; generated CSS reproduced byte-for-byte |
+| Browser | Synthetic normal POST, prerequisite/zero/denied/unavailable/rejected/posted states, backdated Payment allocation, keyboard GET filter and refresh verified; exact 38-digit money and long labels at **390/768/1280** with local table scrolling and no page overflow; console clear |
+
+An earlier four-worker PostgreSQL run ended with 2,528 passes and two lock-observation timeout
+failures. Both cases passed a serial recheck with normal development hashers, and both also
+passed the final complete serial run above. An intervening normal-hasher serial run was explicitly
+stopped after 322 passing cases to switch the disposable runner to the existing test-only hasher;
+it is partial evidence, not a full-suite pass. Earlier test-harness defects (worker updates outside
+atomic transactions and an uppercase Billing draft literal) were corrected before the final runs.
+Eight inherited npm advisories (two moderate, six high) and the outdated Browserslist warning
+remain; dependencies were not changed by this scope.
+
+All required source/cross-effect winner orders, authority/reference/read rechecks after waits,
+hidden/RLS and NOT VALID FK/CHECK evidence, corrupt/orphan provenance, zero-effect attacks,
+composition failure points and HTTP module/RBAC/CSRF/stale-Company cases passed. One local
+`feat: implement ACC-INT-1 accounting outcomes` commit is authorized, then STOP for independent
+audit. Publication, PR, merge, tag, acceptance, canonical adoption and next-phase work remain gated.

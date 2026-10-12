@@ -31,6 +31,8 @@ jobs:
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
       BUSINESSOS_INSTALL_PAYMENTS_BILLING: "1"
+      BUSINESSOS_INSTALL_ACCOUNTING_BILLING: "1"
+      BUSINESSOS_INSTALL_ACCOUNTING_PAYMENTS_BILLING: "1"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5

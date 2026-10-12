@@ -18,6 +18,14 @@ from .compatibility import evidence_profile
 from .manifest import VIEW_ALLOCATIONS
 from .models import PaymentAllocation
 
+ACCOUNTING_BASIS_VERSION = 1
+
+
+def allocation_accounting_basis(context, allocation_id):
+    from .accounting_basis import allocation_accounting_basis as read_basis
+
+    return read_basis(context, allocation_id)
+
 
 def value(field, function, *args):
     try:

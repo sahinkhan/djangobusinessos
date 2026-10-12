@@ -50,6 +50,13 @@ def invoice_total(context, invoice_id):
 
 
 FINANCIAL_BASIS_VERSION = 1
+ACCOUNTING_BASIS_VERSION = 1
+
+
+def invoice_accounting_basis(context, invoice_id, *, lock=True):
+    from .accounting_basis import invoice_accounting_basis as read_basis
+
+    return read_basis(context, invoice_id, lock=lock)
 
 
 def issued_invoice_basis_query(context, *, invoice_ids):

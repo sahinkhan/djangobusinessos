@@ -13,6 +13,14 @@ from . import domain
 from .manifest import VIEW_ACCOUNTS, VIEW_ENTRIES, VIEW_JOURNALS
 from .models import Account, Journal, JournalEntry, JournalEntryLine
 
+POSTED_BASIS_VERSION = 1
+
+
+def posted_journal_basis(context, entry_id, *, lock=True):
+    from .posted_basis import posted_journal_basis as read_basis
+
+    return read_basis(context, entry_id, lock=lock)
+
 
 def accounts_for_company(context, *, search="", active=""):
     require_permission(context, VIEW_ACCOUNTS)

@@ -132,7 +132,12 @@ bindings, owner financial bases, complete evidence and atomic public-service com
 accepted, not implemented. Original proposal/verification history remains in the ADR and plan.
 Inherited non-blocking ACCINT0-DOC-1 remains unmodified; npm/Actions/Browserslist maintenance
 is not remediated. No runtime, permission, migration or UI change is authorized by acceptance.
-**ACC-INT-1: NOT STARTED / NOT AUTHORIZED. Phase 2: NOT COMPLETE. Phase 3: NOT AUTHORIZED.**
+That acceptance-stage authorization statement is historical. Current canonical base is
+`4419bdc4f0210894065400923741dd5449ffd158`; **ACC-INT-0 CANONICALLY CLOSED**.
+**ACC-INT-1: LOCAL IMPLEMENTATION CANDIDATE / AWAITING INDEPENDENT AUDIT** on
+`accint1-accounting-outcomes`, implementing the separately authorized ADR 0016 scope.
+**NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED.** Local implementation verification
+does not constitute independent audit or hosted CI. **Phase 2: NOT COMPLETE. Phase 3: NOT AUTHORIZED.**
 This is the accepted contract for the final currently scoped Accounting composition gate before
 a later Phase 2 completion review, not runtime or Phase 2 exit approval. Other optional integrations
 remain separately governed; SaaS activation and production deployment are not authorized.
@@ -354,7 +359,7 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | ACC-0 / ACC-1 canonically closed | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014; freeze `00e18a75...` | Historical REVISE retained; ACC1-R1/R2 resolved; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
 | PAY-INT-0 canonically closed at `9ee4e0bd...` | Payments retains allocation ownership; Billing retains invoice facts; accepted ADR 0015 freezes opt-in composition | Historical acceptance-stage pending wording retained above; allocation implementation is separately governed; no Accounting automation |
 | PAY-INT-1 canonically closed at `a1079985...` | Opt-in `payments_billing`; immutable allocations, complete-evidence profile and intrinsic stored-parent retries; original REVISE / C preserved; corrective FINAL PASS / A; R1-R4 RESOLVED; CI #118/#119/#120 SUCCESS | No Accounting effect, reversal/refund, FX, bank settlement or other automatic posting; earlier acceptance-stage pending chronology retained |
-| ACC-INT-0 formally accepted | Accepted ADR 0016; independent FINAL PASS / readiness A; exact audited proposal `207c7809...`; candidate CI #125 SUCCESS; unchanged invoice AR/Revenue and allocation Cash/AR contracts | Canonical adoption PENDING at acceptance checkpoint, requiring acceptance/main CI and direct fast-forward; ACC-INT-1 NOT STARTED / NOT AUTHORIZED; no Phase 2 exit or Phase 3 authorization |
+| ACC-INT-0 canonically closed; ACC-INT-1 local implementation candidate | Accepted ADR 0016; independent contract FINAL PASS / readiness A; exact audited proposal `207c7809...`; candidate CI #125 SUCCESS; canonical base `4419bdc4...`; invoice AR/Revenue and allocation Cash/AR implementation follows the accepted contract | ACC-INT-1 AWAITING INDEPENDENT AUDIT; NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED; no Phase 2 exit or Phase 3 authorization |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
 generic Payments and Accounting work without Billing. Settlement-adjusted outstanding in the local

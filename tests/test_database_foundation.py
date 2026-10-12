@@ -290,8 +290,13 @@ def test_selected_alias_historical_bootstrap_and_business_flows(django_db_blocke
             executor.migrate(executor.loader.graph.leaf_nodes())
             from django.apps import apps
 
-            assert BusinessModule.objects.count() == 8 + int(
-                apps.is_installed("businessos.modules.payments.integrations.billing")
+            assert BusinessModule.objects.count() == 8 + sum(
+                apps.is_installed(name)
+                for name in (
+                    "businessos.modules.payments.integrations.billing",
+                    "businessos.modules.accounting.integrations.billing",
+                    "businessos.modules.accounting.integrations.payments_billing",
+                )
             )
             assert Permission.objects.filter(code__startswith="access.").count() == 2
             call_command("seed_reference_data", verbosity=0)
