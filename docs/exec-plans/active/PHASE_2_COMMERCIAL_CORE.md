@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 / PAY-INT-0 / PAY-INT-1 CANONICALLY CLOSED; ACC-INT-0 PROPOSED / LOCAL CONTRACT CANDIDATE; ACC-INT-1 NOT STARTED / NOT AUTHORIZED
+Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 / PAY-INT-0 / PAY-INT-1 CANONICALLY CLOSED; ACC-INT-0 FORMALLY ACCEPTED / CANONICAL ADOPTION PENDING AT ACCEPTANCE CHECKPOINT; ACC-INT-1 NOT STARTED / NOT AUTHORIZED
 
 Current canonical baseline: `a1079985a2ef5645dfed338e3e58af54f5242e1a`.
 **PAY-INT-1 CANONICALLY CLOSED** after acceptance CI #119 / `38163571737` and main
@@ -11,11 +11,18 @@ Original `4b8a072da4426a48988d4605641bf1fc846c06ee` / REVISE / readiness C is pr
 corrective independent FINAL PASS / readiness A resolved PAYINT1-R1/R2/R3/R4. See
 [canonical closure](#pay-int-1-post-adoption-canonical-closure--2026-10-12).
 
-Current bounded task: **ACC-INT-0**, documentation/design only, new Proposed
+Current bounded task: **ACC-INT-0 formal acceptance and controlled canonical adoption**,
+documentation only. Supplied independent FINAL PASS / readiness A approved exact proposal
+`207c78096f419b4d924326df256355a356a3f3d7`; hosted candidate CI #125 / `38203841663` SUCCESS
+tested that exact SHA (**1,613 PostgreSQL tests**, fresh migrations and mandatory checks).
+**Formal acceptance COMPLETE; canonical adoption PENDING at this acceptance checkpoint.**
+Accepted
 [ADR 0016](../../decisions/0016-accounting-commercial-outcomes-integration-contract.md).
-Local contract branch `accint0-accounting-outcomes-contract` starts from the exact canonical
-baseline. Independent architecture audit is pending; no implementation/publication/acceptance is
-claimed. **ACC-INT-1 NOT STARTED / NOT AUTHORIZED; PHASE 2 NOT COMPLETE; PHASE 3 NOT AUTHORIZED.**
+Contract branch `accint0-accounting-outcomes-contract` starts from the exact canonical baseline.
+The authorized remaining sequence is exact-head acceptance CI, unchanged-main/ancestry
+revalidation, direct fast-forward normal push and separate exact-head main CI; no runtime.
+See [formal acceptance and completion rule](#acc-int-0-independent-approval-and-formal-acceptance--2026-10-12).
+**ACC-INT-1 NOT STARTED / NOT AUTHORIZED; PHASE 2 NOT COMPLETE; PHASE 3 NOT AUTHORIZED.**
 SaaS activation and deployment remain unauthorized. No PAY-INT-1 tag is invented.
 
 Historical PAY-INT-1 implementation/acceptance-stage baseline:
@@ -162,7 +169,8 @@ closed at `00e18a75...`, with its original REVISE and resolved remediation histo
 PAY-INT-0 and PAY-INT-1 are canonically closed. PAY-INT-1 corrective implementation has independent
 FINAL PASS, successful hosted implementation/acceptance/main CI and completed normal fast-forward
 adoption. Its earlier acceptance-stage completion rule remains historical below. ACC-INT-0 now
-authorizes one local proposed documentation contract only, not Accounting integration runtime.
+authorizes formal documentation acceptance, verified publication and controlled adoption only,
+not Accounting integration runtime.
 Remaining gates are sequentially
 governed, not automatically launched in parallel.
 
@@ -1305,9 +1313,9 @@ acceptance matrix, not newly executed tests.
 
 ## Billing / Payments outcomes -> Accounting
 
-Current specification: **Proposed — Gate ACC-INT-0**,
+Current specification: **Accepted — Gate ACC-INT-0**,
 [ADR 0016](../../decisions/0016-accounting-commercial-outcomes-integration-contract.md).
-It proposes the exact topology, source/effect bindings, explicit account selection, zero/precision/
+It accepts the audited topology, source/effect bindings, explicit account selection, zero/precision/
 date/Party policies, compound authority, complete-evidence and future acceptance matrix. The older
 minimum patterns below are retained planning context; their imperative wording is **not ACC-INT-1
 authorization**. HTTP enablement remains separate from installed Python services' context/RBAC.
@@ -1621,7 +1629,9 @@ Gate PAY-INT-1 formal acceptance    COMPLETE / FORMALLY ACCEPTED FOR CANONICAL A
 Gate PAY-INT-1 canonical adoption   CLOSED / a1079985a2ef5645dfed338e3e58af54f5242e1a
 Gate PAY-INT-1 acceptance CI        #119 / 38163571737 SUCCESS / 1,613 PostgreSQL tests
 Gate PAY-INT-1 main CI              #120 / 38164395135 SUCCESS / 1,613 PostgreSQL tests
-Gate ACC-INT-0                     PROPOSED / local documentation contract / audit pending
+Gate ACC-INT-0 independent review  FINAL PASS / readiness A / no candidate-owned P0-P3
+Gate ACC-INT-0 proposal CI         #125 / 38203841663 SUCCESS / 1,613 PostgreSQL tests
+Gate ACC-INT-0 formal acceptance   COMPLETE / canonical adoption PENDING at acceptance checkpoint
 Gate ACC-INT-1                     NOT STARTED / NOT AUTHORIZED
 Accounting integration runtime     NOT STARTED / NOT AUTHORIZED
 Phase 2                            NOT COMPLETE
@@ -2349,6 +2359,9 @@ ADR 0015 are unchanged. This closure is not production readiness or full Phase 2
 
 ## ACC-INT-0 local proposed contract — 2026-10-12
 
+Historical proposal checkpoint `207c78096f419b4d924326df256355a356a3f3d7`; its local verification
+and then-pending statements below are retained. The later formal acceptance record supersedes them.
+
 Branch `accint0-accounting-outcomes-contract`, exact starting canonical main
 `a1079985a2ef5645dfed338e3e58af54f5242e1a`. **PROPOSED — NOT ACCEPTED / NOT PUBLISHED**.
 Only this plan, the roadmap and new
@@ -2404,3 +2417,55 @@ No adopted/demo/customer database or customer-migration preparation worktree was
 No new PostgreSQL full-suite, browser, npm/Tailwind or future integration test result is claimed;
 those unchanged runtime checks were not rerun for a documentation-only candidate. Prior hosted
 PAY-INT-1 results above remain separate evidence. Independent ACC-INT-0 audit is still pending.
+
+## ACC-INT-0 independent approval and formal acceptance — 2026-10-12
+
+Exact audited proposal `207c78096f419b4d924326df256355a356a3f3d7`, canonical parent
+`a1079985a2ef5645dfed338e3e58af54f5242e1a`, branch `accint0-accounting-outcomes-contract`.
+Supplied independent verdict **FINAL PASS — ACC-INT-0 CONTRACT APPROVED FOR FORMAL ACCEPTANCE**,
+readiness **A**, **no candidate-owned P0/P1/P2/P3**. This is supplied independent evidence, not
+self-audit. Inherited non-blocking **ACCINT0-DOC-1 P3** is retained as separately bounded
+maintenance; BASELINE, MODULE_BOUNDARIES, DEPENDENCY_MAP and ADR 0011 are not modified.
+
+Hosted **Phase 0 checks #125 / 38203841663 — SUCCESS**
+([run](https://github.com/sahinkhan/djangobusinessos/actions/runs/38203841663)), event `push`,
+checked out the exact audited proposal on its branch. **1,613 PostgreSQL tests passed**;
+fresh migrations, Ruff, zero-issue Django checks, no migration drift, npm/Tailwind and generated
+CSS reproducibility all passed. Eight inherited npm advisories (two moderate, six high),
+Actions/Node deprecation and outdated Browserslist warnings remain outside this acceptance scope.
+
+ADR 0016 is **Accepted — Gate ACC-INT-0**, preserving all ten independent conclusions:
+
+1. Two Accounting-owned opt-in apps, invoice posting independent of Payments.
+2. Allocation integration hard-dependency on `accounting_billing` for this contract.
+3. Explicit Journal/Account UUID selection.
+4. AR/Cash ASSET semantic limitation; no invented control-account or bank certification.
+5. Immutable `Payment.payment_date` for allocation-posting date.
+6. Zero-total `NO_ACCOUNTING_EFFECT`, no persistent binding.
+7. Source/effect binding architecture concurrency-safe by contract.
+8. Existing Accounting public services sufficient for future atomic composition.
+9. Incomplete/hidden evidence cannot certify `NOT_POSTED`.
+10. Precise enough for separately authorized ACC-INT-1; implementation readiness A.
+
+**Formal acceptance: COMPLETE. Canonical adoption: PENDING at this acceptance checkpoint.**
+Only this plan, the roadmap and ADR 0016 status/evidence change. Audited technical design, effect
+shapes, ownership, account/unit/date/Party/zero rules, immutable binding identity, retry, complete
+evidence, RLS/FK compatibility, lock order, four future permission codes and I01–I21 remain unchanged.
+No runtime/test/schema/migration/settings/manifest/frontend changes, new permission or ADR 0011/
+0013/0014/0015 semantic change. Historical proposal, PAY-INT-1 failures/remediation and verification
+remain preserved. Ordinary CRUD, customer-migration preparation, demos and historical refs remain
+untouched.
+
+This acceptance commit requires NEW exact-head branch push CI; proposal CI is not substituted.
+After success, fetch/revalidate canonical main still equals the pinned parent, verify no divergence,
+and use the authorized no-PR/direct fast-forward normal push. Separate exact-head main push CI
+must then succeed. Only that completed sequence makes this same acceptance commit **ACC-INT-0
+CANONICALLY CLOSED / CANONICAL FREEZE**. Adoption-pending wording then remains acceptance-stage
+evidence; actual acceptance/main run IDs and freeze SHA are reported from verified results rather
+than invented before execution. No extra closure commit, amend, squash, rebase, merge commit or
+force push. No exact checkpoint tag name is specified: **NO TAG CREATED**, no GitHub release.
+
+**ACC-INT-1 NOT STARTED / NOT AUTHORIZED. Accounting automation runtime NOT STARTED.
+PHASE 2 NOT COMPLETE; final completion review NOT YET PERFORMED. PHASE 3 NOT AUTHORIZED.
+SaaS activation and production deployment NOT AUTHORIZED; production readiness NOT CLAIMED.**
+STOP after publication/adoption verification; no next milestone begins here.

@@ -1,13 +1,18 @@
 # ADR 0016 — Accounting Commercial Outcomes Integration Contract
 
-Status: Proposed — Gate ACC-INT-0
+Status: Accepted — Gate ACC-INT-0
 
 Date: 2026-10-12
 
 ## Authority, baseline and evidence
 
-This is a local documentation/architecture candidate, **not acceptance or implementation**.
-ACC-INT-1 runtime, publication, canonical adoption and production approval require separate gates.
+This documentation/architecture contract is **FORMALLY ACCEPTED**. Canonical adoption is
+**PENDING at this acceptance checkpoint**, subject to separate exact-head acceptance and main CI.
+Audited proposal `207c78096f419b4d924326df256355a356a3f3d7` and its technical text below are
+preserved unchanged; proposal-stage next-decision/status language is historical, superseded by
+the [formal acceptance record](#independent-approval-and-formal-acceptance--2026-10-12).
+Named proposed APIs/models/permissions remain unimplemented future declarations, not runtime code.
+**ACC-INT-1: NOT STARTED / NOT AUTHORIZED.** No production approval or SaaS activation is granted.
 Canonical starting main is `a1079985a2ef5645dfed338e3e58af54f5242e1a`.
 
 PAY-INT-1 is **CANONICALLY CLOSED** at that SHA. Its original implementation
@@ -584,3 +589,54 @@ must decide this proposed topology, bindings, account/precision/zero policies, c
 and public read additions before publication/formal acceptance/adoption and any separately
 authorized ACC-INT-1. **PROPOSED — NOT ACCEPTED; NOT PUBLISHED; ACC-INT-1 NOT STARTED;
 PHASE 2 NOT COMPLETE; PHASE 3 NOT AUTHORIZED.**
+
+## Independent approval and formal acceptance — 2026-10-12
+
+Audited proposal: `207c78096f419b4d924326df256355a356a3f3d7`, directly above canonical
+`a1079985a2ef5645dfed338e3e58af54f5242e1a`. The supplied independent architecture review returned
+**FINAL PASS — ACC-INT-0 CONTRACT APPROVED FOR FORMAL ACCEPTANCE**, readiness **A**, with
+**no candidate-owned P0/P1/P2/P3 findings**. This is supplied independent evidence, not an audit
+performed by the acceptance session. Inherited non-blocking **ACCINT0-DOC-1 (P3)** remains
+separately governed documentation maintenance; no older architecture summary is corrected here.
+
+Normal publication preserved the exact audited proposal. Hosted **Phase 0 checks #125 /
+38203841663 — SUCCESS**
+([run](https://github.com/sahinkhan/djangobusinessos/actions/runs/38203841663)), event `push`,
+branch `accint0-accounting-outcomes-contract`, checked out that exact SHA. **1,613 PostgreSQL
+tests passed**; fresh migrations, Ruff, Django checks, migration drift, npm/Tailwind and generated
+CSS reproducibility passed. Eight inherited npm advisories (two moderate, six high), Actions/Node
+deprecation and outdated Browserslist warnings remain maintenance evidence, not newly corrected
+dependencies or production readiness.
+
+The ten independent conclusions are accepted without reinterpretation:
+
+1. The two-app topology is accepted; invoice posting works independently of Payments.
+2. `accounting_payments_billing` hard-dependency on `accounting_billing` is accepted for this contract.
+3. Explicit Account/Journal UUID selection is accepted.
+4. AR/Cash ASSET semantics provide no unimplemented subtype/control-account/bank certification.
+5. `Payment.payment_date` is the accepted allocation-posting date policy.
+6. Zero-total `NO_ACCOUNTING_EFFECT` without a persistent binding is accepted.
+7. Source/effect binding architecture is concurrency-safe by contract, not yet implemented/tested.
+8. Existing Accounting public services are sufficient for future atomic composition.
+9. Incomplete/hidden evidence cannot validly become `NOT_POSTED`.
+10. The contract is precise enough for separately authorized ACC-INT-1 implementation; readiness A.
+
+**Formal acceptance: COMPLETE. Canonical adoption: PENDING at this acceptance checkpoint.**
+The audited technical body, effect shapes, bindings, account/currency/date/Party/zero policies,
+retry/evidence/lock requirements, four future permissions and I01–I21 matrix are unchanged.
+Only this ADR, the roadmap and Phase 2 plan change; all runtime, schemas, migrations, settings,
+manifests, permissions, tests, frontend and existing accepted ADR semantics remain untouched.
+
+This acceptance commit requires its own exact-head branch push CI, not reused proposal CI.
+Then revalidate unchanged starting main and straight ancestry, adopt by the authorized direct
+fast-forward/no-PR normal push, and require separate exact-head main push CI. Only successful
+completion makes this same acceptance commit the **ACC-INT-0 canonical freeze / CANONICALLY
+CLOSED** checkpoint. Pending wording then remains acceptance-stage evidence; actual acceptance/
+main run IDs and freeze SHA are reported from verified publication results, not fabricated here.
+No extra closure commit, amendment, merge commit, squash, rebase, force push, tag or release.
+No exact ACC-INT-0 checkpoint tag name is specified: **NO TAG CREATED**.
+
+**ACC-INT-1 NOT STARTED / NOT AUTHORIZED. Accounting automation runtime NOT STARTED.
+PHASE 2 NOT COMPLETE; final completion review NOT YET PERFORMED. PHASE 3 NOT AUTHORIZED.
+SaaS activation and production deployment NOT AUTHORIZED; production readiness NOT CLAIMED.**
+STOP after the authorized publication/adoption verification; do not begin another milestone.

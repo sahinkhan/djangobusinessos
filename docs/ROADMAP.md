@@ -115,18 +115,28 @@ all succeeded with **1,613 PostgreSQL tests each**, fresh migrations and all man
 #118 tested the corrective SHA; #119/#120 tested the canonical freeze. No PAY-INT-1 tag is claimed.
 Earlier adoption-pending statements below describe their historical acceptance stage.
 
-**ACC-INT-0 — Billing / Payments Outcomes -> Accounting Posting Contract: PROPOSED**, local
-documentation only on `accint0-accounting-outcomes-contract`, from that exact canonical main.
-[ADR 0016](decisions/0016-accounting-commercial-outcomes-integration-contract.md) proposes two
+**ACC-INT-0 — Billing / Payments Outcomes -> Accounting Posting Contract: FORMALLY ACCEPTED**,
+2026-10-12, documentation only on `accint0-accounting-outcomes-contract`, from that exact main.
+[ADR 0016](decisions/0016-accounting-commercial-outcomes-integration-contract.md) is
+**Accepted — Gate ACC-INT-0** after supplied independent **FINAL PASS — ACC-INT-0 CONTRACT
+APPROVED FOR FORMAL ACCEPTANCE**, readiness **A**, no candidate-owned P0–P3, and hosted
+**Phase 0 checks #125 / 38203841663 — SUCCESS**
+([run](https://github.com/sahinkhan/djangobusinessos/actions/runs/38203841663)) at exact audited
+proposal `207c78096f419b4d924326df256355a356a3f3d7`: **1,613 PostgreSQL tests**, fresh migrations
+and all mandatory checks passed. **Formal acceptance COMPLETE; canonical adoption PENDING
+at this acceptance checkpoint**, requiring acceptance CI, direct fast-forward and separate main CI.
+The unchanged contract defines two
 Accounting-owned opt-in apps: invoice AR/Revenue independently of Payments, and allocation Cash/AR
 after a valid invoice Accounting posting. Explicit Journal/Account IDs, immutable source/effect
 bindings, owner financial bases, complete evidence and atomic public-service composition are
-specified, not implemented or accepted. Independent architecture audit is next; no publication,
-acceptance, runtime, permission, migration or UI change is authorized by this gate.
+accepted, not implemented. Original proposal/verification history remains in the ADR and plan.
+Inherited non-blocking ACCINT0-DOC-1 remains unmodified; npm/Actions/Browserslist maintenance
+is not remediated. No runtime, permission, migration or UI change is authorized by acceptance.
 **ACC-INT-1: NOT STARTED / NOT AUTHORIZED. Phase 2: NOT COMPLETE. Phase 3: NOT AUTHORIZED.**
-This is the final currently proposed Accounting composition gate before a later Phase 2 completion
-review, unless independent audit identifies a prerequisite gap. Other optional integrations remain
-separately governed; SaaS activation and production deployment are not approved.
+This is the accepted contract for the final currently scoped Accounting composition gate before
+a later Phase 2 completion review, not runtime or Phase 2 exit approval. Other optional integrations
+remain separately governed; SaaS activation and production deployment are not authorized.
+No exact ACC-INT-0 checkpoint tag name is specified: **NO TAG CREATED**.
 
 Current future-work contract: **Option A — separate horizontal modules**, selected by the owner.
 [ADR 0011](decisions/0011-modular-billing-payments-accounting-boundary.md) is **Accepted — Gate BILL-0**
@@ -344,7 +354,7 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | ACC-0 / ACC-1 canonically closed | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014; freeze `00e18a75...` | Historical REVISE retained; ACC1-R1/R2 resolved; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
 | PAY-INT-0 canonically closed at `9ee4e0bd...` | Payments retains allocation ownership; Billing retains invoice facts; accepted ADR 0015 freezes opt-in composition | Historical acceptance-stage pending wording retained above; allocation implementation is separately governed; no Accounting automation |
 | PAY-INT-1 canonically closed at `a1079985...` | Opt-in `payments_billing`; immutable allocations, complete-evidence profile and intrinsic stored-parent retries; original REVISE / C preserved; corrective FINAL PASS / A; R1-R4 RESOLVED; CI #118/#119/#120 SUCCESS | No Accounting effect, reversal/refund, FX, bank settlement or other automatic posting; earlier acceptance-stage pending chronology retained |
-| ACC-INT-0 proposed; local only | ADR 0016 defines invoice AR/Revenue and allocation Cash/AR through Accounting-owned optional apps, explicit accounts, protected source/effect identity and atomic public services | Independent contract audit pending; NOT ACCEPTED / NOT PUBLISHED; ACC-INT-1 NOT STARTED / NOT AUTHORIZED; no Phase 2 exit or Phase 3 authorization |
+| ACC-INT-0 formally accepted | Accepted ADR 0016; independent FINAL PASS / readiness A; exact audited proposal `207c7809...`; candidate CI #125 SUCCESS; unchanged invoice AR/Revenue and allocation Cash/AR contracts | Canonical adoption PENDING at acceptance checkpoint, requiring acceptance/main CI and direct fast-forward; ACC-INT-1 NOT STARTED / NOT AUTHORIZED; no Phase 2 exit or Phase 3 authorization |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
 generic Payments and Accounting work without Billing. Settlement-adjusted outstanding in the local
