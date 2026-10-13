@@ -45,11 +45,23 @@ if mode in {"billing","invoice_no_payments","billing_accounting"}:
     invoice = create_invoice(context,bill_to_party_id=party.pk,currency_id=currency.pk)
     add_invoice_line(context,invoice.pk,description="One",quantity="1",unit_price="1")
     issue_invoice(context,invoice.pk)
+    from businessos.modules.billing.selectors import invoice_accounting_basis
+    assert invoice_accounting_basis(context,invoice.pk).original_total == 1
 if mode in {"accounting","invoice_no_payments","billing_accounting"}:
     from businessos.modules.accounting.services import create_account,create_journal
     ar=create_account(context,code="AR",name="AR",type="ASSET")
     revenue=create_account(context,code="REV",name="Revenue",type="INCOME")
     journal=create_journal(context,code="GEN",name="General")
+    from businessos.modules.accounting.services import (
+        create_journal_entry,add_journal_entry_line,post_journal_entry,
+    )
+    from businessos.modules.accounting.selectors import posted_journal_basis
+    entry=create_journal_entry(context,journal_id=journal.pk)
+    add_journal_entry_line(context,entry.pk,account_id=ar.pk,debit="1",credit="0")
+    add_journal_entry_line(context,entry.pk,account_id=revenue.pk,debit="0",credit="1")
+    post_journal_entry(context,entry.pk)
+    basis=posted_journal_basis(context,entry.pk)
+    assert basis.debit == basis.credit == 1 and len(basis.lines) == 2
 if mode == "invoice_no_payments":
     from businessos.modules.accounting.integrations.billing.services import (
         post_billing_invoice_outcome,

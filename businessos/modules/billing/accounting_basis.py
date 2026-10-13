@@ -11,6 +11,7 @@ from django.utils import timezone
 
 from businessos.core.database import business_atomic, current_database_alias
 
+from .accounting_evidence import admit_owner_basis
 from .models import Invoice
 from .selectors import invoice_financial_basis
 
@@ -39,6 +40,7 @@ def invoice_accounting_basis(context, invoice_id, *, lock=True):
 
 @business_atomic
 def _invoice_accounting_basis(context, invoice_id, *, lock):
+    admit_owner_basis()
     # Existing owner admission always stabilizes Company; lock=False only skips Invoice.
     basis = invoice_financial_basis(context, invoice_id, lock=lock)
     invoice = Invoice.objects.select_related("bill_to_party").get(pk=basis.id)

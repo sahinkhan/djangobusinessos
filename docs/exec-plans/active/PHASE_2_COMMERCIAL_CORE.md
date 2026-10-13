@@ -1,6 +1,6 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 / PAY-INT-0 / PAY-INT-1 / ACC-INT-0 CANONICALLY CLOSED; ACC-INT-1 LOCAL IMPLEMENTATION CANDIDATE / AWAITING INDEPENDENT AUDIT / NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED
+Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 / PAY-INT-0 / PAY-INT-1 / ACC-INT-0 CANONICALLY CLOSED; ACC-INT-1 LOCAL REMEDIATION / INDEPENDENT CORRECTIVE RE-AUDIT PENDING / NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED
 
 Current canonical baseline: `4419bdc4f0210894065400923741dd5449ffd158`.
 **ACC-INT-0 CANONICALLY CLOSED.** The following PAY-INT-1 and ACC-INT-0 acceptance-stage
@@ -24,13 +24,15 @@ Contract branch `accint0-accounting-outcomes-contract` starts from the exact can
 The authorized remaining sequence is exact-head acceptance CI, unchanged-main/ancestry
 revalidation, direct fast-forward normal push and separate exact-head main CI; no runtime.
 See [formal acceptance and completion rule](#acc-int-0-independent-approval-and-formal-acceptance--2026-10-12).
-Current bounded task: separately authorized **ACC-INT-1 LOCAL IMPLEMENTATION CANDIDATE**
+Current bounded task: separately authorized **ACC-INT-1 LOCAL REMEDIATION**
 on `accint1-accounting-outcomes`, from canonical base `4419bdc4f0210894065400923741dd5449ffd158`.
-**AWAITING INDEPENDENT AUDIT / NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED.**
+**INDEPENDENT CORRECTIVE RE-AUDIT PENDING / NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED.**
 The implementation preserves accepted ADR 0016: two Accounting-owned opt-in apps, owner read
 contracts, immutable source/effect bindings, explicit public-service composition and bounded UI.
-Local verification is implementation evidence; no independent implementation audit or hosted
-candidate CI is claimed. **PHASE 2 NOT COMPLETE; PHASE 3 NOT AUTHORIZED.**
+Original implementation `5bfc055b1fb6c2b806a4f4bbf04fc749cc9020fe` received independent
+**REVISE — Readiness B**, with candidate-owned **ACCINT1-AUD-1 — P2**. Local corrective
+verification is implementation evidence; no independent corrective approval or hosted candidate
+CI is claimed. **PHASE 2 NOT COMPLETE; PHASE 3 NOT AUTHORIZED.**
 SaaS activation and deployment remain unauthorized. No PAY-INT-1 tag is invented.
 
 Historical PAY-INT-1 implementation/acceptance-stage baseline:
@@ -1640,9 +1642,9 @@ Gate PAY-INT-1 main CI              #120 / 38164395135 SUCCESS / 1,613 PostgreSQ
 Gate ACC-INT-0 independent review  FINAL PASS / readiness A / no candidate-owned P0-P3
 Gate ACC-INT-0 proposal CI         #125 / 38203841663 SUCCESS / 1,613 PostgreSQL tests
 Gate ACC-INT-0 formal acceptance   COMPLETE / CANONICALLY CLOSED / canonical base 4419bdc4...
-Gate ACC-INT-1                     LOCAL IMPLEMENTATION CANDIDATE / AWAITING INDEPENDENT AUDIT
+Gate ACC-INT-1                     LOCAL REMEDIATION / INDEPENDENT CORRECTIVE RE-AUDIT PENDING
                                   NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED
-Accounting integration runtime     LOCAL IMPLEMENTATION CANDIDATE / AWAITING INDEPENDENT AUDIT
+Accounting integration runtime     LOCAL REMEDIATION / INDEPENDENT CORRECTIVE RE-AUDIT PENDING
 Phase 2                            NOT COMPLETE
 Phase 3                            NOT AUTHORIZED
 Other integration implementation   not authorized
@@ -2479,7 +2481,12 @@ PHASE 2 NOT COMPLETE; final completion review NOT YET PERFORMED. PHASE 3 NOT AUT
 SaaS activation and production deployment NOT AUTHORIZED; production readiness NOT CLAIMED.**
 STOP after publication/adoption verification; no next milestone begins here.
 
-## ACC-INT-1 local implementation verification — 2026-10-12
+## ACC-INT-1 original local implementation verification — 2026-10-12
+
+Historical checkpoint preserved for original candidate
+`5bfc055b1fb6c2b806a4f4bbf04fc749cc9020fe`. The later independent audit returned
+**REVISE — Readiness B**, with **ACCINT1-AUD-1 — P2 candidate-owned**. The original checks below
+do not establish corrective approval; the current remediation record follows this history.
 
 **LOCAL IMPLEMENTATION CANDIDATE / AWAITING INDEPENDENT AUDIT. NOT PUBLISHED / NOT ACCEPTED /
 NOT CANONICALLY ADOPTED.** Branch `accint1-accounting-outcomes`, canonical parent
@@ -2531,3 +2538,79 @@ hidden/RLS and NOT VALID FK/CHECK evidence, corrupt/orphan provenance, zero-effe
 composition failure points and HTTP module/RBAC/CSRF/stale-Company cases passed. One local
 `feat: implement ACC-INT-1 accounting outcomes` commit is authorized, then STOP for independent
 audit. Publication, PR, merge, tag, acceptance, canonical adoption and next-phase work remain gated.
+
+## ACC-INT-1 owner-basis corrective remediation — 2026-10-13
+
+**LOCAL REMEDIATION / INDEPENDENT CORRECTIVE RE-AUDIT PENDING.** Preserved original candidate:
+`5bfc055b1fb6c2b806a4f4bbf04fc749cc9020fe`; original parent and unchanged main/origin-main:
+`4419bdc4f0210894065400923741dd5449ffd158`. The supplied independent implementation audit
+returned **REVISE — Readiness B**, with exactly one candidate-owned blocker,
+**ACCINT1-AUD-1 — P2: public owner-basis APIs could certify RLS-filtered incomplete financial
+evidence**. This corrective commit's exact SHA is frozen and reported after committing; its
+parent must be the preserved original candidate. Developer evidence marks the finding
+**REMEDIATED LOCALLY — INDEPENDENT VERIFICATION PENDING**, not independently resolved.
+
+Billing and Accounting now establish selected-alias owner evidence admission inside each
+public basis transaction before financial reads. Billing inspects Invoice, InvoiceLine, Company,
+Party, Currency and migration provenance. Accounting inspects Entry, EntryLine, Journal, Account,
+Company, Party, Currency and migration provenance. Helpers remain inside their respective owner
+modules, with no optional-integration import or new Core abstraction. Original financial
+arithmetic, BusinessContext/company/RBAC checks and authorization rechecks after waits remain.
+No models, migrations, accepted ADRs, settings, presentation files or financial authority changed.
+
+PostgreSQL admission validates actual metadata-derived relation identities/OIDs, supported
+ordinary public tables and search-path resolution, exact canonical column and PK/UNIQUE/CHECK
+facts, critical validated FK targets/actions, and exact required owner migration history. It
+rejects any relevant RLS flag, FORCE RLS flag or policy, including a policy on a disabled table
+and privileged executions. It does not evaluate arbitrary policies or change aliases/roles/RLS.
+Unrelated Catalog RLS and another owner's migration history do not disable an owner certificate.
+Bounded catalog values are parameterized. Verified relation identifiers are quoted, acquired in
+OID order with ACCESS SHARE and rechecked; strong DDL remains blocked through the transaction.
+As in ADR 0016, weak policy/privilege/migration maintenance requires operator drain; this is not a
+claim of serializing arbitrary live security maintenance. SQLite admits its pinned owner schema
+with enabled FK enforcement and no shadow/attached namespace. Unsupported evidence raises
+owner ValidationError(code="incompatible"), never a partial/zero certificate or presentation DTO.
+
+Direct native reproductions initially failed against the original runtime: complete Invoice
+41.37 became visible 20.00, and complete four-line balanced Entry 46.37 became a visible balanced
+two-line subset 41.37 under an actual non-superuser/non-BYPASSRLS role. Corrected APIs reject both
+RLS states. The owner explicitly clarified the four-line control: preserve ADR 0016's exactly
+two-line posted-basis restriction, reject the complete four-line Entry and certify a separate
+valid two-line 41.37 Entry. Supported ordinary, superuser, BYPASSRLS and owner executions certify
+the valid controls only without relevant RLS/policies. Real role attributes and visible row
+counts/totals are asserted; no financial mutations/audits result from certification.
+
+Verification uses owned disposable PostgreSQL 17, SQLite and Node containers, synthetic data,
+read-only source mounts and the same external test-only password-hasher runner documented in
+the original checkpoint. Fresh non-default aliases trap every default cursor and exercise both
+direct APIs. Strong-DDL probes hold Company before financial reads, prove the owner reader holds
+the relation proof lock, then verify completion and rejection after DDL commits. Fresh topology
+probes now call the direct APIs in standalone Billing, standalone Accounting and combined owners
+without ACC-INT, while retaining absence-of-optional-import assertions.
+
+| Corrective local check | Actual result |
+|---|---|
+| Full PostgreSQL suite, serial disposable test settings | **2,755 passed; zero failures, zero skips** in 1,819.20 seconds; includes all 1,142 ACC-INT cases and all 225 focused corrective cases |
+| Complete ACC-INT integration suite | **1,142 passed; zero failures, zero skips**; includes **225 focused corrective direct-owner cases** |
+| ACC-INT concurrency / schema-security | **230 concurrency cases passed** (198 original concurrency + 30 extra concurrency + two new owner strong-DDL cases); **663 schema/security/direct-owner compatibility cases passed** (442 existing profile + 221 new direct-owner RLS/schema/control cases); two additional new selected-alias cases passed |
+| Fresh bootstrap / installation topology | **22 existing topology cases passed**, including Billing standalone, Accounting standalone, combined owners without ACC-INT and full topology; existing fresh integration alias plus **two new direct-owner fresh aliases** passed with default-cursor traps |
+| Full supported SQLite suite | **1,525 passed; 1,230 classified skips**: 484 actual PostgreSQL lock cases, 723 catalog/DDL/RLS/security/direct-owner compatibility cases, 8 exact numeric cases, 15 fresh PostgreSQL bootstrap/alias cases |
+| Ruff / canonical-base formatting | `ruff check . --no-cache` PASS; **59 changed Python files**, original migrations included, pass `ruff format --check`; no whitespace errors |
+| Fresh migrations / Django / migration drift | Fresh full-topology migration PASS; `manage.py check` zero issues; `makemigrations --check --dry-run` no changes |
+| JavaScript / Tailwind / CSS | Node syntax PASS; **21 JavaScript tests passed**; `npm ci`, Tailwind build and byte-identical generated CSS PASS; no frontend changes |
+| Targeted real Chrome smoke | Invoice Posted **USD 41.37**, Allocation Posted **USD 10.00** and Entry links verified; relevant RLS shows Invoice **Accounting evidence unavailable**, removes allocation links and rejects the direct Allocation endpoint; restoring disposable metadata restores Posted |
+
+The SQLite increase is exactly **225 new PostgreSQL-only cases**: 221 direct owner compatibility/
+RLS/schema/control cases, two selected-alias cases and two strong-DDL concurrency cases. Skips
+are backend capability limits, not missing execution on PostgreSQL. All npm advisories and the
+Browserslist warning remain inherited; no dependency maintenance or hosted CI is claimed.
+No deadlock or connection-health failures occurred. Verification source checksums were unchanged
+through the full run. The completed complete ACC-INT run was 1,518.21 seconds; the SQLite run was
+648.40 seconds. Real browser console was clear. Remote main was read with
+`git ls-remote`, remaining at the canonical base; no final fetch/ref mutation was needed.
+
+Exactly one local `fix: harden ACC-INT-1 owner evidence bases` commit is authorized above the
+preserved original candidate, then STOP. **NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY
+ADOPTED. PHASE 2 NOT COMPLETE. PHASE 3 NOT AUTHORIZED.** A fresh independent corrective auditor
+must verify the new exact SHA before closing ACCINT1-AUD-1; this implementation session does not
+perform that independent audit.

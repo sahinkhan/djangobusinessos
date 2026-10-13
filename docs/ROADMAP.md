@@ -134,8 +134,13 @@ Inherited non-blocking ACCINT0-DOC-1 remains unmodified; npm/Actions/Browserslis
 is not remediated. No runtime, permission, migration or UI change is authorized by acceptance.
 That acceptance-stage authorization statement is historical. Current canonical base is
 `4419bdc4f0210894065400923741dd5449ffd158`; **ACC-INT-0 CANONICALLY CLOSED**.
-**ACC-INT-1: LOCAL IMPLEMENTATION CANDIDATE / AWAITING INDEPENDENT AUDIT** on
-`accint1-accounting-outcomes`, implementing the separately authorized ADR 0016 scope.
+**ACC-INT-1: LOCAL REMEDIATION / INDEPENDENT CORRECTIVE RE-AUDIT PENDING** on
+`accint1-accounting-outcomes`, preserving accepted ADR 0016. Original candidate
+`5bfc055b1fb6c2b806a4f4bbf04fc749cc9020fe` received independent **REVISE — Readiness B**,
+with one candidate-owned **ACCINT1-AUD-1 — P2** finding: direct owner bases could certify
+RLS-filtered financial evidence. The narrow corrective implementation establishes owner-local
+selected-alias schema/RLS admission. The finding is **remediated locally; independent verification
+pending**, not independently resolved. See the current execution plan for corrective verification.
 **NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED.** Local implementation verification
 does not constitute independent audit or hosted CI. **Phase 2: NOT COMPLETE. Phase 3: NOT AUTHORIZED.**
 This is the accepted contract for the final currently scoped Accounting composition gate before
@@ -359,7 +364,7 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | ACC-0 / ACC-1 canonically closed | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014; freeze `00e18a75...` | Historical REVISE retained; ACC1-R1/R2 resolved; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
 | PAY-INT-0 canonically closed at `9ee4e0bd...` | Payments retains allocation ownership; Billing retains invoice facts; accepted ADR 0015 freezes opt-in composition | Historical acceptance-stage pending wording retained above; allocation implementation is separately governed; no Accounting automation |
 | PAY-INT-1 canonically closed at `a1079985...` | Opt-in `payments_billing`; immutable allocations, complete-evidence profile and intrinsic stored-parent retries; original REVISE / C preserved; corrective FINAL PASS / A; R1-R4 RESOLVED; CI #118/#119/#120 SUCCESS | No Accounting effect, reversal/refund, FX, bank settlement or other automatic posting; earlier acceptance-stage pending chronology retained |
-| ACC-INT-0 canonically closed; ACC-INT-1 local implementation candidate | Accepted ADR 0016; independent contract FINAL PASS / readiness A; exact audited proposal `207c7809...`; candidate CI #125 SUCCESS; canonical base `4419bdc4...`; invoice AR/Revenue and allocation Cash/AR implementation follows the accepted contract | ACC-INT-1 AWAITING INDEPENDENT AUDIT; NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED; no Phase 2 exit or Phase 3 authorization |
+| ACC-INT-0 canonically closed; ACC-INT-1 local remediation | Accepted ADR 0016; independent contract FINAL PASS / readiness A; exact audited proposal `207c7809...`; candidate CI #125 SUCCESS; canonical base `4419bdc4...`; original implementation `5bfc055b...` received REVISE / readiness B / ACCINT1-AUD-1 P2; owner-basis correction remediated locally | INDEPENDENT CORRECTIVE RE-AUDIT PENDING; NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED; no Phase 2 exit or Phase 3 authorization |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
 generic Payments and Accounting work without Billing. Settlement-adjusted outstanding in the local

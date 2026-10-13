@@ -14,6 +14,7 @@ from businessos.core.database import business_atomic, current_database_alias
 from . import domain
 from .manifest import VIEW_ENTRIES
 from .models import JournalEntry
+from .posted_evidence import admit_owner_basis
 from .services import _authorize
 
 POSTED_BASIS_VERSION = 1
@@ -62,6 +63,7 @@ def posted_journal_basis(context, entry_id, *, lock=True):
 
 @business_atomic
 def _posted_journal_basis(context, entry_id, *, lock):
+    admit_owner_basis()
     _authorize(context, VIEW_ENTRIES)
     entries = JournalEntry.objects.filter(pk=entry_id, company_id=context.company_id)
     if lock:
