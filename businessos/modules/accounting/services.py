@@ -5,7 +5,7 @@ from django.db import IntegrityError
 from django.db.models import Max, Q
 from django.utils import timezone
 
-from businessos.core.access.policies import require_permission
+from businessos.core.access.policies import require_final_permission, require_permission
 from businessos.core.audit.services import record_audit_entry
 from businessos.core.common.context import BusinessContext
 from businessos.core.database import business_atomic, business_atomic_context
@@ -64,7 +64,7 @@ def _activity(value):
     return value
 
 
-def _create_reference(context, model, code, name, is_active, **extra):
+def _create_reference(context, permission, model, code, name, is_active, **extra):
     code = _value("code", domain.text, code, maximum=32, required=True, uppercase=True, trim=True)
     name = _value("name", domain.text, name, maximum=160, required=True, trim=True)
     if model.objects.filter(company_id=context.company_id, code=code).exists():
@@ -72,6 +72,7 @@ def _create_reference(context, model, code, name, is_active, **extra):
     row = model(
         company_id=context.company_id, code=code, name=name, is_active=_activity(is_active), **extra
     )
+    require_final_permission(context, permission)
     try:
         with business_atomic_context():
             row._persist(_WRITE_TOKEN, creating=True)
@@ -83,7 +84,7 @@ def _create_reference(context, model, code, name, is_active, **extra):
     return row
 
 
-def _update_reference(context, model, identity, changes):
+def _update_reference(context, permission, model, identity, changes):
     if changes.keys() - {"name", "is_active"}:
         raise ValidationError("Only name/activity may change; reference identity is immutable.")
     row = _locked(context, model, identity, model.__name__.lower())
@@ -95,6 +96,7 @@ def _update_reference(context, model, identity, changes):
     if "is_active" in changes:
         row.is_active = _activity(changes["is_active"])
     fields = [f for f in before if before[f] != getattr(row, f)]
+    require_final_permission(context, permission)
     if fields:
         row._persist(_WRITE_TOKEN)
         _audit(context, row, f"{model.__name__.lower()}.updated", fields=fields)
@@ -106,25 +108,25 @@ def create_account(context: BusinessContext, *, code, name, type, is_active=True
     _authorize(context, MANAGE_ACCOUNTS)
     if type not in Account.Type.values:
         raise ValidationError({"type": "Select a supported Account type."})
-    return _create_reference(context, Account, code, name, is_active, type=type)
+    return _create_reference(context, MANAGE_ACCOUNTS, Account, code, name, is_active, type=type)
 
 
 @business_atomic
 def update_account(context: BusinessContext, account_id, **changes):
     _authorize(context, MANAGE_ACCOUNTS)
-    return _update_reference(context, Account, account_id, changes)
+    return _update_reference(context, MANAGE_ACCOUNTS, Account, account_id, changes)
 
 
 @business_atomic
 def create_journal(context: BusinessContext, *, code, name, is_active=True):
     _authorize(context, MANAGE_JOURNALS)
-    return _create_reference(context, Journal, code, name, is_active)
+    return _create_reference(context, MANAGE_JOURNALS, Journal, code, name, is_active)
 
 
 @business_atomic
 def update_journal(context: BusinessContext, journal_id, **changes):
     _authorize(context, MANAGE_JOURNALS)
-    return _update_reference(context, Journal, journal_id, changes)
+    return _update_reference(context, MANAGE_JOURNALS, Journal, journal_id, changes)
 
 
 def _draft(entry):
@@ -209,6 +211,7 @@ def create_journal_entry(context: BusinessContext, *, journal_id, entry_date=Non
         company_local_date(context.company_id) if entry_date is None else entry_date,
     )
     memo = _value("memo", domain.text, memo)
+    require_final_permission(context, CREATE_ENTRIES)
     for attempt in range(3):
         identity = uuid4()
         entry = JournalEntry(
@@ -263,6 +266,7 @@ def update_journal_entry(context: BusinessContext, entry_id, **changes):
     if "memo" in changes:
         entry.memo = _value("memo", domain.text, changes["memo"])
     changed = [f for f in fields if before[f] != getattr(entry, f)]
+    require_final_permission(context, UPDATE_ENTRIES)
     if changed:
         entry._persist(_WRITE_TOKEN)
         _audit(context, entry, "entry.updated", operation="header", fields=changed)
@@ -340,6 +344,7 @@ def add_journal_entry_line(
             credit=credit,
         ),
     )
+    require_final_permission(context, UPDATE_ENTRIES)
     line._persist(_WRITE_TOKEN, creating=True)
     _audit(
         context,
@@ -365,6 +370,7 @@ def update_journal_entry_line(context: BusinessContext, entry_id, line_id, **cha
     before = {f: getattr(line, f) for f in fields}
     _line_data(context, entry, line, changes)
     changed = [f for f in fields if before[f] != getattr(line, f)]
+    require_final_permission(context, UPDATE_ENTRIES)
     if changed:
         line._persist(_WRITE_TOKEN)
         _audit(
@@ -386,6 +392,7 @@ def remove_journal_entry_line(context: BusinessContext, entry_id, line_id):
     _journals(context, {entry.journal_id}, active_ids=set())
     line = _line(entry, line_id)
     identity = str(line.pk)
+    require_final_permission(context, UPDATE_ENTRIES)
     line._persist(_WRITE_TOKEN, remove=True)
     _audit(
         context, entry, "entry.updated", operation="line_removed", line_id=identity, fields=["line"]
@@ -397,6 +404,7 @@ def post_journal_entry(context: BusinessContext, entry_id):
     company = _authorize(context, POST_ENTRIES)
     entry = _locked(context, JournalEntry, entry_id, "entry")
     if entry.status == JournalEntry.Status.POSTED:
+        require_final_permission(context, POST_ENTRIES)
         return entry
     _draft(entry)
     entry.journal = _journals(context, {entry.journal_id})[entry.journal_id]
@@ -422,6 +430,7 @@ def post_journal_entry(context: BusinessContext, entry_id):
         raise ValidationError(
             "Journal entry must balance exactly with positive debit/credit totals."
         )
+    require_final_permission(context, POST_ENTRIES)
     entry._post(_POST_TOKEN, timezone.now())
     _audit(context, entry, "entry.posted", number=entry.number, line_count=len(lines))
     return entry

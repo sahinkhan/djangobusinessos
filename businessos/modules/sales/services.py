@@ -4,7 +4,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db.models import Max
 from django.utils import timezone
 
-from businessos.core.access.policies import require_permission
+from businessos.core.access.policies import require_final_permission, require_permission
 from businessos.core.audit.services import record_audit_entry
 from businessos.core.common.context import BusinessContext
 from businessos.core.database import business_atomic
@@ -20,9 +20,7 @@ from .models import SalesOrder, SalesOrderLine
 def _lock_company_and_authorize(context: BusinessContext, permission_code: str) -> Company:
     """Serialize scoped authorization with concurrent grant and revocation changes."""
     company = (
-        Company.objects.select_for_update()
-        .filter(id=context.company_id, is_active=True)
-        .first()
+        Company.objects.select_for_update().filter(id=context.company_id, is_active=True).first()
     )
     if company is None:
         raise PermissionDenied("The selected company does not exist or is inactive.")
@@ -32,7 +30,7 @@ def _lock_company_and_authorize(context: BusinessContext, permission_code: str) 
 
 def _customer(context: BusinessContext, customer_id) -> Party:
     try:
-        return Party.objects.get(
+        return Party.objects.select_for_update().get(
             id=customer_id,
             company_id=context.company_id,
             is_active=True,
@@ -44,19 +42,23 @@ def _customer(context: BusinessContext, customer_id) -> Party:
 
 def _currency(currency_id) -> Currency:
     try:
-        return Currency.objects.get(id=currency_id, is_active=True)
+        return Currency.objects.select_for_update().get(id=currency_id, is_active=True)
     except Currency.DoesNotExist as exc:
         raise ValidationError({"currency": "Select an active currency."}) from exc
 
 
 def _variant(context: BusinessContext, variant_id) -> ProductVariant:
     try:
-        return ProductVariant.objects.select_related("product").get(
-            id=variant_id,
-            company_id=context.company_id,
-            is_active=True,
-            product__is_active=True,
-            product__is_sellable=True,
+        return (
+            ProductVariant.objects.select_related("product")
+            .select_for_update(of=("self",))
+            .get(
+                id=variant_id,
+                company_id=context.company_id,
+                is_active=True,
+                product__is_active=True,
+                product__is_sellable=True,
+            )
         )
     except ProductVariant.DoesNotExist as exc:
         raise PermissionDenied(
@@ -86,7 +88,7 @@ def _line_order_id(context: BusinessContext, line_id):
 
 def _locked_line(context: BusinessContext, *, order: SalesOrder, line_id) -> SalesOrderLine:
     try:
-        return SalesOrderLine.objects.get(
+        return SalesOrderLine.objects.select_for_update().get(
             id=line_id,
             company_id=context.company_id,
             sales_order_id=order.id,
@@ -146,6 +148,7 @@ def create_sales_order(
         currency=_currency(currency_id),
         notes=notes,
     )
+    require_final_permission(context, CREATE_ORDERS)
     order.save()
     record_audit_entry(
         context=context,
@@ -178,6 +181,7 @@ def update_sales_order(context: BusinessContext, *, order_id, **changes) -> Sale
         order.currency = _currency(changes.pop("currency_id"))
     for field_name, value in changes.items():
         setattr(order, field_name, value)
+    require_final_permission(context, UPDATE_ORDERS)
     order.save()
     changed_fields = [
         field_name
@@ -217,6 +221,7 @@ def add_sales_order_line(
         unit_price=unit_price,
         position=position,
     )
+    require_final_permission(context, UPDATE_ORDERS)
     line.save()
     _record_order_update(
         context,
@@ -258,6 +263,7 @@ def update_sales_order_line(
     line.description_snapshot = description
     line.quantity = quantity
     line.unit_price = unit_price
+    require_final_permission(context, UPDATE_ORDERS)
     line.save()
     after = (
         line.product_variant_id,
@@ -280,10 +286,9 @@ def remove_sales_order_line(context: BusinessContext, *, line_id) -> None:
     _require_draft(order)
     line = _locked_line(context, order=order, line_id=line_id)
     deleted_line_id = line.id
+    require_final_permission(context, UPDATE_ORDERS)
     line.delete()
-    _record_order_update(
-        context, order, change="line_removed", line_id=str(deleted_line_id)
-    )
+    _record_order_update(context, order, change="line_removed", line_id=str(deleted_line_id))
 
 
 @business_atomic
@@ -291,6 +296,7 @@ def confirm_sales_order(context: BusinessContext, *, order_id) -> SalesOrder:
     _lock_company_and_authorize(context, CONFIRM_ORDERS)
     order = _locked_order(context, order_id)
     if order.status == SalesOrder.Status.CONFIRMED:
+        require_final_permission(context, CONFIRM_ORDERS)
         return order
     if order.status == SalesOrder.Status.CANCELLED:
         raise ValidationError("A cancelled Sales Order cannot be confirmed.")
@@ -302,6 +308,7 @@ def confirm_sales_order(context: BusinessContext, *, order_id) -> SalesOrder:
     for line in lines:
         _variant(context, line.product_variant_id)
         line.full_clean()
+    require_final_permission(context, CONFIRM_ORDERS)
     confirmed_at = timezone.now()
     order = _persist_lifecycle_transition(
         order,
@@ -324,9 +331,11 @@ def cancel_sales_order(context: BusinessContext, *, order_id) -> SalesOrder:
     _lock_company_and_authorize(context, CANCEL_ORDERS)
     order = _locked_order(context, order_id)
     if order.status == SalesOrder.Status.CANCELLED:
+        require_final_permission(context, CANCEL_ORDERS)
         return order
     if order.status != SalesOrder.Status.CONFIRMED:
         raise ValidationError("Only a confirmed Sales Order may be cancelled.")
+    require_final_permission(context, CANCEL_ORDERS)
     order = _persist_lifecycle_transition(
         order,
         expected_status=SalesOrder.Status.CONFIRMED,

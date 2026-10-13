@@ -1,11 +1,14 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied
+from django.db import connections
 
 from businessos.core.common.context import BusinessContext
+from businessos.core.database import current_database_alias
 from businessos.core.organization.models import Branch, Company, Warehouse
 
 from .models import (
     Permission,
+    Role,
     UserBranchAccess,
     UserCompanyAccess,
     UserRoleAssignment,
@@ -85,3 +88,71 @@ def require_permission(context: BusinessContext, permission_code: str) -> Busine
     if not has_permission(context, permission_code):
         raise PermissionDenied(f"Business permission required: {permission_code}.")
     return context
+
+
+def _share_authority_row(connection, model, identity):
+    """Hold activity/deletion stable without excluding other authorized readers."""
+    quote = connection.ops.quote_name
+    pk = model._meta.pk
+    lock = " FOR SHARE" if connection.vendor == "postgresql" else ""
+    with connection.cursor() as cursor:
+        cursor.execute(
+            f"SELECT {quote(pk.column)} FROM {quote(model._meta.db_table)} "
+            f"WHERE {quote(pk.column)} = %s{lock}",
+            [pk.get_db_prep_value(identity, connection)],
+        )
+        return cursor.fetchone() is not None
+
+
+def require_final_permission(context: BusinessContext, permission_code: str) -> BusinessContext:
+    """Serialize current mutation authority after the caller's domain/reference locks.
+
+    The caller must hold its active Company lock in the selected business transaction.
+    Supported Access grant/link/assignment writers hold that same Company lock (ADR 0009).
+    Global actor/Permission activity and Role activity need additional protection: lock
+    actor, exact Permission, then one qualifying Role witness in UUID order. PostgreSQL
+    FOR SHARE blocks activity updates/deletion through outer commit while allowing nested
+    owner services and different-company readers to share authority anchors. Do not use
+    this helper as a substitute for Company locking or as an authorization cache.
+    SQLite retains the ordinary policy check; row-lock concurrency is PostgreSQL-only.
+    """
+    alias = current_database_alias()
+    connection = connections[alias]
+    if not connection.in_atomic_block:
+        raise RuntimeError("Final mutation authorization requires a business transaction.")
+    validate_permission_code(permission_code)
+    user_model = get_user_model()
+    if not _share_authority_row(connection, user_model, context.actor_id):
+        raise PermissionDenied("The context actor does not exist or is inactive.")
+    permission_id = (
+        Permission.objects.using(alias)
+        .filter(code=permission_code)
+        .values_list("pk", flat=True)
+        .first()
+    )
+    if permission_id is None or not _share_authority_row(connection, Permission, permission_id):
+        raise PermissionDenied(f"Business permission required: {permission_code}.")
+    user = user_model.objects.using(alias).get(pk=context.actor_id)
+    if not user.is_superuser:
+        assignments = UserRoleAssignment.objects.using(alias).filter(
+            user_id=context.actor_id,
+            company_id=context.company_id,
+            role__company_id=context.company_id,
+            role__is_active=True,
+            role__permission_links__permission_id=permission_id,
+            role__permission_links__permission__is_active=True,
+        )
+        role_ids = list(
+            assignments.order_by("role_id").values_list("role_id", flat=True).distinct()
+        )
+        for role_id in role_ids:
+            if (
+                _share_authority_row(connection, Role, role_id)
+                and assignments.filter(role_id=role_id).exists()
+            ):
+                break
+        else:
+            raise PermissionDenied(f"Business permission required: {permission_code}.")
+    # Re-read context/activity/grants only AFTER every authority lock wait. A new,
+    # unlocked role cannot replace the locked qualifying witness above.
+    return require_permission(context, permission_code)

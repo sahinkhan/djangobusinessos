@@ -8,7 +8,7 @@ from django.db.models import Max, Sum
 from django.utils import timezone
 from django.utils.dateparse import parse_date
 
-from businessos.core.access.policies import require_permission
+from businessos.core.access.policies import require_final_permission, require_permission
 from businessos.core.audit.services import record_audit_entry
 from businessos.core.common.context import BusinessContext
 from businessos.core.database import business_atomic, business_atomic_context
@@ -48,7 +48,7 @@ def _lock_company_and_authorize(context: BusinessContext, permission_code: str) 
 
 def _supplier(context: BusinessContext, supplier_id) -> Party:
     try:
-        return Party.objects.get(
+        return Party.objects.select_for_update().get(
             id=supplier_id,
             company_id=context.company_id,
             is_active=True,
@@ -60,19 +60,23 @@ def _supplier(context: BusinessContext, supplier_id) -> Party:
 
 def _currency(currency_id) -> Currency:
     try:
-        return Currency.objects.get(id=currency_id, is_active=True)
+        return Currency.objects.select_for_update().get(id=currency_id, is_active=True)
     except Currency.DoesNotExist as exc:
         raise ValidationError({"currency": "Select an active currency."}) from exc
 
 
 def _variant(context: BusinessContext, variant_id) -> ProductVariant:
     try:
-        return ProductVariant.objects.select_related("product").get(
-            id=variant_id,
-            company_id=context.company_id,
-            is_active=True,
-            product__is_active=True,
-            product__is_purchasable=True,
+        return (
+            ProductVariant.objects.select_related("product")
+            .select_for_update(of=("self",))
+            .get(
+                id=variant_id,
+                company_id=context.company_id,
+                is_active=True,
+                product__is_active=True,
+                product__is_purchasable=True,
+            )
         )
     except ProductVariant.DoesNotExist as exc:
         raise PermissionDenied(
@@ -102,7 +106,7 @@ def _line_order_id(context: BusinessContext, line_id):
 
 def _locked_line(context: BusinessContext, *, order: PurchaseOrder, line_id) -> PurchaseOrderLine:
     try:
-        return PurchaseOrderLine.objects.get(
+        return PurchaseOrderLine.objects.select_for_update().get(
             id=line_id,
             company_id=context.company_id,
             purchase_order_id=order.id,
@@ -231,6 +235,7 @@ def create_purchase_order(
         currency=_currency(currency_id),
         notes=notes,
     )
+    require_final_permission(context, CREATE_ORDERS)
     order.save()
     record_audit_entry(
         context=context,
@@ -263,6 +268,7 @@ def update_purchase_order(context: BusinessContext, *, order_id, **changes) -> P
         order.currency = _currency(changes.pop("currency_id"))
     for field_name, value in changes.items():
         setattr(order, field_name, value)
+    require_final_permission(context, UPDATE_ORDERS)
     order.save()
     changed = [name for name, value in before.items() if value != getattr(order, name)]
     if changed:
@@ -298,6 +304,7 @@ def add_purchase_order_line(
         unit_cost=unit_cost,
         position=position,
     )
+    require_final_permission(context, UPDATE_ORDERS)
     line.save()
     _record_order_update(
         context,
@@ -338,6 +345,7 @@ def update_purchase_order_line(
     line.description_snapshot = description
     line.quantity = quantity
     line.unit_cost = unit_cost
+    require_final_permission(context, UPDATE_ORDERS)
     line.save()
     after = (
         line.product_variant_id,
@@ -359,6 +367,7 @@ def remove_purchase_order_line(context: BusinessContext, *, line_id) -> None:
     _require_draft(order)
     line = _locked_line(context, order=order, line_id=line_id)
     line_id = line.id
+    require_final_permission(context, UPDATE_ORDERS)
     line.delete()
     _record_order_update(context, order, change="line_removed", line_id=str(line_id))
 
@@ -368,6 +377,7 @@ def confirm_purchase_order(context: BusinessContext, *, order_id) -> PurchaseOrd
     _lock_company_and_authorize(context, CONFIRM_ORDERS)
     order = _locked_order(context, order_id)
     if order.status == PurchaseOrder.Status.CONFIRMED:
+        require_final_permission(context, CONFIRM_ORDERS)
         return order
     if order.status == PurchaseOrder.Status.CANCELLED:
         raise ValidationError("A cancelled Purchase Order cannot be confirmed.")
@@ -379,6 +389,7 @@ def confirm_purchase_order(context: BusinessContext, *, order_id) -> PurchaseOrd
     for line in lines:
         _variant(context, line.product_variant_id)
         line.full_clean()
+    require_final_permission(context, CONFIRM_ORDERS)
     order = _persist_lifecycle_transition(
         order,
         expected_status=PurchaseOrder.Status.DRAFT,
@@ -400,11 +411,13 @@ def cancel_purchase_order(context: BusinessContext, *, order_id) -> PurchaseOrde
     _lock_company_and_authorize(context, CANCEL_ORDERS)
     order = _locked_order(context, order_id)
     if order.status == PurchaseOrder.Status.CANCELLED:
+        require_final_permission(context, CANCEL_ORDERS)
         return order
     if order.status != PurchaseOrder.Status.CONFIRMED:
         raise ValidationError("Only a confirmed Purchase Order may be cancelled.")
     if order.receipts.exists():
         raise ValidationError("A Purchase Order with receipts cannot be cancelled.")
+    require_final_permission(context, CANCEL_ORDERS)
     order = _persist_lifecycle_transition(
         order,
         expected_status=PurchaseOrder.Status.CONFIRMED,
@@ -442,6 +455,7 @@ def receive_purchase_order(
     order = _locked_order(context, purchase_order_id)
     existing = _receipt_for_key(context, key)
     if existing:
+        require_final_permission(context, RECEIVE_ORDERS)
         return _validate_idempotent_match(
             existing,
             purchase_order_id=order.id,
@@ -452,11 +466,13 @@ def receive_purchase_order(
         raise ValidationError("Only a confirmed Purchase Order may be received.")
     order_lines = {
         line.id: line
-        for line in PurchaseOrderLine.objects.select_for_update().filter(
+        for line in PurchaseOrderLine.objects.select_for_update()
+        .filter(
             id__in=normalized_lines,
             purchase_order=order,
             company_id=context.company_id,
         )
+        .order_by("id")
     }
     if set(order_lines) != set(normalized_lines):
         raise PermissionDenied("Every receipt line must belong to the selected Purchase Order.")
@@ -475,6 +491,7 @@ def receive_purchase_order(
                 "Receipt quantity exceeds the ordered quantity for "
                 f"{order_lines[line_id].sku_snapshot}."
             )
+    require_final_permission(context, RECEIVE_ORDERS)
     try:
         with business_atomic_context():
             posted_at = timezone.now()
@@ -522,6 +539,7 @@ def receive_purchase_order(
         existing = _receipt_for_key(context, key)
         if existing is None:
             raise
+        require_final_permission(context, RECEIVE_ORDERS)
         return _validate_idempotent_match(
             existing,
             purchase_order_id=order.id,

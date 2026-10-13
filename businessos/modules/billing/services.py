@@ -6,7 +6,7 @@ from django.db import IntegrityError
 from django.db.models import Max
 from django.utils import timezone
 
-from businessos.core.access.policies import require_permission
+from businessos.core.access.policies import require_final_permission, require_permission
 from businessos.core.audit.services import record_audit_entry
 from businessos.core.common.context import BusinessContext
 from businessos.core.database import business_atomic, business_atomic_context
@@ -141,6 +141,7 @@ def create_invoice(
     )
     _snap_party(invoice, _party(context, bill_to_party_id))
     _snap_currency(invoice, _currency(currency_id))
+    require_final_permission(context, CREATE_INVOICES)
     for attempt in range(3):
         invoice.number = _number()
         try:
@@ -190,6 +191,7 @@ def update_invoice(context: BusinessContext, invoice_id, **changes):
     invoice.full_clean(validate_constraints=False)
     _validate_total(invoice)
     changed = [field for field in fields if before[field] != getattr(invoice, field)]
+    require_final_permission(context, UPDATE_INVOICES)
     if changed:
         invoice._persist(_WRITE_TOKEN)
         _audit(context, invoice, change="header", fields=changed)
@@ -214,6 +216,7 @@ def add_invoice_line(context: BusinessContext, invoice_id, *, description, quant
     position = (invoice.lines.aggregate(value=Max("position"))["value"] or 0) + 1
     line = InvoiceLine(company_id=context.company_id, invoice=invoice, position=position)
     _line_data(line, description, quantity, unit_price)
+    require_final_permission(context, UPDATE_INVOICES)
     line._persist(_WRITE_TOKEN, creating=True)
     _validate_total(invoice)
     _audit(context, invoice, change="line_added", line_id=str(line.pk))
@@ -231,6 +234,7 @@ def update_invoice_line(context: BusinessContext, invoice_id, line_id, **changes
         raise ValidationError("Unsupported invoice line fields.")
     before = tuple(getattr(line, f) for f in fields)
     _line_data(line, **{f: changes.get(f, getattr(line, f)) for f in fields})
+    require_final_permission(context, UPDATE_INVOICES)
     if before != tuple(getattr(line, f) for f in fields):
         line._persist(_WRITE_TOKEN)
         _validate_total(invoice)
@@ -244,6 +248,7 @@ def remove_invoice_line(context: BusinessContext, invoice_id, line_id):
     invoice = _locked_invoice(context, invoice_id)
     _draft(invoice)
     line = _line(invoice, line_id)
+    require_final_permission(context, UPDATE_INVOICES)
     line._persist(_WRITE_TOKEN, remove=True)
     _audit(context, invoice, change="line_removed", line_id=str(line_id))
 
@@ -253,6 +258,7 @@ def issue_invoice(context: BusinessContext, invoice_id):
     _authorize(context, ISSUE_INVOICES)
     invoice = _locked_invoice(context, invoice_id)
     if invoice.status == Invoice.Status.ISSUED:
+        require_final_permission(context, ISSUE_INVOICES)
         return invoice
     _draft(invoice)
     _party(context, invoice.bill_to_party_id)
@@ -270,6 +276,7 @@ def issue_invoice(context: BusinessContext, invoice_id):
         line.clean()
         line.full_clean()
     _validate_total(invoice)
+    require_final_permission(context, ISSUE_INVOICES)
     invoice._issue(_ISSUE_TOKEN, timezone.now())
     _audit(context, invoice, "issued", number=invoice.number)
     return invoice

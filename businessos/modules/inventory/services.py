@@ -6,11 +6,12 @@ from django.db import IntegrityError
 from django.db.models import Q
 from django.utils import timezone
 
-from businessos.core.access.policies import require_permission
+from businessos.core.access.policies import require_final_permission, require_permission
 from businessos.core.audit.services import record_audit_entry
 from businessos.core.common.context import BusinessContext
 from businessos.core.database import business_atomic, business_atomic_context
 from businessos.core.organization.models import Company, Warehouse
+from businessos.core.reference.models import UnitOfMeasure
 from businessos.modules.catalog.models import Product, ProductVariant
 
 from .manifest import CREATE_MOVEMENTS, POST_MOVEMENTS, UPDATE_MOVEMENTS
@@ -25,9 +26,7 @@ from .models import (
 
 def _lock_company_and_authorize(context: BusinessContext, permission_code: str) -> Company:
     company = (
-        Company.objects.select_for_update()
-        .filter(id=context.company_id, is_active=True)
-        .first()
+        Company.objects.select_for_update().filter(id=context.company_id, is_active=True).first()
     )
     if company is None:
         raise PermissionDenied("The selected company does not exist or is inactive.")
@@ -62,13 +61,17 @@ def _source(source_module, source_type, source_id):
 
 def _variant(context: BusinessContext, variant_id) -> ProductVariant:
     try:
-        return ProductVariant.objects.select_related("product", "product__default_uom").get(
-            id=variant_id,
-            company_id=context.company_id,
-            is_active=True,
-            product__is_active=True,
-            product__product_type__in=[Product.Type.STOCKABLE, Product.Type.CONSUMABLE],
-            product__default_uom__is_active=True,
+        return (
+            ProductVariant.objects.select_related("product", "product__default_uom")
+            .select_for_update(of=("self",))
+            .get(
+                id=variant_id,
+                company_id=context.company_id,
+                is_active=True,
+                product__is_active=True,
+                product__product_type__in=[Product.Type.STOCKABLE, Product.Type.CONSUMABLE],
+                product__default_uom__is_active=True,
+            )
         )
     except ProductVariant.DoesNotExist as exc:
         raise PermissionDenied(
@@ -83,6 +86,7 @@ def _warehouse(context: BusinessContext, warehouse_id, field):
     try:
         return (
             Warehouse.objects.select_related("branch")
+            .select_for_update(of=("self",))
             .filter(id=warehouse_id, company_id=context.company_id, is_active=True)
             .filter(Q(branch__isnull=True) | Q(branch__is_active=True))
             .get()
@@ -149,11 +153,15 @@ def create_stock_movement(
     if not timezone.is_aware(effective_at):
         raise ValidationError({"effective_at": "Enter a timezone-aware effective time."})
     key = idempotency_key.strip() if idempotency_key else None
-    if key and StockMovement.objects.filter(
-        company_id=context.company_id, idempotency_key=key
-    ).exists():
+    if (
+        key
+        and StockMovement.objects.filter(
+            company_id=context.company_id, idempotency_key=key
+        ).exists()
+    ):
         raise ValidationError({"idempotency_key": "This idempotency key is already in use."})
     source_module, source_type, source_id = _source(source_module, source_type, source_id)
+    require_final_permission(context, CREATE_MOVEMENTS)
     for _attempt in range(3):
         movement = StockMovement(
             company_id=context.company_id,
@@ -171,9 +179,12 @@ def create_stock_movement(
             with business_atomic_context():
                 movement.save(_inventory_token=_MOVEMENT_MUTATION_TOKEN)
         except IntegrityError as exc:
-            if key and StockMovement.objects.filter(
-                company_id=context.company_id, idempotency_key=key
-            ).exists():
+            if (
+                key
+                and StockMovement.objects.filter(
+                    company_id=context.company_id, idempotency_key=key
+                ).exists()
+            ):
                 raise ValidationError(
                     {"idempotency_key": "This idempotency key is already in use."}
                 ) from exc
@@ -213,6 +224,7 @@ def update_stock_movement(context: BusinessContext, *, movement_id, **changes) -
     before = {field: getattr(movement, field) for field in allowed}
     for field, value in changes.items():
         setattr(movement, field, value)
+    require_final_permission(context, UPDATE_MOVEMENTS)
     movement.save(_inventory_token=_MOVEMENT_MUTATION_TOKEN)
     changed_fields = sorted(field for field in allowed if before[field] != getattr(movement, field))
     if changed_fields:
@@ -233,11 +245,14 @@ def _line_values(
     source = _warehouse(context, source_warehouse_id, "source_warehouse")
     destination = _warehouse(context, destination_warehouse_id, "destination_warehouse")
     _validate_route(movement.movement_type, source, destination)
+    # Acquire the new line's shared-reference FK lock BEFORE authority anchors;
+    # a deferred FK wait must not reverse reference -> final-authority ordering.
+    uom = UnitOfMeasure.objects.select_for_update().get(pk=variant.product.default_uom_id)
     return {
         "product_variant": variant,
         "sku_snapshot": variant.sku,
         "product_name_snapshot": variant.product.name,
-        "uom": variant.product.default_uom,
+        "uom": uom,
         "quantity": _quantity(quantity),
         "source_warehouse": source,
         "destination_warehouse": destination,
@@ -254,6 +269,7 @@ def add_stock_movement_line(context: BusinessContext, *, movement_id, **data):
         movement=movement,
         **_line_values(context, movement, **data),
     )
+    require_final_permission(context, UPDATE_MOVEMENTS)
     line.save(_inventory_token=_LINE_MUTATION_TOKEN)
     _record_update(
         context,
@@ -271,7 +287,7 @@ def update_stock_movement_line(context: BusinessContext, *, movement_id, line_id
     movement = _locked_movement(context, movement_id)
     _require_draft(movement)
     try:
-        line = StockMovementLine.objects.get(
+        line = StockMovementLine.objects.select_for_update().get(
             id=line_id, movement_id=movement.id, company_id=context.company_id
         )
     except StockMovementLine.DoesNotExist as exc:
@@ -288,6 +304,7 @@ def update_stock_movement_line(context: BusinessContext, *, movement_id, line_id
     before = {name: getattr(line, name) for name in persisted_fields}
     for field, value in _line_values(context, movement, **data).items():
         setattr(line, field, value)
+    require_final_permission(context, UPDATE_MOVEMENTS)
     line.save(_inventory_token=_LINE_MUTATION_TOKEN)
     changed_fields = sorted(
         name for name in persisted_fields if before[name] != getattr(line, name)
@@ -309,12 +326,13 @@ def remove_stock_movement_line(context: BusinessContext, *, movement_id, line_id
     movement = _locked_movement(context, movement_id)
     _require_draft(movement)
     try:
-        line = StockMovementLine.objects.get(
+        line = StockMovementLine.objects.select_for_update().get(
             id=line_id, movement_id=movement.id, company_id=context.company_id
         )
     except StockMovementLine.DoesNotExist as exc:
         raise PermissionDenied("The Stock Movement Line is outside the selected company.") from exc
     deleted_id = line.id
+    require_final_permission(context, UPDATE_MOVEMENTS)
     line.delete(_inventory_token=_LINE_MUTATION_TOKEN)
     _record_update(context, movement, change="line_removed", line_id=str(deleted_id))
 
@@ -331,11 +349,15 @@ def _validate_posting_line(context, movement, line):
         )
     if not line.uom.is_active:
         raise ValidationError(f"{variant.sku} requires an active unit of measure before posting.")
-    if StockMovementLine.objects.filter(
-        company_id=context.company_id,
-        product_variant_id=variant.id,
-        movement__status=StockMovement.Status.POSTED,
-    ).exclude(uom_id=line.uom_id).exists():
+    if (
+        StockMovementLine.objects.filter(
+            company_id=context.company_id,
+            product_variant_id=variant.id,
+            movement__status=StockMovement.Status.POSTED,
+        )
+        .exclude(uom_id=line.uom_id)
+        .exists()
+    ):
         raise ValidationError(
             f"{variant.sku} conflicts with the unit of measure in posted stock history."
         )
@@ -346,6 +368,7 @@ def post_stock_movement(context: BusinessContext, *, movement_id) -> StockMoveme
     _lock_company_and_authorize(context, POST_MOVEMENTS)
     movement = _locked_movement(context, movement_id)
     if movement.status == StockMovement.Status.POSTED:
+        require_final_permission(context, POST_MOVEMENTS)
         return movement
     lines = list(
         movement.lines.select_related(
@@ -359,6 +382,7 @@ def post_stock_movement(context: BusinessContext, *, movement_id) -> StockMoveme
         raise ValidationError("A Stock Movement requires at least one line before posting.")
     for line in lines:
         _validate_posting_line(context, movement, line)
+    require_final_permission(context, POST_MOVEMENTS)
     posted_at = timezone.now()
     movement = StockMovement.objects.get_queryset()._post_locked_movement(
         movement_id=movement.id,

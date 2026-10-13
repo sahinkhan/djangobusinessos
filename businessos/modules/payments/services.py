@@ -4,7 +4,7 @@ from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import IntegrityError
 from django.utils import timezone
 
-from businessos.core.access.policies import require_permission
+from businessos.core.access.policies import require_final_permission, require_permission
 from businessos.core.audit.services import record_audit_entry
 from businessos.core.common.context import BusinessContext
 from businessos.core.database import business_atomic, business_atomic_context
@@ -66,6 +66,7 @@ def create_payment_method(context: BusinessContext, *, code, name):
     )
     if PaymentMethod.objects.filter(company_id=context.company_id, code=method.code).exists():
         raise ValidationError({"code": "A payment method with this code already exists."})
+    require_final_permission(context, MANAGE_METHODS)
     method._persist(_METHOD_WRITE_TOKEN, creating=True)
     _audit(context, method, "payments.method.created", code=method.code)
     return method
@@ -76,6 +77,7 @@ def update_payment_method(context: BusinessContext, *, payment_method_id, name):
     _authorize(context, MANAGE_METHODS)
     method = _locked_method(context, payment_method_id)
     name = _value("name", domain.normalized_text, name, maximum=160, required=True)
+    require_final_permission(context, MANAGE_METHODS)
     if method.name != name:
         method.name = name
         method._persist(_METHOD_WRITE_TOKEN)
@@ -89,6 +91,7 @@ def set_payment_method_active(context: BusinessContext, *, payment_method_id, is
     method = _locked_method(context, payment_method_id)
     if type(is_active) is not bool:
         raise ValidationError({"is_active": "Use a boolean activity value."})
+    require_final_permission(context, MANAGE_METHODS)
     if method.is_active != is_active:
         method.is_active = is_active
         method._persist(_METHOD_WRITE_TOKEN)
@@ -172,6 +175,7 @@ def record_payment(
     }
     existing = _existing(context, key)
     if existing is not None:
+        require_final_permission(context, RECORD_PAYMENTS)
         return _recover(existing, payload)
     method = _locked_method(context, payload["payment_method_id"])
     if not method.is_active:
@@ -208,6 +212,7 @@ def record_payment(
         payment_method_name_snapshot=method.name,
         recorded_at=timezone.now(),
     )
+    require_final_permission(context, RECORD_PAYMENTS)
     for attempt in range(3):
         payment.number = _number()
         try:
@@ -218,6 +223,7 @@ def record_payment(
             if collision == "key":
                 existing = _existing(context, key)
                 if existing is not None:
+                    require_final_permission(context, RECORD_PAYMENTS)
                     return _recover(existing, payload)
             if (
                 collision != "number"

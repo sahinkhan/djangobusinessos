@@ -2681,3 +2681,166 @@ No exact ACC-INT-1 checkpoint tag is specified: **NO TAG CREATED**.
 **PHASE 2 NOT COMPLETE; final completion audit NOT YET PERFORMED. PHASE 3 NOT AUTHORIZED.
 SaaS activation and production deployment NOT AUTHORIZED; production readiness NOT CLAIMED.**
 STOP after canonical publication/adoption verification; do not begin another milestone.
+
+## PH2-FINAL-AUD-1 late-authorization corrective candidate — 2026-10-13
+
+This is a separately authorized **local implementation/remediation record**, not independent
+re-audit, publication, formal acceptance, Phase 2 closure, or Phase 3 authorization. The final
+Phase 2 audit returned **REVISE / Readiness C**, with **PH2-FINAL-AUD-1 P1** blocking and
+**PH2-FINAL-DOC-1 P3** nonblocking. Earlier implementation/audit/acceptance records above remain
+historical evidence and are not rewritten.
+
+### A–D: integrity, root cause, final guard and supported writers
+
+Starting checkout, local `main` and fetched `origin/main` were clean at
+`669936df432ec1bb12792ed8d31741fbb1b1287a`, ACC-INT-1 canonical freeze. Main CI #130 attempt 1
+encountered the previously reported synthetic-policy/autovacuum deadlock; the separately
+authorized failed-job rerun, #130 attempt 2, succeeded with **2,755 PostgreSQL tests** at the
+same SHA. That prior hosted evidence is not hosted verification of this corrective candidate.
+Only local `phase2-final-authorization-remediation` was created directly from that canonical
+parent. No publication, tag, history reconstruction, or main update is authorized.
+
+Source inspection confirmed the nine supplied counterexamples: initial authorization followed
+Company locking, but a later Order/Movement/Currency/Journal/Party lock could wait while actor or
+Permission activity changed. Resuming code reused the earlier decision through effect/audit or
+successful retry. Another unlocked policy query alone would leave a check-to-commit window.
+
+The small Access policy `require_final_permission` requires the selected business transaction
+and the caller's held active Company lock. After domain/reference waits, it takes PostgreSQL
+**FOR SHARE** on the actor User, exact registered Permission, then one qualifying same-company
+Role witness (candidate UUID order), and rechecks current context/activity/grants. A committed
+retirement before these locks denies; an operation winning these locks holds authority stable
+through its outer commit. Shared rather than exclusive authority locks allow nested owner calls
+and different-company readers to share an actor/Permission without a lock upgrade. The helper
+is not an authorization cache or replacement for Company locking. SQLite executes ordinary
+policy validation without claiming PostgreSQL row-lock concurrency guarantees.
+
+All SQL locks and policy reads use ADR 0012's selected/pinned execution alias. Successful guards
+outside an atomic transaction are rejected. Savepoint collision recovery is guarded again before
+return; initial guards are outside insertion savepoints so insertion rollback does not drop their
+authority locks. No earlier authorization is reused after an owner-operation failure.
+
+Supported-path inspection, not an assumption about every possible ORM statement:
+
+| Authority fact / path | Existing serialization and this correction |
+|---|---|
+| Actor activity/superuser state | Identity validated save/queryset update and technical User admin need no Company lock; actor shared lock now protects these facts through business commit |
+| Exact Permission existence/activity | Validated save/queryset activity update can occur independently of Company; exact Permission shared lock protects retirement/deletion. Manifest registration only get-or-creates and preserves retirement; Core registration updates names, not activity |
+| Role activity | Validated Role save/queryset activity changes need no Company lock; lock and revalidate a qualifying Role witness rather than assuming Company alone protects its activity |
+| RolePermission / UserRoleAssignment / Company, Branch and Warehouse grants | All 11 supported audited Access mutation services acquire Company before current policy and mutation; this protocol is unchanged. ADR 0009 and inspection-only Access admin do not support direct unaudited link/assignment/grant mutations as application APIs |
+| Company activity | Ordinary UPDATE conflicts with the already-held Company row lock |
+| Branch/Warehouse activity and ownership | Validated saves take Company before Branch/Warehouse; queryset ownership/activity bypasses are already rejected. Existing context checks remain unchanged |
+| Arbitrary privilege / transaction composition | No claim of serialization against privileged SQL, private persistence misuse, unaudited grant edits, arbitrary multi-company outer transactions, or arbitrary mixed-order multi-row administrative transactions. Existing single-company services and same-company optional compositions retain their contracts |
+
+No Core model, permission vocabulary, ordinary CRUD policy, manifest, schema, migration, settings,
+financial rule or integration contract is changed. Activity anchors do not lock grant-child rows
+in reverse order against supported Company-first Access writers. Actor/Permission/Role writer
+statements need not adopt a new framework: their existing PostgreSQL UPDATE locks contend with
+the held shared rows. No global mutex, advisory lock, generic lock framework or new infrastructure.
+
+### E–L: six-owner sweep, final boundaries and retries
+
+Every standalone public mutation was inspected and exercised at the final boundary. **41 public
+services: 37 C (later aggregate/reference/FK wait, corrected), 4 A (no later aggregate/shared
+reference wait, still guarded), 0 B (already-safe final guard before this correction).** A/C below
+classify the pre-correction paths, not an assertion that C remains vulnerable.
+
+| Owner | Complete public mutation inventory / baseline classification | Final boundary |
+|---|---|---|
+| Sales (7 C) | `create_sales_order`, `update_sales_order`, `add_sales_order_line`, `update_sales_order_line`, `remove_sales_order_line`, `confirm_sales_order`, `cancel_sales_order` | Order, affected line and required Party/Currency/Variant locks before final guard; new FK references cannot introduce a late reference wait after authority anchors |
+| Procurement (8 C) | `create_purchase_order`, `update_purchase_order`, `add_purchase_order_line`, `update_purchase_order_line`, `remove_purchase_order_line`, `confirm_purchase_order`, `cancel_purchase_order`, `receive_purchase_order` | Order/line/reference locks before final guard; receipt lines lock in UUID order; matching/collision receipt recovery reauthorized |
+| Inventory (1 A, 5 C) | A: `create_stock_movement`; C: `update_stock_movement`, `add_stock_movement_line`, `update_stock_movement_line`, `remove_stock_movement_line`, `post_stock_movement` | Movement/affected line, Variant, route Warehouses and new-line UoM FK locks before guard; posted retry guarded |
+| Billing (6 C) | `create_invoice`, `update_invoice`, `add_invoice_line`, `update_invoice_line`, `remove_invoice_line`, `issue_invoice` | Existing Invoice/line/Party/Currency locks precede final guard; issued retry and true no-ops reauthorized |
+| Payments (1 A, 3 C) | A: `create_payment_method`; C: `update_payment_method`, `set_payment_method_active`, `record_payment` | Method/Party/Currency or historical Payment lock before guard; existing-key and uniqueness-collision recovery guarded |
+| Accounting (2 A, 8 C) | A: `create_account`, `create_journal`; C: `update_account`, `update_journal`, `create_journal_entry`, `update_journal_entry`, `add_journal_entry_line`, `update_journal_entry_line`, `remove_journal_entry_line`, `post_journal_entry` | Entry/Journal/line/ordered Account/Party locks before guard; reference updates, no-ops and posted retry guarded |
+
+The additional reference acquisition is service-local and precedes final authority. In particular,
+new Sales/Procurement Currency FKs and Inventory line UoM FKs must not defer their first conflicting
+reference wait until after actor locking. Variant/nullable Warehouse joins lock only their own
+row (`of=("self",)`), not unrelated joined Product/Branch rows. Existing business eligibility,
+immutable snapshots, arithmetic, source-of-truth and retry payload/conflict semantics are retained.
+
+Sales confirms/cancels without stock or invoices; Procurement receipts do not create stock;
+Inventory remains posted movement-line derived; Billing retains frozen once-only HALF_UP totals;
+Payments retains immutable exact receipts; Accounting retains exact balanced base-currency entries.
+Each final guard precedes authoritative persistence/success audit or an authorized retry/no-op.
+Retries do not duplicate timestamps, effects or audits. PAY-INT/ACC-INT are not redesigned.
+
+### M–O: new deterministic security/concurrency evidence
+
+Final focused PostgreSQL execution: **122 passed, 0 failed, 0 skipped in 300.20 seconds**.
+Worker connections close in `finally`; real `pg_blocking_pids` observations coordinate waits.
+Polling delays only poll the database lock graph and are not elapsed-time race evidence.
+
+| New group | Actual focused result |
+|---|---|
+| All public mutation final-boundary rollback | 41 passed; late actor denial leaves every persisted owner field and all audit rows unchanged |
+| Original counterexamples + reference/FK waits | 12 passed: all nine supplied failures now deny with no effect/success audit, plus Sales create/Currency, Procurement create/Currency and Inventory line/UoM waits |
+| Permission / Role activity during six-module domain waits | 12 passed |
+| Operation wins before activity retirement | 18 passed: six owners x actor/Permission/Role; observed retirement wait, one committed effect/audit, then retirement completes |
+| Company-first supported revocation / Company retirement | 6 passed: role, role-permission, Company access, Company, Branch grant and Warehouse grant |
+| Matching retry while historical/aggregate row waits | 18 passed: nine retry paths x actor/Permission retirement; historical rows/audits remain intact |
+| Successful matching retry / immediate revoked retry | 9 passed, unchanged UUID/state/audit on match |
+| Direct Core / sharing / selected alias | 6 passed: transaction precondition, all three authority-row waits, concurrent shared actor/Permission across Companies, fresh PostgreSQL non-default alias with default-cursor trap and same actor UUID but independent activity/permission facts |
+
+The new PostgreSQL-only subset is **71 tests**; **51** of the new tests also execute on SQLite.
+Fresh selected-alias bootstrap is inside a separate synthetic PostgreSQL database. No default
+cursor fallback, cross-alias activity borrowing, deadlock or worker connection teardown warning
+occurred in the final focused run.
+
+### P–U: verification record
+
+Final full-suite execution is complete. These are fresh **implementation-run** results, not
+independent re-audit or hosted candidate CI:
+
+| Final mandatory gate | Actual result |
+|---|---|
+| Full PostgreSQL 17 | **2,877 passed / 0 failed / 0 skipped, 2,589.53 seconds (43m 09.53s)**; all 2,755 baseline tests plus 122 new tests |
+| Full supported SQLite | **1,576 passed / 0 failed / 1,301 classified skips, 952.99 seconds (15m 52.99s)**; 51 new supported tests and 71 new PostgreSQL-only skips |
+| Existing Core / six-module security/concurrency / PAY-INT / ACC-INT | All passed freshly within the full PostgreSQL run, including existing owner evidence, RLS/schema, retry/collision, composition, concurrency and read-path revocation regressions; no separate subset runtime is invented |
+| Bootstrap / aliases / architecture | Fresh full-topology bootstrap, all existing optional/standalone topology and database/module-registry/permission/dependency guards passed; new fresh PostgreSQL selected-alias/default-cursor-trap case passed |
+| Quality | `ruff check . --no-cache` PASS; explicit `ruff format --check` on all eight changed Python files PASS; Django zero issues, migration drift no changes, `git diff --check` PASS |
+| Frontend | Node 22.23.3 syntax, 21 JS tests, npm install, Tailwind build and byte-identical CSS PASS; no frontend file changed |
+| Connection/deadlock health | No full-suite teardown warning; no `deadlock detected` in the isolated task PostgreSQL server logs |
+
+SQLite's 1,301 skips comprise **554 actual PostgreSQL lock tests, 723 catalog/DDL/RLS/security
+tests, 8 exact numeric tests and 16 PostgreSQL bootstrap/alias tests**. The increase over the
+baseline's 1,230 is exactly 70 lock-coordination tests plus one new PostgreSQL alias test, not
+unexplained regressions. No PostgreSQL test was skipped to obtain a pass.
+
+Already completed on the final runtime logic:
+
+- Python **3.13.16**, Django **5.2.17**, PostgreSQL **17.11**; isolated task-owned Linux containers
+  and newly created synthetic databases. PostgreSQL test-only external settings use the existing
+  synthetic MD5 password hasher convention; source settings are unchanged.
+- Fresh empty full-topology PostgreSQL migrations PASS; `manage.py check` zero issues;
+  `makemigrations --check --dry-run` no changes. No migration is created/edited.
+- Node **22.23.3**: `npm ci`, `node --check static/js/app-navigation.js`, all **21 JS tests**,
+  `npm run build:css` and byte-identical generated CSS PASS in temporary container storage.
+  Frontend source is mounted read-only. Eight inherited npm advisories (2 moderate, 6 high) and
+  outdated Browserslist remain separately scoped maintenance.
+
+Development verification history is retained: the first new focused harness run was **80 passed /
+3 failed** (missing Core permission bootstrap after flush and wrong revoke-service argument), then
+the corrected expanded draft passed **119**. The final reference-lock coverage passed **122**.
+Early full-suite runners were deliberately stopped before the reference-lock refinement; those
+partial runs are not PASS evidence. The first temporary CSS comparison identified a new Python
+comment token interpreted as a Tailwind utility; replacing that comment word restored exact CSS
+without any frontend edit or runtime-semantic change. Final full suites use the final runtime/test
+logic; only that comment-only token correction and this documentation record changed afterward.
+
+### V–X: candidate boundary and stop condition
+
+Intended candidate files only: `businessos/core/access/policies.py`; the six standalone
+`businessos/modules/{sales,procurement,inventory,billing,payments,accounting}/services.py` files;
+`tests/test_final_authorization.py`; this active Phase 2 plan. Eight changed Python files require
+explicit Ruff format checks. No other tracked file, model, migration, frontend, settings, registry
+or integration code is authorized. Final commit SHA is reported after creating the single local
+commit, rather than inventing a self-referential SHA in this record.
+
+Current status: **PH2-FINAL-AUD-1 REMEDIATED LOCALLY — INDEPENDENT VERIFICATION PENDING**;
+**PHASE 2 AUTHORIZATION CORRECTIVE CANDIDATE READY FOR INDEPENDENT RE-AUDIT**.
+**PH2-FINAL-DOC-1 remains OPEN**, nonblocking and untouched (BASELINE, DEPENDENCY_MAP and ADR 0010
+header are not normalized). **PHASE 2 NOT COMPLETE; PHASE 2 FINAL CLOSURE NOT AUTHORIZED;
+PHASE 3 NOT AUTHORIZED.** After all mandatory checks, exactly one local corrective commit with
+parent `669936df432ec1bb12792ed8d31741fbb1b1287a` is permitted; then STOP for independent re-audit.
