@@ -134,15 +134,21 @@ Inherited non-blocking ACCINT0-DOC-1 remains unmodified; npm/Actions/Browserslis
 is not remediated. No runtime, permission, migration or UI change is authorized by acceptance.
 That acceptance-stage authorization statement is historical. Current canonical base is
 `4419bdc4f0210894065400923741dd5449ffd158`; **ACC-INT-0 CANONICALLY CLOSED**.
-**ACC-INT-1: LOCAL REMEDIATION / INDEPENDENT CORRECTIVE RE-AUDIT PENDING** on
-`accint1-accounting-outcomes`, preserving accepted ADR 0016. Original candidate
-`5bfc055b1fb6c2b806a4f4bbf04fc749cc9020fe` received independent **REVISE — Readiness B**,
-with one candidate-owned **ACCINT1-AUD-1 — P2** finding: direct owner bases could certify
-RLS-filtered financial evidence. The narrow corrective implementation establishes owner-local
-selected-alias schema/RLS admission. The finding is **remediated locally; independent verification
-pending**, not independently resolved. See the current execution plan for corrective verification.
-**NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED.** Local implementation verification
-does not constitute independent audit or hosted CI. **Phase 2: NOT COMPLETE. Phase 3: NOT AUTHORIZED.**
+**ACC-INT-1: FORMALLY ACCEPTED FOR CANONICAL ADOPTION** on `accint1-accounting-outcomes`.
+**Formal acceptance COMPLETE; canonical adoption PENDING at this acceptance checkpoint.**
+Original candidate `5bfc055b1fb6c2b806a4f4bbf04fc749cc9020fe` and its independent
+**REVISE — Readiness B / ACCINT1-AUD-1 — P2** result remain historical evidence.
+Corrective candidate `2c7c8109f875909b34cc089698cb6d7dde572266` received the supplied independent
+**FINAL PASS — ACC-INT-1 CORRECTIVE IMPLEMENTATION APPROVED FOR HOSTED CI / Readiness A**;
+**ACCINT1-AUD-1 independently RESOLVED; no new actionable candidate-owned P0–P3 findings**.
+Exact-head hosted **Phase 0 checks #128 / 38365702656 SUCCESS** passed **2,755 PostgreSQL tests**
+and all configured mandatory checks. Accepted ADR 0016 technical semantics are unchanged.
+See the [formal implementation acceptance and completion rule](exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#acc-int-1-independent-corrective-approval-and-formal-implementation-acceptance--2026-10-13).
+This same docs-only acceptance commit becomes the canonical freeze only after its own exact-head
+branch CI, unchanged-main/ancestry verification, direct fast-forward normal push and separate
+exact-head main CI succeed. Earlier local-remediation/pending wording is historical.
+**Phase 2 NOT COMPLETE; final completion audit NOT YET PERFORMED. Phase 3 NOT AUTHORIZED.**
+Production readiness is not claimed; SaaS activation and production deployment remain unauthorized.
 This is the accepted contract for the final currently scoped Accounting composition gate before
 a later Phase 2 completion review, not runtime or Phase 2 exit approval. Other optional integrations
 remain separately governed; SaaS activation and production deployment are not authorized.
@@ -364,7 +370,7 @@ security-maintenance follow-ups. No accepted ownership or implementation is chan
 | ACC-0 / ACC-1 canonically closed | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014; freeze `00e18a75...` | Historical REVISE retained; ACC1-R1/R2 resolved; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
 | PAY-INT-0 canonically closed at `9ee4e0bd...` | Payments retains allocation ownership; Billing retains invoice facts; accepted ADR 0015 freezes opt-in composition | Historical acceptance-stage pending wording retained above; allocation implementation is separately governed; no Accounting automation |
 | PAY-INT-1 canonically closed at `a1079985...` | Opt-in `payments_billing`; immutable allocations, complete-evidence profile and intrinsic stored-parent retries; original REVISE / C preserved; corrective FINAL PASS / A; R1-R4 RESOLVED; CI #118/#119/#120 SUCCESS | No Accounting effect, reversal/refund, FX, bank settlement or other automatic posting; earlier acceptance-stage pending chronology retained |
-| ACC-INT-0 canonically closed; ACC-INT-1 local remediation | Accepted ADR 0016; independent contract FINAL PASS / readiness A; exact audited proposal `207c7809...`; candidate CI #125 SUCCESS; canonical base `4419bdc4...`; original implementation `5bfc055b...` received REVISE / readiness B / ACCINT1-AUD-1 P2; owner-basis correction remediated locally | INDEPENDENT CORRECTIVE RE-AUDIT PENDING; NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED; no Phase 2 exit or Phase 3 authorization |
+| ACC-INT-0 canonically closed; ACC-INT-1 formally accepted | Accepted ADR 0016 unchanged; canonical base `4419bdc4...`; original `5bfc055b...` / REVISE / readiness B preserved; corrective `2c7c8109...` / supplied independent FINAL PASS / readiness A; ACCINT1-AUD-1 P2 independently RESOLVED; exact-head candidate CI #128 / 38365702656 SUCCESS / 2,755 PostgreSQL tests | FORMALLY ACCEPTED FOR CANONICAL ADOPTION; adoption PENDING at this checkpoint, requiring acceptance CI and separate main CI; Phase 2 NOT COMPLETE / final audit NOT YET PERFORMED; Phase 3 NOT AUTHORIZED |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
 generic Payments and Accounting work without Billing. Settlement-adjusted outstanding in the local

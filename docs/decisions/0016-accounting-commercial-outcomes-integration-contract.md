@@ -4,7 +4,19 @@ Status: Accepted — Gate ACC-INT-0
 
 Date: 2026-10-12
 
+Implementation status — 2026-10-13: **ACC-INT-1 FORMALLY ACCEPTED FOR CANONICAL ADOPTION;
+canonical adoption PENDING at this acceptance checkpoint.**
+
 ## Authority, baseline and evidence
+
+Current implementation acceptance preserves this ADR's accepted technical body unchanged.
+Corrective implementation `2c7c8109f875909b34cc089698cb6d7dde572266` received the supplied
+independent FINAL PASS / Readiness A and exact-head hosted candidate CI #128 SUCCESS.
+See the [implementation acceptance and completion rule](#acc-int-1-independent-corrective-approval-and-formal-implementation-acceptance--2026-10-13).
+The following ACC-INT-0 authority/baseline paragraphs and proposed-API language in the technical
+body are preserved **historical contract-stage evidence**, not a current declaration that
+ACC-INT-1 remains unimplemented or unauthorized. ACC-INT-0 was subsequently canonically closed
+at `4419bdc4f0210894065400923741dd5449ffd158`, the starting base for this implementation gate.
 
 This documentation/architecture contract is **FORMALLY ACCEPTED**. Canonical adoption is
 **PENDING at this acceptance checkpoint**, subject to separate exact-head acceptance and main CI.
@@ -638,5 +650,45 @@ No exact ACC-INT-0 checkpoint tag name is specified: **NO TAG CREATED**.
 
 **ACC-INT-1 NOT STARTED / NOT AUTHORIZED. Accounting automation runtime NOT STARTED.
 PHASE 2 NOT COMPLETE; final completion review NOT YET PERFORMED. PHASE 3 NOT AUTHORIZED.
+SaaS activation and production deployment NOT AUTHORIZED; production readiness NOT CLAIMED.**
+STOP after the authorized publication/adoption verification; do not begin another milestone.
+
+## ACC-INT-1 independent corrective approval and formal implementation acceptance — 2026-10-13
+
+Canonical starting base: `4419bdc4f0210894065400923741dd5449ffd158`. Original implementation
+`5bfc055b1fb6c2b806a4f4bbf04fc749cc9020fe` received independent **REVISE / Readiness B** for
+**ACCINT1-AUD-1 — P2**, incomplete direct owner-basis evidence under RLS. Corrective implementation
+`2c7c8109f875909b34cc089698cb6d7dde572266`, its direct child, received the supplied independent
+**FINAL PASS — ACC-INT-1 CORRECTIVE IMPLEMENTATION APPROVED FOR HOSTED CI / Readiness A**.
+**ACCINT1-AUD-1 independently RESOLVED; no new actionable candidate-owned P0/P1/P2/P3 findings**.
+This is supplied independent evidence, not a fresh audit performed by the acceptance session.
+Original failure, remediation and implementation-run verification remain in the
+[Phase 2 plan](../exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#acc-int-1-owner-basis-corrective-remediation--2026-10-13).
+
+Normal publication preserved the exact audited corrective candidate. Hosted **Phase 0 checks
+#128 / 38365702656 — SUCCESS**
+([run](https://github.com/sahinkhan/djangobusinessos/actions/runs/38365702656)), event `push`,
+branch `accint1-accounting-outcomes`, checked out that exact SHA. Fresh PostgreSQL migrations,
+**2,755 tests**, Ruff, Django checks, migration drift, npm/Tailwind and generated CSS reproducibility
+passed. No separate hosted JavaScript test step exists; the supplied 21 JavaScript tests remain
+independent/local evidence. Inherited npm advisories and Actions/Node/Browserslist warnings remain
+maintenance concerns, not new corrections or production-readiness evidence.
+
+**ACC-INT-1 IMPLEMENTATION: FORMALLY ACCEPTED FOR CANONICAL ADOPTION. Formal acceptance
+COMPLETE. Canonical adoption PENDING at this acceptance checkpoint.** The accepted two-app
+topology, source bindings/effect shapes, explicit Journal/Account choices, dates/currency/Party/
+zero policies, exactly-two-line posted basis, owner-local complete evidence/RLS admission,
+retry/locking/RBAC/HTTP/provenance requirements and I01–I21 matrix remain unchanged. No runtime,
+schema, migration, permission, setting, test or frontend modification occurs during acceptance.
+
+Require this docs-only acceptance commit's own exact-head branch push CI, then revalidate unchanged
+starting main and ancestry, adopt with the direct fast-forward/no-PR normal push, and verify separate
+exact-head main push CI. Only that completed sequence makes **this same acceptance commit** the
+**ACC-INT-1 canonical freeze / CANONICALLY CLOSED** checkpoint. Pending wording then remains
+acceptance-stage history; actual acceptance/main run IDs and freeze SHA are reported from verified
+results. No extra closure commit, amendment, merge commit, squash, rebase, force push, tag or release.
+No exact ACC-INT-1 checkpoint tag is specified: **NO TAG CREATED**.
+
+**PHASE 2 NOT COMPLETE; final completion audit NOT YET PERFORMED. PHASE 3 NOT AUTHORIZED.
 SaaS activation and production deployment NOT AUTHORIZED; production readiness NOT CLAIMED.**
 STOP after the authorized publication/adoption verification; do not begin another milestone.

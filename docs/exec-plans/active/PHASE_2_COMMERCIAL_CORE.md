@@ -1,8 +1,8 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 / PAY-INT-0 / PAY-INT-1 / ACC-INT-0 CANONICALLY CLOSED; ACC-INT-1 LOCAL REMEDIATION / INDEPENDENT CORRECTIVE RE-AUDIT PENDING / NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED
+Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 / PAY-INT-0 / PAY-INT-1 / ACC-INT-0 CANONICALLY CLOSED; ACC-INT-1 FORMALLY ACCEPTED FOR CANONICAL ADOPTION / ADOPTION PENDING AT THIS ACCEPTANCE CHECKPOINT; PHASE 2 NOT COMPLETE / FINAL COMPLETION AUDIT NOT YET PERFORMED
 
-Current canonical baseline: `4419bdc4f0210894065400923741dd5449ffd158`.
+Canonical starting baseline for this acceptance checkpoint: `4419bdc4f0210894065400923741dd5449ffd158`.
 **ACC-INT-0 CANONICALLY CLOSED.** The following PAY-INT-1 and ACC-INT-0 acceptance-stage
 records retain their historical baselines and completion rules.
 **PAY-INT-1 CANONICALLY CLOSED** after acceptance CI #119 / `38163571737` and main
@@ -24,15 +24,22 @@ Contract branch `accint0-accounting-outcomes-contract` starts from the exact can
 The authorized remaining sequence is exact-head acceptance CI, unchanged-main/ancestry
 revalidation, direct fast-forward normal push and separate exact-head main CI; no runtime.
 See [formal acceptance and completion rule](#acc-int-0-independent-approval-and-formal-acceptance--2026-10-12).
-Current bounded task: separately authorized **ACC-INT-1 LOCAL REMEDIATION**
-on `accint1-accounting-outcomes`, from canonical base `4419bdc4f0210894065400923741dd5449ffd158`.
-**INDEPENDENT CORRECTIVE RE-AUDIT PENDING / NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED.**
+Current bounded task: explicitly authorized **ACC-INT-1 corrective publication, docs-only formal
+implementation acceptance and direct fast-forward canonical adoption** on `accint1-accounting-outcomes`,
+from canonical base `4419bdc4f0210894065400923741dd5449ffd158`.
+**FORMALLY ACCEPTED FOR CANONICAL ADOPTION; formal acceptance COMPLETE; adoption PENDING
+at this acceptance checkpoint.** Corrective candidate `2c7c8109f875909b34cc089698cb6d7dde572266`
+received the supplied independent **FINAL PASS / Readiness A**; **ACCINT1-AUD-1 RESOLVED**.
+Hosted candidate CI **#128 / 38365702656 SUCCESS** tested that exact SHA: **2,755 PostgreSQL
+tests passed**, fresh migrations and all configured mandatory checks passed.
 The implementation preserves accepted ADR 0016: two Accounting-owned opt-in apps, owner read
 contracts, immutable source/effect bindings, explicit public-service composition and bounded UI.
 Original implementation `5bfc055b1fb6c2b806a4f4bbf04fc749cc9020fe` received independent
-**REVISE — Readiness B**, with candidate-owned **ACCINT1-AUD-1 — P2**. Local corrective
-verification is implementation evidence; no independent corrective approval or hosted candidate
-CI is claimed. **PHASE 2 NOT COMPLETE; PHASE 3 NOT AUTHORIZED.**
+**REVISE — Readiness B**, with candidate-owned **ACCINT1-AUD-1 — P2**. That failure and local
+corrective verification remain historical implementation evidence, distinct from the supplied
+independent corrective review and verified hosted candidate CI. See the
+[formal acceptance and completion rule](#acc-int-1-independent-corrective-approval-and-formal-implementation-acceptance--2026-10-13).
+**PHASE 2 NOT COMPLETE; final completion audit NOT YET PERFORMED; PHASE 3 NOT AUTHORIZED.**
 SaaS activation and deployment remain unauthorized. No PAY-INT-1 tag is invented.
 
 Historical PAY-INT-1 implementation/acceptance-stage baseline:
@@ -1642,10 +1649,13 @@ Gate PAY-INT-1 main CI              #120 / 38164395135 SUCCESS / 1,613 PostgreSQ
 Gate ACC-INT-0 independent review  FINAL PASS / readiness A / no candidate-owned P0-P3
 Gate ACC-INT-0 proposal CI         #125 / 38203841663 SUCCESS / 1,613 PostgreSQL tests
 Gate ACC-INT-0 formal acceptance   COMPLETE / CANONICALLY CLOSED / canonical base 4419bdc4...
-Gate ACC-INT-1                     LOCAL REMEDIATION / INDEPENDENT CORRECTIVE RE-AUDIT PENDING
-                                  NOT PUBLISHED / NOT ACCEPTED / NOT CANONICALLY ADOPTED
-Accounting integration runtime     LOCAL REMEDIATION / INDEPENDENT CORRECTIVE RE-AUDIT PENDING
+Gate ACC-INT-1 corrective review    FINAL PASS / readiness A / ACCINT1-AUD-1 RESOLVED
+Gate ACC-INT-1 implementation CI    #128 / 38365702656 SUCCESS / 2,755 PostgreSQL tests
+Gate ACC-INT-1 formal acceptance    COMPLETE / FORMALLY ACCEPTED FOR CANONICAL ADOPTION
+Gate ACC-INT-1 canonical adoption   PENDING AT THIS ACCEPTANCE CHECKPOINT / acceptance and main CI required
+Accounting integration runtime     corrective candidate published intact / formally accepted
 Phase 2                            NOT COMPLETE
+Phase 2 final completion audit     NOT YET PERFORMED
 Phase 3                            NOT AUTHORIZED
 Other integration implementation   not authorized
 ```
@@ -2541,6 +2551,11 @@ audit. Publication, PR, merge, tag, acceptance, canonical adoption and next-phas
 
 ## ACC-INT-1 owner-basis corrective remediation — 2026-10-13
 
+The following is preserved **historical implementation-stage evidence**. Its local-remediation/
+pending language describes the corrective checkpoint before independent re-audit and publication;
+the [later formal acceptance record](#acc-int-1-independent-corrective-approval-and-formal-implementation-acceptance--2026-10-13)
+supersedes that status without changing the recorded failures, corrections or verification results.
+
 **LOCAL REMEDIATION / INDEPENDENT CORRECTIVE RE-AUDIT PENDING.** Preserved original candidate:
 `5bfc055b1fb6c2b806a4f4bbf04fc749cc9020fe`; original parent and unchanged main/origin-main:
 `4419bdc4f0210894065400923741dd5449ffd158`. The supplied independent implementation audit
@@ -2614,3 +2629,55 @@ preserved original candidate, then STOP. **NOT PUBLISHED / NOT ACCEPTED / NOT CA
 ADOPTED. PHASE 2 NOT COMPLETE. PHASE 3 NOT AUTHORIZED.** A fresh independent corrective auditor
 must verify the new exact SHA before closing ACCINT1-AUD-1; this implementation session does not
 perform that independent audit.
+
+## ACC-INT-1 independent corrective approval and formal implementation acceptance — 2026-10-13
+
+Frozen history, preserved without amendment or reconstruction:
+
+| Checkpoint | Exact identity / decision |
+|---|---|
+| Canonical ACC-INT-0 starting base | `4419bdc4f0210894065400923741dd5449ffd158` |
+| Original ACC-INT-1 implementation | `5bfc055b1fb6c2b806a4f4bbf04fc749cc9020fe` — independent **REVISE / Readiness B** |
+| Original blocker | **ACCINT1-AUD-1 — P2**: direct owner-basis APIs could certify RLS-filtered incomplete evidence |
+| Corrective implementation | `2c7c8109f875909b34cc089698cb6d7dde572266`, directly above the original implementation |
+| Supplied independent corrective verdict | **FINAL PASS — ACC-INT-1 CORRECTIVE IMPLEMENTATION APPROVED FOR HOSTED CI / Readiness A** |
+| Finding disposition | **ACCINT1-AUD-1 independently RESOLVED**; no new actionable candidate-owned P0/P1/P2/P3 findings |
+| Verified hosted implementation CI | **Phase 0 checks #128 / 38365702656 — SUCCESS**, `push`, `accint1-accounting-outcomes`, exact corrective SHA |
+
+The supplied independent review reproduced the original RLS failure and verified both owner
+bases and the unchanged ADR 0016 exactly-two-line rule. Its evidence includes **225 focused
+corrective cases**, **1,142 ACC-INT cases**, **230 concurrency cases**, **663 schema/security/direct
+compatibility cases**, **22 topology cases**, **59 changed Python files format-clean**, **21
+JavaScript tests** and browser verification. Supplied independent full-suite results are **2,755
+PostgreSQL passed / zero failures or skips** and **1,525 SQLite passed / 1,230 classified skips**.
+These are supplied independent evidence, not an independent audit performed by this acceptance
+session. The separate developer full-suite results in the preceding remediation record retain
+their implementation-run provenance; unchanged full local suites were not rerun for acceptance.
+
+The newly verified hosted [candidate run #128 / 38365702656](https://github.com/sahinkhan/djangobusinessos/actions/runs/38365702656)
+checked out exactly `2c7c8109f875909b34cc089698cb6d7dde572266`, applied fresh PostgreSQL migrations,
+collected **2,755 tests** and passed all **2,755** in **1,859.58 seconds**. Ruff, Django checks (zero
+issues), migration drift (no changes), npm install, Tailwind build and byte-identical generated
+CSS all passed. The configured hosted workflow has no separate JavaScript syntax/test step;
+the 21 JavaScript tests above are independent/local evidence, not a hosted result. Eight inherited
+npm advisories (two moderate, six high), Actions/Node deprecation and outdated Browserslist
+warnings remain separately governed maintenance; no dependency correction is claimed here.
+
+**ACC-INT-1 IMPLEMENTATION: FORMALLY ACCEPTED FOR CANONICAL ADOPTION. Formal acceptance
+COMPLETE; canonical adoption PENDING at this acceptance checkpoint.** Only this plan, the
+roadmap and ADR 0016 status/evidence metadata change. Both audited implementation commits,
+all runtime/tests/migrations/frontend, accepted technical semantics and I01–I21 remain unchanged.
+
+This single docs-only acceptance commit requires its own exact-head branch push CI. Revalidate
+unchanged main `4419bdc4f0210894065400923741dd5449ffd158` and straight ancestry before the
+authorized direct fast-forward/no-PR normal push; require separate exact-head main push CI.
+Only verified success of all gates makes **this same acceptance commit** the **ACC-INT-1
+canonical freeze / CANONICALLY CLOSED** checkpoint. Its acceptance-stage pending wording then
+remains historical evidence. Actual acceptance/main run IDs and freeze SHA are reported from
+verified results, not invented before the runs exist. No extra closure commit, amendment, PR,
+merge commit, squash, rebase, force push, tag or GitHub release is authorized or created.
+No exact ACC-INT-1 checkpoint tag is specified: **NO TAG CREATED**.
+
+**PHASE 2 NOT COMPLETE; final completion audit NOT YET PERFORMED. PHASE 3 NOT AUTHORIZED.
+SaaS activation and production deployment NOT AUTHORIZED; production readiness NOT CLAIMED.**
+STOP after canonical publication/adoption verification; do not begin another milestone.
