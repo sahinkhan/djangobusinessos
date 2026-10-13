@@ -1,10 +1,56 @@
 from django.conf import settings
 from django.core.exceptions import ValidationError
-from django.db import models
+from django.db import connections, models, router
 
 from businessos.core.common.models import UUIDTimestampedModel
+from businessos.core.database import business_atomic_context
 
 from .permissions import validate_permission_code
+
+
+def _lock_authority_targets(queryset):
+    """Freeze this writer's targets and lock UUIDs before any batch UPDATE/delete.
+
+    Caller owns the alias-aware transaction. Clear any caller-supplied row locking
+    for the identity read; only the explicit UUID-ordered prelocks acquire rows.
+    Permission writers obtain PostgreSQL's normal write relation mode first,
+    compatible with the superuser reader's namespace-stabilizing SHARE lock.
+    """
+    connection = connections[queryset.db]
+    if not connection.in_atomic_block:
+        raise RuntimeError("Authority writer prelocking requires a transaction.")
+    if (
+        connection.vendor == "postgresql"
+        and queryset.model._meta.label_lower == "access.permission"
+    ):
+        with connection.cursor() as cursor:
+            table = connection.ops.quote_name(queryset.model._meta.db_table)
+            cursor.execute(f"LOCK TABLE {table} IN ROW EXCLUSIVE MODE")
+    query = queryset.all()
+    query.query.select_for_update = False
+    identities = sorted(set(query.order_by().values_list("pk", flat=True)))
+    if connection.vendor == "postgresql":
+        quote = connection.ops.quote_name
+        pk = queryset.model._meta.pk
+        with connection.cursor() as cursor:
+            for identity in identities:
+                cursor.execute(
+                    f"SELECT {quote(pk.column)} FROM {quote(queryset.model._meta.db_table)} "
+                    f"WHERE {quote(pk.column)} = %s FOR UPDATE",
+                    [pk.get_db_prep_value(identity, connection)],
+                )
+                cursor.fetchone()
+    return queryset.filter(pk__in=identities)
+
+
+def _delete_authority_instance(instance, using, keep_parents):
+    if instance.pk is None:
+        raise ValueError("Cannot delete an authority instance without a primary key.")
+    alias = using or router.db_for_write(type(instance), instance=instance)
+    # These concrete authority models have no multi-table inheritance parents.
+    result = type(instance).objects.using(alias).filter(pk=instance.pk).delete()
+    instance.pk = None
+    return result
 
 
 class PermissionQuerySet(models.QuerySet):
@@ -14,12 +60,20 @@ class PermissionQuerySet(models.QuerySet):
     def bulk_update(self, objs, fields, batch_size=None):
         if "code" in fields:
             raise ValidationError("Permission identity is immutable.")
-        return super().bulk_update(objs, fields, batch_size=batch_size)
+        objs = tuple(objs)
+        with business_atomic_context(using=self.db):
+            targets = _lock_authority_targets(self.filter(pk__in=[obj.pk for obj in objs]))
+            return models.QuerySet.bulk_update(targets, objs, fields, batch_size=batch_size)
 
     def update(self, **kwargs):
         if "code" in kwargs:
             raise ValidationError("Permission identity is immutable.")
-        return super().update(**kwargs)
+        with business_atomic_context(using=self.db):
+            return models.QuerySet.update(_lock_authority_targets(self), **kwargs)
+
+    def delete(self):
+        with business_atomic_context(using=self.db):
+            return models.QuerySet.delete(_lock_authority_targets(self))
 
 
 class Permission(UUIDTimestampedModel):
@@ -49,6 +103,9 @@ class Permission(UUIDTimestampedModel):
         self.full_clean()
         super().save(*args, **kwargs)
 
+    def delete(self, using=None, keep_parents=False):
+        return _delete_authority_instance(self, using, keep_parents)
+
     def __str__(self):
         return self.code
 
@@ -57,12 +114,20 @@ class RoleQuerySet(models.QuerySet):
     def update(self, **kwargs):
         if {"company", "company_id"}.intersection(kwargs):
             raise ValidationError("Role company is immutable.")
-        return super().update(**kwargs)
+        with business_atomic_context(using=self.db):
+            return models.QuerySet.update(_lock_authority_targets(self), **kwargs)
 
     def bulk_update(self, objs, fields, batch_size=None):
         if {"company", "company_id"}.intersection(fields):
             raise ValidationError("Role company is immutable.")
-        return super().bulk_update(objs, fields, batch_size=batch_size)
+        objs = tuple(objs)
+        with business_atomic_context(using=self.db):
+            targets = _lock_authority_targets(self.filter(pk__in=[obj.pk for obj in objs]))
+            return models.QuerySet.bulk_update(targets, objs, fields, batch_size=batch_size)
+
+    def delete(self):
+        with business_atomic_context(using=self.db):
+            return models.QuerySet.delete(_lock_authority_targets(self))
 
     def bulk_create(self, *args, **kwargs):
         raise ValidationError("Role bulk creation/upsert requires validated model saves.")
@@ -98,6 +163,9 @@ class Role(UUIDTimestampedModel):
         self.code = self.code.strip().upper()
         self.full_clean()
         super().save(*args, **kwargs)
+
+    def delete(self, using=None, keep_parents=False):
+        return _delete_authority_instance(self, using, keep_parents)
 
     def __str__(self):
         return f"{self.company.code} / {self.code}"

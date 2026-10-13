@@ -2844,3 +2844,223 @@ Current status: **PH2-FINAL-AUD-1 REMEDIATED LOCALLY — INDEPENDENT VERIFICATIO
 header are not normalized). **PHASE 2 NOT COMPLETE; PHASE 2 FINAL CLOSURE NOT AUTHORIZED;
 PHASE 3 NOT AUTHORIZED.** After all mandatory checks, exactly one local corrective commit with
 parent `669936df432ec1bb12792ed8d31741fbb1b1287a` is permitted; then STOP for independent re-audit.
+
+## PH2-AUTH-CORR-1 second corrective implementation notes — 2026-10-13
+
+### Design recorded before runtime edits
+
+Starting branch `phase2-final-authorization-remediation` is clean at first corrective
+`2fbd4a2ae02eda31c6273456a2599b0a2f90339a`, directly above canonical
+`669936df432ec1bb12792ed8d31741fbb1b1287a`. The supplied independent re-audit is
+**REVISE / Readiness B**: the original nine races individually deny, but exact-Permission / one-Role
+locking can accumulate anchors in opposite order to supported batch activity writers during nested
+Accounting composition. The previous exclusion of arbitrary administrative batching does not
+exclude these supported `update` / `bulk_update` APIs. First-candidate evidence above is historical.
+
+Proposed bounded protocol:
+
+1. Retain active Company -> domain/reference facts before final authority. Company-first audited
+   Access services continue to stabilize assignment/link/organizational-grant membership.
+2. Share-lock the actor, then every assigned same-company Role, including inactive Roles, ordered
+   by UUID. Then share-lock every Permission reachable through those Roles, including inactive
+   Permissions, ordered by UUID. Re-read the exact requested policy after all waits. Nested owner
+   calls resolve the same complete set, not a new per-action witness. Do not cache an approval.
+3. For superusers, lock the Permission relation in PostgreSQL SHARE mode before enumerating and
+   UUID-locking every declared Permission. This prevents newly registered identities from expanding
+   the namespace mid-transaction. It is a normal database relation lock, not an advisory/global
+   process mutex. Permission writers take ROW EXCLUSIVE relation mode before row prelocking,
+   matching ordinary PostgreSQL UPDATE/INSERT; it cannot wait for a reader while holding rows.
+4. Permission and Role queryset `update`, `bulk_update` (whole call, before batching), and deletion
+   resolve actual target UUIDs on `queryset.db`, prelock those rows in UUID order, then execute the
+   mutation over the fixed target set in the same alias-aware transaction. Do not rely on UPDATE's
+   heap/index scan order. Instance deletion routes through that same guarded deletion protocol.
+   Existing immutable-field rejection and allowed activity/name semantics stay unchanged.
+5. Core permission registration is the existing multi-statement authority writer: collect label
+   corrections and apply one ordered bulk update, rather than accumulate per-code row locks.
+   Manifest registration only creates missing identities and preserves existing activity.
+6. Actor activity writes contend on the actor row. Role writers do not acquire actor/Permission
+   locks; Permission writers do not acquire Role/Company locks. Role deletion locks parent Roles
+   before cascading assignment/link deletion; Permission deletion retains Django PROTECT. Scoped
+   Access writers take Company before Role/link/grant mutations, so they cannot change the held
+   actor/company graph concurrently. Ordinary CRUD authorization semantics are not expanded.
+7. Require real transactions for lock primitives. Released nested savepoints retain locks until
+   outer commit. A rolled-back first acquisition is not cached: the next call must reacquire the
+   complete set and recheck. Test outer-held anchors across inner rollback and reauthorization
+   after first-acquisition rollback explicitly.
+
+Production composition inventory: Accounting's invoice and allocation outcome services both call
+`evidence.compose`: public create Entry -> two public add Line calls -> public post Entry. These
+need create/update/post permissions in one outer transaction and prelock existing Journal/Accounts/
+Party/Currency before those calls. PAY-INT composes owner read-only bases, not multiple owner
+mutations. Party/Catalog/demo setup has multiple operations but no Phase 2 RBAC final guard or
+financial-posting orchestration. No other production transaction calls different Phase 2 owner
+mutations. Same-company direct public-owner composition is covered by the complete authority set.
+
+Planned evidence: real PostgreSQL blocking for both batch winners, Permission/Role update/bulk/
+delete, two planner configurations, invoice/allocation effects/retries/rollback, savepoints,
+superuser namespace and fresh non-default alias. Preserve/re-run the original 122 cases and full
+mandatory suites. Only developer evidence may be recorded; independent acceptance is pending.
+`PH2-FINAL-DOC-1` stays OPEN. No schema/migration, publication, main change, Phase 2 closure or
+Phase 3 work is authorized.
+
+### Implemented protocol and focused evidence
+
+The final reader uses fixed-UUID `ORDER BY id FOR SHARE` set queries, rather than one round trip
+per authority row. Actor, all assigned same-company Roles and all reachable Permissions retain
+the recorded type/UUID order. Missing rows fail closed; every invocation rechecks current policy.
+The private reader and writer locking primitives themselves reject calls outside a transaction.
+No connection-level approval/lock cache is introduced. Superusers stabilize all declared identities
+with the recorded Permission SHARE relation lock; Permission writers take ROW EXCLUSIVE before
+UUID row prelocking. Role/Permission model deletion uses the same alias-aware queryset protocol.
+
+Only three production files change in this second correction: Core Access `policies.py`,
+`models.py`, and the registration batching in `services.py`. All six standalone final-boundary
+placements from the first corrective commit, optional integration code, ordinary CRUD decision
+rules, permission vocabulary, schemas, migrations, settings and frontend remain unchanged.
+
+Final focused PostgreSQL command:
+
+```text
+python -m pytest tests/test_final_authorization.py tests/test_authority_batches.py -q
+  --ds=qa_settings --junitxml=/tmp/focused-ordered-final.xml
+```
+
+**182 passed / 0 failed / 0 skipped in 489.38 seconds**: the original 122 cases plus 60 new cases.
+This is developer execution evidence, not independent re-audit or hosted CI.
+
+| New regression group | Final focused result |
+|---|---|
+| Permission/Role batch update and bulk_update | 32 passed: both writer/business winners, heap and index planner settings, public invoice and allocation posting; batch_size=1 still prelocks the complete set |
+| Role batch deletion | 8 passed: both winners, both planners and both public effects; confirmed effects/history/audit survive the later authority deletion |
+| Writer target ordering | 6 passed: update/bulk_update/delete over reverse-ordered targets; actual prelock UUID order observed; assigned Permission deletion still raises Django PROTECT |
+| Instance deletion | 2 passed: ordinary Permission/Role deletion enters the ordered transactional writer protocol |
+| Nested savepoints | 2 passed: outer-acquired anchors survive inner rollback; first acquisition rolled back is reacquired and revoked authority denied on the next guard |
+| Inactive authority closure | 1 passed: inactive assigned Roles/reachable Permissions are included, and repeated complete sets are sorted |
+| Superuser namespace | 3 passed: update, successful unlinked batch deletion and registration block before writer rows while the declared namespace is held |
+| Core registration | 1 passed: two label corrections use one complete writer set and preserve explicit retirement |
+| Private transaction precondition | 1 passed: actor/set reader and writer primitives reject autocommit invocation |
+| Public composition rollback/retry | 2 passed: Invoice AR/Revenue and Allocation Cash/AR, exact AR prerequisite, injected posting-audit rollback and unchanged authorized retry |
+| Fresh selected alias | 2 passed: separate PostgreSQL zero-state migrations, matching source UUIDs, default-cursor trap, update/bulk_update/delete, observed writer wait and independent default authority |
+
+The 32 activity cases explain the **actual UPDATE SQL executed by Django**, under forced sequential
+and index-capable planner settings. UUIDs deliberately oppose code-index order. Explicit ordered
+prelocking, not the physical UPDATE scan, establishes the result. Every race uses worker Events
+and observed `pg_blocking_pids`; no sleep is accepted as evidence of a race. Worker connections
+close in `finally`. Public posting assertions verify the exact financial lines, stored prerequisite
+and immutable Payment date; later revoked retries deny without effect/audit changes.
+
+Original evidence remains freshly covered: **9/9 supplied counterexamples deny with zero committed
+unauthorized effect/audit; all 18 opposite single-authority winners pass; all 41 standalone final
+boundaries pass; all existing matching/no-op retries pass.** ACCINT1-AUD-1 is not reopened or
+redesigned by this correction.
+
+Final supported SQLite execution: **1,583 passed / 0 failed / 1,354 classified skips in 851.29
+seconds**. New tests contribute **7 passes and 53 skips**: 51 actual PostgreSQL locking cases and
+2 fresh PostgreSQL alias cases. Case-level XML classification across the full suite is **603
+row-lock cases, 725 catalog/DDL/RLS/provenance cases, 8 exact-numeric cases, and 18 fresh bootstrap/
+alias cases**. The earlier first-candidate category labels above are historical: two direct
+RLS-hidden owner-evidence cases belong in RLS, not locking. Full totals are unchanged by that
+classification correction; no unexpected skip is used to obtain a pass.
+
+Verification history is retained: early new-harness execution passed 57, then the combined draft
+passed 181 in 556.05 seconds. The executed-UPDATE planner refinement passed 181 in 550.75 seconds.
+The final set-query/private-transaction version passed 182 as recorded above. Earlier partial full
+runners were stopped before those refinements and are not PASS evidence. An unnecessary restart
+of the completed final SQLite runner was immediately stopped; its retained XML and original
+complete console result certify the 851.29-second run, not that aborted rerun. No source was changed
+by runner control. Final complete PostgreSQL evidence is recorded below after completion.
+
+### Final complete verification and exit-matrix evidence
+
+Final complete PostgreSQL command:
+
+```text
+python -m pytest -q --ds=qa_settings --junitxml=/tmp/full-postgres.xml
+```
+
+**2,937 passed / 0 failed / 0 skipped in 2,713.58 seconds (45m 13.58s)**, on Python **3.13.16**,
+Django **5.2.17**, PostgreSQL **17.11**. This includes all 2,877 first-candidate cases and 60 new
+cases. Final runtime/test files were unchanged during both complete runs; only this evidence
+documentation was completed afterward. The external synthetic-only QA settings select the existing
+MD5 fixture hasher; source settings remain untouched. All three approved optional apps are opted in.
+Full supported SQLite used `python -m pytest -q --ds=config.settings.test
+--junitxml=/tmp/full-sqlite.xml` with the same optional topology.
+
+Fresh complete suite results extracted from the final PostgreSQL XML, not inherited results:
+
+| Defined complete group | Passed |
+|---|---:|
+| Core/foundation/database | 408 |
+| Sales | 98 |
+| Procurement | 115 |
+| Inventory | 80 |
+| Billing | 104 |
+| Payments | 136 |
+| Accounting | 304 |
+| PAY-INT | 300 |
+| ACC-INT | 1,142 |
+| First corrective regression file | 122 |
+| Second corrective regression file | 60 |
+| Defined complete Core / six-owner / both-integration / corrective bundle | 2,869 |
+
+Core here means complete `tests/test_{access,admin,core_foundation_v1,database_architecture,
+database_foundation,foundation_correctness,identity,modules,organization}.py` files. The six owner
+groups are their complete `tests/` directories; both integration groups are their complete test
+directories. The 2,869-case bundle is deliberately broader than the supplied independent audit's
+875-case selected bundle; it is not a claim that the same selection grew to 2,869. These groups ran
+freshly inside the complete PostgreSQL invocation; no separate subset wall-clock time is invented.
+All original counterexamples, opposite winners, retry/no-op, same-source/cross-effect composition,
+owner evidence/RLS/constraint/schema checks and selected-alias tests passed.
+
+Other final checks:
+
+- Fresh empty full-topology PostgreSQL migrations PASS; database architecture, standalone/optional
+  topology and fresh selected-alias/default-cursor-trap regressions PASS. `manage.py check` reports
+  zero issues; `makemigrations --check --dry-run` reports no changes after the final code refinement.
+- Ruff **0.16.7** `ruff check . --no-cache` PASS. Explicit `ruff format --check` covers **all 11
+  changed Python files across the complete two-commit series**, including paths normally excluded
+  by Ruff discovery if any existed (no migration changed). Whitespace checks PASS.
+- Node **22.23.3**: `npm ci`, JS syntax, all **21 JS tests**, `npm run build:css` and byte-identical
+  compiled CSS PASS after the final runtime refinement. No frontend file changes. Eight inherited
+  npm advisories (2 moderate, 6 high) and stale Browserslist remain separately scoped maintenance.
+- Final full test database and fresh alias databases were removed by normal teardown; only the two
+  task-created base databases remained before container cleanup. No synthetic test role remained;
+  only the task database owner and built-in roles existed. No worker connection warning or
+  `deadlock detected` occurred in the task PostgreSQL log. Unrelated containers/databases were not
+  touched. Task-created containers, network, anonymous database storage and copied XML outputs are
+  removed after evidence inspection; no customer or demo database was accessed.
+
+The supplied previous independent re-audit had **11 PASS / 2 FAIL / 0 NOT PROVEN**; criteria 1 and
+13 failed, and criterion 10 passed. The following updates are **developer evidence ready for
+independent verification**, not a new independent verdict or permission to close Phase 2:
+
+| Criterion | Current developer evidence / outstanding gate |
+|---|---|
+| 1. Six standalone architectures | All 41 placements, original nine denials, 18 opposite winners and complete suites pass; new ordered-reader/batch-writer composition tests pass. Independent second corrective review still required |
+| 2. Company isolation | Complete six-owner/Core suites and fresh independent-alias UUID/default-cursor cases pass; Company-first Access protocol unchanged |
+| 3. Concrete ProductVariant identity | Owning models/services unchanged; complete Sales/Procurement/Inventory regressions pass |
+| 4. Posted movement stock source | Inventory ledger/balance contract unchanged; complete Inventory regressions pass |
+| 5. Balanced posted-line Accounting source | Accounting/ACC-INT suites and exact new AR/Revenue, Cash/AR assertions pass; no authoritative balance added |
+| 6. Frozen Billing / derived settlement | Billing, Payments and PAY-INT complete suites pass; owner amount/basis contracts unchanged |
+| 7. Immutable history | Guarded owner ORM/history suites pass; authority deletion cannot erase committed financial effects |
+| 8. Retry safety | Nine original matching/no-op paths, new public integration rollback/retry and complete Accounting/Inventory/ACC-INT collision/race suites pass |
+| 9. Public optional composition / dependency direction | Only `evidence.compose`'s two current public-owner compositions found; complete topology/dependency guards pass; no private owner write or reverse import added |
+| 10. Module registry semantics | Prior independent PASS preserved; complete module/HTTP tests and 21 JS tests pass, installed Python service RBAC unaffected |
+| 11. PostgreSQL / quality / drift | 2,937 PostgreSQL passes, zero failures/skips; complete SQLite and mandatory quality/bootstrap checks pass |
+| 12. No speculative framework | Only Access-local row/set ordering and writer batching; no schema, generic lock framework, advisory lock, mutex, infrastructure or new model |
+| 13. Explicit architecture acceptance | STILL PENDING: the second exact local corrective SHA needs fresh independent re-audit and separately authorized final closure; developer tests do not supply acceptance |
+
+Final local candidate scope: `businessos/core/access/{models,policies,services}.py`,
+`tests/test_authority_batches.py`, and this active plan, exactly five files. The first corrective
+commit `2fbd4a2ae02eda31c6273456a2599b0a2f90339a` remains unchanged. Exactly one additional local
+commit, `fix: order Phase 2 authority locks`, is authorized after verification; its exact SHA is
+reported externally to avoid a self-referential commit hash. Canonical local/remote main remains
+`669936df432ec1bb12792ed8d31741fbb1b1287a`.
+
+**PHASE 2 AUTHORIZATION SECOND CORRECTIVE CANDIDATE READY FOR INDEPENDENT RE-AUDIT.**
+**PH2-FINAL-AUD-1: ORIGINAL NINE RACES REMAIN REMEDIATED LOCALLY.**
+**PH2-AUTH-CORR-1: REMEDIATED LOCALLY — INDEPENDENT VERIFICATION PENDING.**
+**PH2-FINAL-DOC-1: OPEN — NONBLOCKING DOCUMENTATION MAINTENANCE.** BASELINE, DEPENDENCY_MAP and
+ADR 0010 are not normalized. **PHASE 2 NOT COMPLETE; PHASE 2 FINAL CLOSURE NOT AUTHORIZED;
+PHASE 3 NOT AUTHORIZED.** No push, PR, merge, tag, main update or earlier-commit amendment; STOP
+after the single local commit for a fresh independent re-audit.

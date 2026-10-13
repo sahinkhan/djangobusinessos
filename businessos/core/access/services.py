@@ -27,15 +27,19 @@ MANAGE_ROLES = CORE_PERMISSION_DECLARATIONS[1][0]
 @business_atomic
 def register_core_permissions() -> tuple[Permission, ...]:
     registered = []
+    renamed = []
     for code, name in CORE_PERMISSION_DECLARATIONS:
         permission, created = Permission.objects.get_or_create(
             code=code,
             defaults={"name": name, "is_active": True},
         )
         if not created and permission.name != name:
-            Permission.objects.filter(id=permission.id).update(name=name)
             permission.name = name
+            renamed.append(permission)
         registered.append(permission)
+    # One complete writer set, rather than accumulating locks in declaration order.
+    if renamed:
+        Permission.objects.bulk_update(renamed, ["name"])
     return tuple(registered)
 
 

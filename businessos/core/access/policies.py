@@ -92,16 +92,27 @@ def require_permission(context: BusinessContext, permission_code: str) -> Busine
 
 def _share_authority_row(connection, model, identity):
     """Hold activity/deletion stable without excluding other authorized readers."""
+    return _share_authority_rows(connection, model, [identity])
+
+
+def _share_authority_rows(connection, model, identities):
+    """Lock the complete fixed set in UUID order, independent of scan order."""
+    if not connection.in_atomic_block:
+        raise RuntimeError("Authority reader locking requires a business transaction.")
+    identities = sorted(set(identities))
+    if not identities:
+        return True
     quote = connection.ops.quote_name
     pk = model._meta.pk
     lock = " FOR SHARE" if connection.vendor == "postgresql" else ""
+    placeholders = ", ".join(["%s"] * len(identities))
     with connection.cursor() as cursor:
         cursor.execute(
             f"SELECT {quote(pk.column)} FROM {quote(model._meta.db_table)} "
-            f"WHERE {quote(pk.column)} = %s{lock}",
-            [pk.get_db_prep_value(identity, connection)],
+            f"WHERE {quote(pk.column)} IN ({placeholders}) ORDER BY {quote(pk.column)}{lock}",
+            [pk.get_db_prep_value(identity, connection) for identity in identities],
         )
-        return cursor.fetchone() is not None
+        return len(cursor.fetchall()) == len(identities)
 
 
 def require_final_permission(context: BusinessContext, permission_code: str) -> BusinessContext:
@@ -110,9 +121,10 @@ def require_final_permission(context: BusinessContext, permission_code: str) -> 
     The caller must hold its active Company lock in the selected business transaction.
     Supported Access grant/link/assignment writers hold that same Company lock (ADR 0009).
     Global actor/Permission activity and Role activity need additional protection: lock
-    actor, exact Permission, then one qualifying Role witness in UUID order. PostgreSQL
-    FOR SHARE blocks activity updates/deletion through outer commit while allowing nested
-    owner services and different-company readers to share authority anchors. Do not use
+    actor, ALL assigned same-company Roles, then ALL reachable Permissions in UUID order,
+    including inactive rows. Nested actions cannot add an earlier authority anchor.
+    PostgreSQL FOR SHARE protects activity/deletion through outer commit while allowing
+    other readers. Superusers stabilize the declared Permission namespace as well. Do not use
     this helper as a substitute for Company locking or as an authorization cache.
     SQLite retains the ordinary policy check; row-lock concurrency is PostgreSQL-only.
     """
@@ -124,35 +136,29 @@ def require_final_permission(context: BusinessContext, permission_code: str) -> 
     user_model = get_user_model()
     if not _share_authority_row(connection, user_model, context.actor_id):
         raise PermissionDenied("The context actor does not exist or is inactive.")
-    permission_id = (
-        Permission.objects.using(alias)
-        .filter(code=permission_code)
-        .values_list("pk", flat=True)
-        .first()
-    )
-    if permission_id is None or not _share_authority_row(connection, Permission, permission_id):
-        raise PermissionDenied(f"Business permission required: {permission_code}.")
     user = user_model.objects.using(alias).get(pk=context.actor_id)
-    if not user.is_superuser:
-        assignments = UserRoleAssignment.objects.using(alias).filter(
-            user_id=context.actor_id,
-            company_id=context.company_id,
-            role__company_id=context.company_id,
-            role__is_active=True,
-            role__permission_links__permission_id=permission_id,
-            role__permission_links__permission__is_active=True,
+    if user.is_superuser:
+        if connection.vendor == "postgresql":
+            with connection.cursor() as cursor:
+                table = connection.ops.quote_name(Permission._meta.db_table)
+                cursor.execute(f"LOCK TABLE {table} IN SHARE MODE")
+        permissions = Permission.objects.using(alias).all()
+    else:
+        role_ids = sorted(
+            set(
+                UserRoleAssignment.objects.using(alias)
+                .filter(
+                    user_id=context.actor_id,
+                    company_id=context.company_id,
+                    role__company_id=context.company_id,
+                )
+                .values_list("role_id", flat=True)
+            )
         )
-        role_ids = list(
-            assignments.order_by("role_id").values_list("role_id", flat=True).distinct()
-        )
-        for role_id in role_ids:
-            if (
-                _share_authority_row(connection, Role, role_id)
-                and assignments.filter(role_id=role_id).exists()
-            ):
-                break
-        else:
-            raise PermissionDenied(f"Business permission required: {permission_code}.")
-    # Re-read context/activity/grants only AFTER every authority lock wait. A new,
-    # unlocked role cannot replace the locked qualifying witness above.
+        if not _share_authority_rows(connection, Role, role_ids):
+            raise PermissionDenied("Assigned authority changed before final authorization.")
+        permissions = Permission.objects.using(alias).filter(role_links__role_id__in=role_ids)
+    if not _share_authority_rows(connection, Permission, permissions.values_list("pk", flat=True)):
+        raise PermissionDenied("Declared authority changed before final authorization.")
+    # No cached decision: read current context/activity/grants after EVERY lock wait.
     return require_permission(context, permission_code)
