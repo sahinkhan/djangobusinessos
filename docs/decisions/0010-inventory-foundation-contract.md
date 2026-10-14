@@ -1,8 +1,14 @@
 # ADR 0010 — Inventory Foundation Contract
 
-Status: Accepted historical closure — post-closure corrective re-audit pending
+Status: Accepted — Inventory corrective re-audit, adoption and closure complete
 
 Date: 2026-09-15
+
+Current status — 2026-10-14: the Inventory corrective cycle below is closed. The supplied final
+combined Phase 2 audit is FINAL PASS / Readiness A. Phase 2 formal closure is complete for
+canonical adoption, which remains pending. The following gate/remediation records preserve their
+historical status statements; the accepted Inventory technical contract is unchanged. See the
+[formal Phase 2 closure](../exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#phase-2-formal-closure-for-canonical-adoption--2026-10-14).
 
 ## Context
 

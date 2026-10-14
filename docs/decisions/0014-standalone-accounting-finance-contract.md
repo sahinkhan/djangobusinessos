@@ -4,6 +4,15 @@ Status: Accepted — Gate ACC-0
 
 Date: 2026-10-11
 
+Current status — 2026-10-14: ACC-0 is canonically closed at
+`d5030e0e807334fdc358a1aa3affce704ef4a0f0`; ACC-1 at
+`00e18a75e27bfe962ea290ab01f0cb0520f4427e`. Optional Accounting composition is separately
+implemented under ADR 0016: ACC-INT-1 closed at `669936df432ec1bb12792ed8d31741fbb1b1287a`
+(main CI #130 attempt 2 SUCCESS). The subsequent combined Phase 2 corrective series is formally
+closed for canonical adoption, still pending. Authority/acceptance-stage pending and not-started
+statements below retain their historical meaning; no technical contract is rewritten. See the
+[current closure record](../exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#phase-2-formal-closure-for-canonical-adoption--2026-10-14).
+
 ## Authority, evidence and gate boundary
 
 This is the formally accepted documentation-only ACC-0 contract, not Accounting implementation,

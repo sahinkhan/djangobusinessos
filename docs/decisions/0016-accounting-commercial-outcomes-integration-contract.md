@@ -4,12 +4,18 @@ Status: Accepted — Gate ACC-INT-0
 
 Date: 2026-10-12
 
-Implementation status — 2026-10-13: **ACC-INT-1 FORMALLY ACCEPTED FOR CANONICAL ADOPTION;
-canonical adoption PENDING at this acceptance checkpoint.**
+Implementation status — 2026-10-14: **ACC-INT-1 CANONICALLY CLOSED** at
+`669936df432ec1bb12792ed8d31741fbb1b1287a`, exact-head main CI #130 attempt 2 SUCCESS
+([run 38374429372](https://github.com/sahinkhan/djangobusinessos/actions/runs/38374429372)).
+Attempt 1's synthetic-policy/autovacuum deadlock remains historical evidence, not concealed by
+the successful same-SHA rerun. The later corrective series through
+`4a2a7ecaa26e1e312a482e405cd763efdc5f2d74` has supplied independent FINAL PASS / Readiness A
+and hosted candidate CI #131 SUCCESS. **Phase 2 formal closure complete for canonical adoption;
+canonical adoption pending.** See the [formal closure record](../exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#phase-2-formal-closure-for-canonical-adoption--2026-10-14).
 
 ## Authority, baseline and evidence
 
-Current implementation acceptance preserves this ADR's accepted technical body unchanged.
+The historical implementation acceptance preserved this ADR's accepted technical body unchanged.
 Corrective implementation `2c7c8109f875909b34cc089698cb6d7dde572266` received the supplied
 independent FINAL PASS / Readiness A and exact-head hosted candidate CI #128 SUCCESS.
 See the [implementation acceptance and completion rule](#acc-int-1-independent-corrective-approval-and-formal-implementation-acceptance--2026-10-13).
@@ -368,8 +374,9 @@ metadata, not causal-order certificates**. Canonical `669936df432ec1bb12792ed8d3
 was demonstrated to reject otherwise valid Invoice and Allocation compositions under a
 controlled 1ms backward clock read on both SQLite and PostgreSQL 17. This establishes inherited
 clock sensitivity, not attribution of the earlier historical SQLite failure (cause NOT PROVEN).
-The corrective implementation remains a local candidate requiring independent verification;
-this clarification does not grant publication, canonical adoption or Phase 2 closure.
+At this clarification's original local checkpoint, corrective implementation required independent
+verification; the current header records its subsequent FINAL PASS and separate formal closure.
+The clarification itself did not grant publication, canonical adoption or Phase 2 closure.
 
 Every required timestamp must still be present and aware, including posted Entry metadata,
 line metadata, binding created_at/updated_at and owner-issued/recorded facts. Their original

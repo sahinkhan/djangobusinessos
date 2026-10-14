@@ -72,7 +72,8 @@ Gate 3A received independent FINAL PASS at accepted candidate
 `780144c5560e1d46cc5d545dc29b33522cd2d1f5`; hosted CI #42 succeeded at that exact SHA. Gate 3B
 canonical `main` cutover received independent FINAL PASS at
 `29d6c12913145bd1b64f572b5bc94c1f53d9987a`, with hosted main CI #45 successful. Gate 3 is closed;
-Phase 2 / Gate 4 adoption remains separately gated and unauthorized.
+At that historical Gate 3 checkpoint, Phase 2 / Gate 4 adoption remained separately gated and
+unauthorized; the subsequently authorized Phase 2 sequence is recorded below.
 
 ---
 
@@ -101,7 +102,44 @@ Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contract
 
 ## Phase 2 — Commercial Core
 
-Current milestone — 2026-10-12: **PAY-INT-1 CANONICALLY CLOSED** at
+Current milestone — 2026-10-14: **FORMAL PHASE 2 CLOSURE COMPLETE FOR CANONICAL ADOPTION;
+CANONICAL ADOPTION PENDING.** The owner authorizes this documentation-only formal acceptance
+of the completed architecture/corrective series, not a main update or Phase 3 work.
+Canonical starting `main` remains `669936df432ec1bb12792ed8d31741fbb1b1287a`:
+**ACC-INT-1 CANONICALLY CLOSED**, exact-head main CI #130 attempt 2 SUCCESS. Attempt 1's
+synthetic-policy/autovacuum deadlock is preserved in the execution-plan history.
+
+Preserved corrective ancestry:
+
+```text
+669936df432ec1bb12792ed8d31741fbb1b1287a
+→ 2fbd4a2ae02eda31c6273456a2599b0a2f90339a
+→ 368dc70aa7bdcefd3191661b4569ccfad29f4069
+→ f4925f70fa2efc12a6c0dabad9facc515213efe9
+→ 4a2a7ecaa26e1e312a482e405cd763efdc5f2d74
+```
+
+The supplied combined independent audit returned **FINAL PASS / Readiness A** with
+**13 PASS / 0 FAIL / 0 NOT PROVEN**. Corrective-candidate hosted **Phase 0 checks #131 /
+38537403882 SUCCESS** tested exact `4a2a7ec...`: **3,015 PostgreSQL tests passed**, none failed
+or skipped; fresh migrations and mandatory quality/frontend checks passed.
+PH2-FINAL-AUD-1, PH2-AUTH-CORR-1, PH2-AUTH2-AUD-1, PH2-CLOCK-1 and ACCINT1-AUD-1 are RESOLVED.
+This docs-only checkpoint resolves PH2-FINAL-DOC-1 without erasing historical REVISE evidence.
+Original historical SQLite failure attribution remains **NOT PROVEN**.
+
+The [formal closure record and exit matrix](exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#phase-2-formal-closure-for-canonical-adoption--2026-10-14)
+distinguishes independent audit, implementation runs and hosted evidence. This closure commit
+requires its own exact-head branch CI; later separately authorized unchanged-main/ancestry
+verification, direct fast-forward adoption and exact-head main CI are still required. Phase 2
+is **not yet canonically closed**. No PR, tag, production readiness, deployment, SaaS activation
+or Phase 3 authorization is granted by this checkpoint.
+
+### Historical milestone chronology
+
+The following dated acceptance-stage statements retain their original scope and baselines;
+the current status above and current gate summary below supersede their pending/not-started wording.
+
+Milestone — 2026-10-12: **PAY-INT-1 CANONICALLY CLOSED** at
 `a1079985a2ef5645dfed338e3e58af54f5242e1a` after normal fast-forward adoption and successful
 exact-head main CI. Original implementation `4b8a072da4426a48988d4605641bf1fc846c06ee`,
 corrective implementation `bef50fe8b20f97aaeefb8c610a46d412e9a05402` and the original independent
@@ -132,7 +170,7 @@ bindings, owner financial bases, complete evidence and atomic public-service com
 accepted, not implemented. Original proposal/verification history remains in the ADR and plan.
 Inherited non-blocking ACCINT0-DOC-1 remains unmodified; npm/Actions/Browserslist maintenance
 is not remediated. No runtime, permission, migration or UI change is authorized by acceptance.
-That acceptance-stage authorization statement is historical. Current canonical base is
+That acceptance-stage authorization statement is historical. The ACC-INT-1 starting canonical base was
 `4419bdc4f0210894065400923741dd5449ffd158`; **ACC-INT-0 CANONICALLY CLOSED**.
 **ACC-INT-1: FORMALLY ACCEPTED FOR CANONICAL ADOPTION** on `accint1-accounting-outcomes`.
 **Formal acceptance COMPLETE; canonical adoption PENDING at this acceptance checkpoint.**
@@ -147,14 +185,15 @@ See the [formal implementation acceptance and completion rule](exec-plans/active
 This same docs-only acceptance commit becomes the canonical freeze only after its own exact-head
 branch CI, unchanged-main/ancestry verification, direct fast-forward normal push and separate
 exact-head main CI succeed. Earlier local-remediation/pending wording is historical.
-**Phase 2 NOT COMPLETE; final completion audit NOT YET PERFORMED. Phase 3 NOT AUTHORIZED.**
+At that historical acceptance checkpoint, **Phase 2 was NOT COMPLETE; final completion audit
+was NOT YET PERFORMED. Phase 3 was NOT AUTHORIZED.** The current final audit/closure is above.
 Production readiness is not claimed; SaaS activation and production deployment remain unauthorized.
 This is the accepted contract for the final currently scoped Accounting composition gate before
 a later Phase 2 completion review, not runtime or Phase 2 exit approval. Other optional integrations
 remain separately governed; SaaS activation and production deployment are not authorized.
 No exact ACC-INT-0 checkpoint tag name is specified: **NO TAG CREATED**.
 
-Current future-work contract: **Option A — separate horizontal modules**, selected by the owner.
+Accepted ownership contract: **Option A — separate horizontal modules**, selected by the owner.
 [ADR 0011](decisions/0011-modular-billing-payments-accounting-boundary.md) is **Accepted — Gate BILL-0**
 as of 2026-10-07. Independent audit FINAL PASS and hosted Phase 0 checks #91 SUCCESS
 ([run 37579298801](https://github.com/sahinkhan/djangobusinessos/actions/runs/37579298801))
@@ -363,18 +402,21 @@ at 1280px; retain it for separately authorized UI maintenance. Existing eight np
 (two moderate, six high) and GitHub Actions runtime deprecation warnings remain separate
 security-maintenance follow-ups. No accepted ownership or implementation is changed by acceptance.
 
-| Gate | Standalone ownership | Deferred integration |
+### Current gate summary
+
+| Gate | Ownership / accepted implementation | Standalone exclusions / remaining boundaries |
 | --- | --- | --- |
 | BILL-1 — Billing & Invoicing | Invoice/InvoiceLine, generic lines, snapshots, numbering, DRAFT -> ISSUED, derived original totals | No payment-aware outstanding; no void/credit, Sales automation or journals |
-| PAY-1 — Payments (canonically closed; payments-v1) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Payments-owned PaymentAllocation, applied/unapplied/outstanding, invoice integration, refunds/settlement and journals deferred |
+| PAY-1 — Payments (canonically closed; payments-v1) | PaymentMethod, immutable incoming Payment/Receipt, snapshots, numbering and receipt idempotency | Allocations/applied/unapplied/outstanding supplied only by optional PAY-INT-1; journals only by optional ACC-INT-1; refunds/reversals/bank settlement remain deferred |
 | ACC-0 / ACC-1 canonically closed | Account, Journal, balanced immutable base-currency postings, derived GL/trial balance; accepted ADR 0014; freeze `00e18a75...` | Historical REVISE retained; ACC1-R1/R2 resolved; external-source idempotency, Billing/Payments automation and other finance capabilities separately governed |
 | PAY-INT-0 canonically closed at `9ee4e0bd...` | Payments retains allocation ownership; Billing retains invoice facts; accepted ADR 0015 freezes opt-in composition | Historical acceptance-stage pending wording retained above; allocation implementation is separately governed; no Accounting automation |
 | PAY-INT-1 canonically closed at `a1079985...` | Opt-in `payments_billing`; immutable allocations, complete-evidence profile and intrinsic stored-parent retries; original REVISE / C preserved; corrective FINAL PASS / A; R1-R4 RESOLVED; CI #118/#119/#120 SUCCESS | No Accounting effect, reversal/refund, FX, bank settlement or other automatic posting; earlier acceptance-stage pending chronology retained |
-| ACC-INT-0 canonically closed; ACC-INT-1 formally accepted | Accepted ADR 0016 unchanged; canonical base `4419bdc4...`; original `5bfc055b...` / REVISE / readiness B preserved; corrective `2c7c8109...` / supplied independent FINAL PASS / readiness A; ACCINT1-AUD-1 P2 independently RESOLVED; exact-head candidate CI #128 / 38365702656 SUCCESS / 2,755 PostgreSQL tests | FORMALLY ACCEPTED FOR CANONICAL ADOPTION; adoption PENDING at this checkpoint, requiring acceptance CI and separate main CI; Phase 2 NOT COMPLETE / final audit NOT YET PERFORMED; Phase 3 NOT AUTHORIZED |
+| ACC-INT-0 / ACC-INT-1 canonically closed | ADR 0016; ACC-INT-1 freeze `669936df432ec1bb12792ed8d31741fbb1b1287a`; ACCINT1-AUD-1 RESOLVED; main CI #130 attempt 2 SUCCESS / 2,755 PostgreSQL tests; original REVISE and attempt-1 deadlock preserved | Invoice AR/Revenue and Allocation Cash/AR remain optional public-service composition, not standalone hard dependencies |
+| Phase 2 combined corrective series / formal closure | Candidate `4a2a7ec...`; supplied independent FINAL PASS / A / 13 of 13 PASS; candidate CI #131 SUCCESS / 3,015 PostgreSQL tests; all six findings RESOLVED including docs-only PH2-FINAL-DOC-1 | FORMAL CLOSURE COMPLETE FOR CANONICAL ADOPTION; adoption PENDING, requiring closure branch CI and separately authorized fast-forward/main CI; Phase 3 NOT AUTHORIZED |
 
 This is implementation sequence, not a hard-dependency chain. Billing requires Party plus Core;
-generic Payments and Accounting work without Billing. Settlement-adjusted outstanding in the local
-optional candidate is a derived composition of invoice state and valid Payments allocations; absence of integration must
+generic Payments and Accounting work without Billing. Settlement-adjusted outstanding in the accepted
+optional integration is a derived composition of invoice state and valid Payments allocations; absence of integration must
 not display an invoice as fully unpaid. No duplicate mutable financial balance is introduced.
 
 Historical audit/adoption records below are retained as evidence of their respective checkpoints.

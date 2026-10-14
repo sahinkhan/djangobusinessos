@@ -4,6 +4,16 @@ Status: Accepted — Gate BILL-0
 
 Date: 2026-10-07
 
+Current implementation context — 2026-10-14: BILL-1, PAY-1, ACC-1, PAY-INT-1 and ACC-INT-1 are
+canonically closed; their accepted ownership and optional-dependency boundaries remain unchanged.
+PAY-1 closed at `9ac3f0944fff65f013efd9c3a3e9b841022ce87f` (main CI #105 SUCCESS), and
+ACC-INT-1 at `669936df432ec1bb12792ed8d31741fbb1b1287a` (main CI #130 attempt 2 SUCCESS).
+The subsequent combined Phase 2 corrective series is formally closed for canonical adoption,
+still pending. The BILL-0/BILL-1 acceptance records and subsequent-gate deferrals below describe
+their historical checkpoints, not current implementation availability. PAY-INT-1 now supplies
+optional allocation/outstanding composition and ACC-INT-1 optional Accounting effects; neither
+changes standalone hard dependencies. See the [current Phase 2 closure record](../exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#phase-2-formal-closure-for-canonical-adoption--2026-10-14).
+
 ## Formal BILL-0 acceptance
 
 Acceptance date: 2026-10-07. Independent audit verdict:

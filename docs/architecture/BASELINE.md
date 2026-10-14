@@ -207,7 +207,8 @@ Accepted ADR 0011 defines the owner-selected separation: Billing & Invoicing own
 Payments owns Payment/Receipt, PaymentMethod and PaymentAllocation; Accounting & Finance owns
 balanced journals and the General Ledger. Delivery order is Billing, Payments, then Accounting,
 not a hard-dependency chain. Generic Payments and Accounting remain usable without Billing.
-Invoice allocation and journal automation require separate optional integration approval.
+Invoice allocation and journal automation are implemented through separately accepted optional
+integrations (ADRs 0015/0016), not new standalone hard dependencies.
 
 Standalone Billing exposes original invoice totals, not payment-aware outstanding or an assumed
 fully unpaid balance. It requires Party and Core, not Catalog/Sales/Procurement/Inventory/Payments/
@@ -216,12 +217,18 @@ BILL-1 is canonically closed at `409e45eaa32fae1cf9c77042a762e57026d0349f`, chec
 `billing-invoicing-v1`, with exact-head main CI #97 SUCCESS (run `37645584246`).
 
 Accepted ADR 0013 is the Gate PAY-0 contract, canonically closed at `d12f3e8c`
-(`payments-contract-v1`, main CI #101 SUCCESS). PAY-1 has separate local implementation
-authorization; its candidate remains pending independent audit. It specifies PaymentMethod
-plus immutable standalone incoming Payment/Receipt,
-without Billing or Accounting. Payments owns future allocations/settlement/refunds, but PAY-1
-defers those features and applied/unapplied/outstanding balances. No Payments runtime is authorized
-by PAY-0. ADR 0012 governs future mutations; this changes no existing accepted module behavior.
+(`payments-contract-v1`, main CI #101 SUCCESS). The subsequently authorized PAY-1 standalone
+Payments implementation is CANONICALLY CLOSED at `9ac3f0944fff65f013efd9c3a3e9b841022ce87f`,
+main CI #105 SUCCESS. It supplies PaymentMethod and immutable incoming Payment/Receipt without
+Billing or Accounting. PAY-0 itself was documentation-only; standalone PAY-1 did not add allocations.
+
+PAY-INT-1 is canonically closed at `a1079985a2ef5645dfed338e3e58af54f5242e1a`: its optional
+Payments-owned Billing composition supplies allocations and derived applied/unapplied/outstanding
+reads. Accounting effects are supplied by the separate optional ACC-INT-1 compositions, canonically
+closed at `669936df432ec1bb12792ed8d31741fbb1b1287a` (main CI #130 attempt 2 SUCCESS).
+Refunds, reversals and bank settlement remain deferred. ADR 0012 continues to govern mutations.
+The later Phase 2 corrective series is formally closed for canonical adoption; that adoption is
+still pending. See the [formal closure record](../exec-plans/active/PHASE_2_COMMERCIAL_CORE.md#phase-2-formal-closure-for-canonical-adoption--2026-10-14).
 
 ## Client customization
 

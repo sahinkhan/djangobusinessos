@@ -1,8 +1,26 @@
 # Phase 2 — Commercial Core
 
-Status: IN PROGRESS — BILL-1 / PAY-1 / ACC-1 / PAY-INT-0 / PAY-INT-1 / ACC-INT-0 CANONICALLY CLOSED; ACC-INT-1 FORMALLY ACCEPTED FOR CANONICAL ADOPTION / ADOPTION PENDING AT THIS ACCEPTANCE CHECKPOINT; PHASE 2 NOT COMPLETE / FINAL COMPLETION AUDIT NOT YET PERFORMED
+Status: FORMAL PHASE 2 CLOSURE COMPLETE FOR CANONICAL ADOPTION — CANONICAL ADOPTION PENDING
 
-Canonical starting baseline for this acceptance checkpoint: `4419bdc4f0210894065400923741dd5449ffd158`.
+Current checkpoint — 2026-10-14: supplied combined independent **FINAL PASS / Readiness A**,
+**13 PASS / 0 FAIL / 0 NOT PROVEN**, against corrective candidate
+`4a2a7ecaa26e1e312a482e405cd763efdc5f2d74`; exact-head candidate hosted CI #131 SUCCESS,
+3,015 PostgreSQL tests and mandatory gates PASS. All six findings, including PH2-FINAL-DOC-1
+normalized by this documentation-only closure, are RESOLVED. See the
+[formal closure record](#phase-2-formal-closure-for-canonical-adoption--2026-10-14).
+
+Canonical `main` remains `669936df432ec1bb12792ed8d31741fbb1b1287a`, the **ACC-INT-1
+CANONICALLY CLOSED** checkpoint with main CI #130 attempt 2 SUCCESS. This Phase 2 closure
+requires its own branch CI and later separately authorized direct fast-forward/main CI;
+**Phase 2 is not yet canonically closed**. No Phase 3, SaaS activation or production approval.
+
+## Historical milestone chronology
+
+The acceptance/remediation records below preserve their original evidence, failures, baseline
+SHAs and pending/not-started states. They are not current gate declarations; the current status
+above and final closure section supersede them without rewriting accepted technical contracts.
+
+Historical canonical starting baseline for ACC-INT-1 acceptance: `4419bdc4f0210894065400923741dd5449ffd158`.
 **ACC-INT-0 CANONICALLY CLOSED.** The following PAY-INT-1 and ACC-INT-0 acceptance-stage
 records retain their historical baselines and completion rules.
 **PAY-INT-1 CANONICALLY CLOSED** after acceptance CI #119 / `38163571737` and main
@@ -24,7 +42,7 @@ Contract branch `accint0-accounting-outcomes-contract` starts from the exact can
 The authorized remaining sequence is exact-head acceptance CI, unchanged-main/ancestry
 revalidation, direct fast-forward normal push and separate exact-head main CI; no runtime.
 See [formal acceptance and completion rule](#acc-int-0-independent-approval-and-formal-acceptance--2026-10-12).
-Current bounded task: explicitly authorized **ACC-INT-1 corrective publication, docs-only formal
+Historical bounded task: explicitly authorized **ACC-INT-1 corrective publication, docs-only formal
 implementation acceptance and direct fast-forward canonical adoption** on `accint1-accounting-outcomes`,
 from canonical base `4419bdc4f0210894065400923741dd5449ffd158`.
 **FORMALLY ACCEPTED FOR CANONICAL ADOPTION; formal acceptance COMPLETE; adoption PENDING
@@ -3538,3 +3556,125 @@ identified by its exact parent `f4925f70fa2efc12a6c0dabad9facc515213efe9` and me
 `fix: remove wall-clock causality from accounting evidence`; its resulting SHA is reported in
 the handoff, not fabricated inside its own content. STOP for the separately authorized combined
 independent re-audit. No publication, main adoption, Phase 2 closure or Phase 3 authorization.
+
+## Phase 2 formal closure for canonical adoption — 2026-10-14
+
+### Authority, canonical baseline and preserved ancestry
+
+The owner explicitly authorized one documentation-only formal Phase 2 closure commit above
+the independently approved combined corrective candidate. This records formal acceptance of
+the completed Phase 2 architecture/corrective series, not a new implementation or independent
+audit performed by this documentation author. **FORMAL PHASE 2 CLOSURE: COMPLETE FOR CANONICAL
+ADOPTION. CANONICAL ADOPTION: PENDING. PHASE 2 CANONICALLY CLOSED: NO.**
+
+Canonical starting main remains `669936df432ec1bb12792ed8d31741fbb1b1287a`.
+ACC-INT-1 was canonically closed there after acceptance CI #129 and exact-head main
+[CI #130 / 38374429372, attempt 2 SUCCESS](https://github.com/sahinkhan/djangobusinessos/actions/runs/38374429372),
+with 2,755 PostgreSQL tests. Attempt 1's `CREATE POLICY synthetic_hide` versus autovacuum
+deadlock remains historical evidence; the same-SHA failed-job rerun did not change code.
+
+| Order | Exact preserved SHA | Checkpoint |
+| --- | --- | --- |
+| Canonical base | `669936df432ec1bb12792ed8d31741fbb1b1287a` | ACC-INT-1 canonical freeze |
+| First correction | `2fbd4a2ae02eda31c6273456a2599b0a2f90339a` | Late authorization remediation |
+| Second correction | `368dc70aa7bdcefd3191661b4569ccfad29f4069` | Authorization batch-cycle remediation |
+| Third correction | `f4925f70fa2efc12a6c0dabad9facc515213efe9` | Remaining authorization corrective remediation |
+| Fourth correction / audited candidate | `4a2a7ecaa26e1e312a482e405cd763efdc5f2d74` | PH2-CLOCK-1 structural versus clock evidence correction |
+
+No corrective commit is amended, squashed or rewritten. Earlier REVISE results and all
+implementation-run evidence above remain historical, including initial harness failures and
+the canonical clock-sensitivity investigation. The separate controlled 1ms rollback reproduction
+established an inherited product defect; it did **not** establish the cause of the original
+historical SQLite failure. That original attribution remains **NOT PROVEN**. PH2-CLOCK-1 removed
+independent-clock causal inequalities while preserving required aware metadata, the same-write
+Entry `updated_at == posted_at` invariant and complete structural/financial evidence. ADR 0016's
+accepted clarification is retained without further technical change.
+
+### Independent audit and hosted corrective-candidate evidence
+
+The owner supplied the fresh combined independent verdict:
+
+**FINAL PASS — PHASE 2 COMBINED CORRECTIVE SERIES APPROVED FOR HOSTED CI AND FORMAL CLOSURE**
+
+Readiness **A**; final exit matrix **13 PASS / 0 FAIL / 0 NOT PROVEN**. This is independent
+review evidence supplied to this checkpoint, distinct from the implementation-run PostgreSQL/
+SQLite counts recorded above and from hosted CI.
+
+Hosted corrective-candidate [Phase 0 checks #131 / 38537403882](https://github.com/sahinkhan/djangobusinessos/actions/runs/38537403882)
+completed **SUCCESS**, attempt 1, event `push`, branch `phase2-final-authorization-remediation`,
+exact checkout `4a2a7ecaa26e1e312a482e405cd763efdc5f2d74`. Hosted PostgreSQL:
+**3,015 passed / 0 failed / 0 skipped**. Fresh migrations/bootstrap, Ruff, Django system checks,
+migration drift, npm installation, Tailwind build and generated CSS reproducibility all passed.
+Inherited npm advisories and Actions/Browserslist maintenance warnings remain separate concerns;
+this checkpoint does not remediate them or certify production readiness.
+
+### Accepted final Phase 2 exit matrix
+
+| # | Exit criterion | Final accepted result |
+| --- | --- | --- |
+| 1 | Six standalone accepted architectures | PASS |
+| 2 | Company isolation | PASS |
+| 3 | ProductVariant consistency | PASS |
+| 4 | Inventory ledger authority | PASS |
+| 5 | Accounting posted-line authority | PASS |
+| 6 | Billing frozen totals/allocation-derived outstanding | PASS |
+| 7 | Historical immutability | PASS |
+| 8 | Retry/idempotency safety | PASS |
+| 9 | Public optional composition/no hard dependency cycle | PASS |
+| 10 | Registry gating/exact service RBAC | PASS |
+| 11 | Full PostgreSQL/mandatory quality | PASS |
+| 12 | No speculative framework | PASS |
+| 13 | Complete architecture acceptance | PASS |
+
+**13 PASS / 0 FAIL / 0 NOT PROVEN.** This accepts the reviewed Phase 2 scope, not every
+future optional integration, vertical capability or deployment requirement.
+
+### Final finding dispositions and documentation normalization
+
+| Finding / evidence | Final disposition |
+| --- | --- |
+| PH2-FINAL-AUD-1 | RESOLVED — combined independent re-audit |
+| PH2-AUTH-CORR-1 | RESOLVED — combined independent re-audit |
+| PH2-AUTH2-AUD-1 | RESOLVED — combined independent re-audit |
+| PH2-CLOCK-1 | RESOLVED — combined independent re-audit |
+| ACCINT1-AUD-1 | RESOLVED — independent corrective approval retained |
+| PH2-FINAL-DOC-1 | RESOLVED — authorized docs-only current-status normalization |
+| Original historical SQLite failure attribution | NOT PROVEN — unchanged historical uncertainty |
+
+PH2-FINAL-DOC-1 was P3/nonblocking. Its resolution normalizes stale current-facing summaries
+while retaining historical chronology and every accepted technical body:
+
+| Document / location | Normalization |
+| --- | --- |
+| `docs/ROADMAP.md`, Phase 0H checkpoint, Phase 2 current milestone and gate summary | Historical Gate 3 authorization scoped to its date; ACC-INT-1 closure, four-corrective chain, final audit/CI and Phase 2 formal-versus-canonical distinction |
+| `docs/architecture/BASELINE.md`, commercial ownership | PAY-1 canonical closure and exact SHA/CI #105; optional allocation/Accounting implementation, no hard-dependency change |
+| `docs/architecture/DEPENDENCY_MAP.md`, Billing and Payments | Implemented optional allocation/outstanding and Accounting composition; standalone Payments still exactly Party/organization/reference/access |
+| `docs/architecture/MODULE_BOUNDARIES.md`, Option A commercial boundary | Same stale future-only allocation/PAY-1 summary normalized to implemented optional composition |
+| ADR 0010, status/header | Inventory corrective re-audit/adoption closed; historical narrative retained |
+| ADR 0011, current context note | Later Payments/Accounting/integration gates distinguished from historical BILL-0/BILL-1 deferrals |
+| ADR 0014, current status note | ACC-0/ACC-1/ACC-INT-1 canonical closures distinguished from historical acceptance-stage pending wording |
+| ADR 0016, current implementation header and clarification-stage status | ACC-INT-1 canonical closure; later combined corrective approval; clock-safety technical clarification unchanged |
+| This plan, top/current status and this closure section | Final audit performed, exit matrix accepted, findings resolved, formal closure complete but canonical adoption pending |
+
+ADRs 0012/0013/0015 were reviewed: their historical foundation/contract/acceptance-stage
+records remain evidence of those gates, not new pending Phase 2 findings. No global replacement
+of historical pending/REVISE/not-started statements was performed.
+
+### Publication and canonical completion rule
+
+This one docs-only closure commit requires its **own** exact-head hosted branch push CI.
+CI #131 verifies its parent corrective candidate and must not be reused as closure-commit CI.
+The resulting closure SHA, run number/ID/attempt, tested SHA and actual job/check results are
+reported after publication; no future SHA or CI result is fabricated in this commit.
+
+After successful closure CI, status is **FORMALLY CLOSED FOR CANONICAL ADOPTION**, not
+canonically closed. A separate authorization must revalidate unchanged main
+`669936df432ec1bb12792ed8d31741fbb1b1287a` and straight ancestry, directly fast-forward main
+to the closure SHA with a normal push, and verify separate exact-head main push CI. Only then
+may Phase 2 be declared canonically closed. **DO NOT CREATE A PR.** No tag is specified or
+created; no merge commit, rebase, squash, force push, release or main update is authorized here.
+
+No runtime, test, migration, setting, manifest, frontend or business-semantic change accompanies
+this checkpoint. **Phase 3/Phase 4 are NOT AUTHORIZED. Production readiness is NOT CLAIMED;
+SaaS activation and production deployment remain NOT AUTHORIZED.** Stop after this closure
+commit's hosted CI verification; failed CI requires separate disposition, not automatic repair.

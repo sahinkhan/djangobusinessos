@@ -124,8 +124,8 @@ main CI #97 SUCCESS (run `37645584246`).
 
 Billing must not own Payment, PaymentAllocation or PaymentMethod and must not import Payments.
 It has no hard dependency on Sales, Procurement, Inventory, Catalog, Payments or Accounting.
-Original invoice totals are Billing-owned. Settlement-aware outstanding needs later approved
-composition with Payments-owned allocations; standalone Billing reports payment status unavailable.
+Original invoice totals are Billing-owned. Allocation-derived outstanding is supplied by the
+accepted optional PAY-INT-1 composition; standalone Billing reports payment status unavailable.
 
 Billing must be usable independently by Sales, Procurement and vertical products such as School, Hospital and Hotel.
 
@@ -140,20 +140,25 @@ allocation validation and settlement; refund/reversal capabilities require separ
 Generic Payments requires Party plus Core organization/reference/access, not Billing or Accounting.
 Its standalone receipt capability must work with Billing absent. Accepted ADR 0013
 (Gate PAY-0 closed at `d12f3e8c`, `payments-contract-v1`, main CI #101 SUCCESS) restricts
-the separately authorized PAY-1 local candidate, pending independent audit, to PaymentMethod and
-immutable incoming Payment/Receipt. The manifest dependencies are exactly
+standalone PAY-1 to PaymentMethod and immutable incoming Payment/Receipt. PAY-1 is canonically
+closed at `9ac3f0944fff65f013efd9c3a3e9b841022ce87f` (main CI #105 SUCCESS).
+The manifest dependencies are exactly
 `party, organization, reference, access`; approved Core utilities are infrastructure, not extra
-manifest dependencies. Payments ownership of future allocations/settlement/refunds does not
-implement or authorize them in PAY-1. Applied/unapplied/outstanding reads/UI are deferred.
+manifest dependencies. PAY-1 did not implement allocations. The separately accepted optional
+PAY-INT-1 composition now supplies PaymentAllocation and applied/unapplied/outstanding reads/UI;
+refund/reversal and bank-settlement workflows remain deferred.
 
 Optional invoice-allocation composition -> Billing public invoice contracts + Payments public
 allocation services. This requires both capabilities, but adds no Billing dependency to the base
 Payments manifest/startup/models/migrations. No unconditional Invoice FK in generic Payments core.
-Concrete optional reference/storage design is deferred to a separate allocation integration gate,
-not standalone PAY-1. No Invoice FK/import/selector/service call or Billing migration/startup
+Concrete optional reference/storage is defined by accepted ADR 0015 and implemented in the opt-in
+`payments_billing` app, not standalone PAY-1. No Invoice FK/import/selector/service call or Billing migration/startup
 dependency belongs to generic Payments. PAY-0 adds no runtime or dependency/package changes.
 Billing has no reverse import. Optional composition, not either module's base implementation,
-calls Accounting.
+calls Accounting. PAY-INT-1 is canonically closed at `a1079985a2ef5645dfed338e3e58af54f5242e1a`.
+The separately accepted ACC-INT-1 invoice and allocation Accounting compositions are canonically
+closed at `669936df432ec1bb12792ed8d31741fbb1b1287a` (main CI #130 attempt 2 SUCCESS).
+They consume owner public contracts/services; no reverse import or hard-dependency cycle is added.
 
 ### Accounting
 
