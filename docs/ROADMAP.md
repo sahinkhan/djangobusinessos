@@ -102,6 +102,12 @@ Exit gate: Sales/Procurement/Inventory can consume stable Party/Catalog contract
 
 ## Phase 2 — Commercial Core
 
+Current canonical status: **CANONICALLY CLOSED** at
+`0d4a14254889ba1ec06cfb16088009177991d8d8`. Main push CI #133 (run `38549126483`) succeeded
+on that exact SHA with 3,015 PostgreSQL tests; final exit matrix: 13 PASS / 0 FAIL / 0 NOT PROVEN.
+The acceptance-stage and earlier milestone records below are preserved historical checkpoints;
+their then-pending adoption wording does not override this current status.
+
 Current milestone — 2026-10-14: **FORMAL PHASE 2 CLOSURE COMPLETE FOR CANONICAL ADOPTION;
 CANONICAL ADOPTION PENDING.** The owner authorizes this documentation-only formal acceptance
 of the completed architecture/corrective series, not a main update or Phase 3 work.
@@ -571,12 +577,22 @@ Accounting and Inventory require transactional tests and duplicate-posting prote
 
 ## Phase 3 — People and Digital Commerce
 
-Deliver:
+Status: **CONTRACT PROPOSAL — NOT ACCEPTED / NOT IMPLEMENTED**. Local planning only, based on
+the canonical Phase 2 freeze above. HR and Ecommerce implementation are NOT AUTHORIZED.
 
-- HR basics: Employee, Department, Attendance, Leave
-- Ecommerce composition using Catalog + Sales + Inventory + Billing; Payments when separately approved
+Review [proposed ADR 0017](decisions/0017-phase3-people-digital-commerce-boundaries.md) and the
+[Phase 3 execution plan](exec-plans/active/PHASE_3_PEOPLE_DIGITAL_COMMERCE.md), including required
+owner decisions D1–D10, separate HR-0/HR-1 and ECOM-0/ECOM-1 gates and thirteen finite exit criteria.
 
-Do not create duplicate ecommerce product/variant/order/stock sources of truth.
+Proposed split:
+
+- Phase 3A: HR basics — Employee, Department, Attendance, Leave; not Payroll.
+- Phase 3B: Ecommerce composition — Catalog/Party/Sales reuse, optional Inventory availability;
+  Billing/Payments/Accounting effects only under separately approved integration contracts.
+
+The recommended first Commerce slice is staff-assisted draft-order checkout, subject to owner
+acceptance, not a silently approved public storefront. No duplicate product/variant/order/stock/
+invoice/payment/ledger authority. No runtime work, publication or Phase 4 start follows from this proposal.
 
 ---
 

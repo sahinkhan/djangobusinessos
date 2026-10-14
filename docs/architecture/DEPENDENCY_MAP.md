@@ -47,6 +47,26 @@ This graph is intentionally conservative. A module may use fewer hard dependenci
 
 Inventory, Accounting and other capabilities may be composed with these modules through optional integrations without becoming mandatory hard dependencies.
 
+## Proposed Phase 3 refinement — not accepted
+
+[ADR 0017](../decisions/0017-phase3-people-digital-commerce-boundaries.md) and the
+[Phase 3 plan](../exec-plans/active/PHASE_3_PEOPLE_DIGITAL_COMMERCE.md) propose these exact future
+direct manifests, subject to PH3-0/HR-0/ECOM-0 acceptance:
+
+```text
+hr        -> party, organization, reference, access
+ecommerce -> party, catalog, sales, organization, reference, access
+```
+
+The earlier conservative future Ecommerce graph is retained above as historical planning context,
+not proof of an installed module. The proposal removes Billing as a mandatory prerequisite for a
+draft Sales order, explicitly declares consumed Party/Core contracts and leaves Inventory as an
+optional read-only composition. Billing/Payments/Accounting checkout effects are deferred. Existing
+financial opt-in apps and all accepted owner dependencies remain unchanged. No reverse import from
+owners to HR/Ecommerce, no HR/Ecommerce dependency on one another, and no new runtime manifest or
+integration is introduced here. The proposed additive Sales batch-create API is Sales-owned and
+must be approved at ECOM-0; it must not import Ecommerce.
+
 ## Core dependencies
 
 Core apps may depend on lower-level shared utilities but must not import business modules.
