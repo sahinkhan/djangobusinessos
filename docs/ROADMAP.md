@@ -577,22 +577,34 @@ Accounting and Inventory require transactional tests and duplicate-posting prote
 
 ## Phase 3 — People and Digital Commerce
 
-Status: **CONTRACT PROPOSAL — NOT ACCEPTED / NOT IMPLEMENTED**. Local planning only, based on
-the canonical Phase 2 freeze above. HR and Ecommerce implementation are NOT AUTHORIZED.
+Status: **OWNER DECISIONS RESOLVED LOCALLY — FINAL UMBRELLA CONTRACT ACCEPTANCE PENDING**.
+ADR 0017 remains Proposed. Based on the canonical Phase 2 freeze above; implementation NOT AUTHORIZED.
 
 Review [proposed ADR 0017](decisions/0017-phase3-people-digital-commerce-boundaries.md) and the
-[Phase 3 execution plan](exec-plans/active/PHASE_3_PEOPLE_DIGITAL_COMMERCE.md), including required
-owner decisions D1–D10, separate HR-0/HR-1 and ECOM-0/ECOM-1 gates and thirteen finite exit criteria.
+[Phase 3 execution plan](exec-plans/active/PHASE_3_PEOPLE_DIGITAL_COMMERCE.md). Original proposal
+`15e68828300f40c84165c86317217024f6b9d66d` received the supplied independent structural audit
+FINAL PASS / Readiness A for owner-decision resolution, with zero candidate-owned P0–P3 findings.
+On 2026-10-14 the owner explicitly resolved OD-1–OD-12; final acceptance of the resolution contract
+requires a fresh independent audit. Original proposal/audit chronology remains in the ADR and plan.
 
-Proposed split:
+Owner-approved initial product scope:
 
-- Phase 3A: HR basics — Employee, Department, Attendance, Leave; not Payroll.
-- Phase 3B: Ecommerce composition — Catalog/Party/Sales reuse, optional Inventory availability;
-  Billing/Payments/Accounting effects only under separately approved integration contracts.
+- Phase 3A: stable Company/PERSON Employee, company-wide Department, optional current Employee
+  Branch, multiple completed attendance sessions with immutable revisions, full-calendar-day Leave.
+  Optional User association grants no authority; bounded HR PERSON projection retains Party ownership
+  and existing company-wide Party visibility. Self-service, rehire episodes and Payroll are deferred.
+- Phase 3B minimum: authenticated staff-assisted Cart/Checkout -> one atomic DRAFT SalesOrder and
+  all lines through a new public Sales owner service; explicit authorized staff-entered price.
+  Catalog + Sales composition retains Party/Core boundaries; Sales confirmation stays separate.
+- Deferred optional Commerce scope: Inventory display/projection/warehouse selection, Billing,
+  Payments and Accounting effects, public/guest/customer storefront admission. None is required for
+  initial Phase 3B completion. Future compositions require their own approved owner contracts.
 
-The recommended first Commerce slice is staff-assisted draft-order checkout, subject to owner
-acceptance, not a silently approved public storefront. No duplicate product/variant/order/stock/
-invoice/payment/ledger authority. No runtime work, publication or Phase 4 start follows from this proposal.
+The owner explicitly clarifies the previous roadmap wording: Billing is not mandatory for minimum
+Phase 3B. No duplicate product/variant/order/stock/invoice/payment/ledger authority. Thirteen bounded
+exit criteria require both HR and minimum Ecommerce implementations accepted. HR-0 and ECOM-0 must
+freeze detailed technical contracts after final umbrella acceptance; HR-0/ECOM-0/HR-1/ECOM-1 are
+NOT STARTED. Runtime, publication, canonical adoption and Phase 4 remain separately authorized.
 
 ---
 

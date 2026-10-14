@@ -20,6 +20,11 @@ consumer -> dependency
 
 ## Initial hard-dependency graph
 
+The graph includes future module declarations, not proof of installed HR/Ecommerce. Phase 3's
+owner-resolved refinement below governs its future HR/Ecommerce manifest direction; final umbrella
+acceptance remains pending. The older Ecommerce/Billing allowance is retained here as original
+planning history and does not make Billing mandatory for initial Phase 3B.
+
 ```text
 organization -> common, reference
 audit -> common, identity, organization
@@ -47,11 +52,11 @@ This graph is intentionally conservative. A module may use fewer hard dependenci
 
 Inventory, Accounting and other capabilities may be composed with these modules through optional integrations without becoming mandatory hard dependencies.
 
-## Proposed Phase 3 refinement — not accepted
+## Phase 3 owner-resolved dependency policy — final contract acceptance pending
 
 [ADR 0017](../decisions/0017-phase3-people-digital-commerce-boundaries.md) and the
-[Phase 3 plan](../exec-plans/active/PHASE_3_PEOPLE_DIGITAL_COMMERCE.md) propose these exact future
-direct manifests, subject to PH3-0/HR-0/ECOM-0 acceptance:
+[Phase 3 plan](../exec-plans/active/PHASE_3_PEOPLE_DIGITAL_COMMERCE.md) record the twelve owner
+decisions at the 2026-10-14 resolution checkpoint. Future direct manifest policy is resolved:
 
 ```text
 hr        -> party, organization, reference, access
@@ -59,13 +64,27 @@ ecommerce -> party, catalog, sales, organization, reference, access
 ```
 
 The earlier conservative future Ecommerce graph is retained above as historical planning context,
-not proof of an installed module. The proposal removes Billing as a mandatory prerequisite for a
-draft Sales order, explicitly declares consumed Party/Core contracts and leaves Inventory as an
-optional read-only composition. Billing/Payments/Accounting checkout effects are deferred. Existing
-financial opt-in apps and all accepted owner dependencies remain unchanged. No reverse import from
+not proof of an installed module. OD-11 removes Billing as a mandatory prerequisite for minimum
+Phase 3B, explicitly declares consumed Party/Core contracts, and OD-10 defers Inventory display
+entirely from initial ECOM-1. OD-12 defers Payments; Accounting remains outside checkout by accepted
+owner architecture. These are approved product policies, not final ADR acceptance or implementation
+authority. Existing financial opt-in apps and all accepted owner dependencies remain unchanged. No reverse import from
 owners to HR/Ecommerce, no HR/Ecommerce dependency on one another, and no new runtime manifest or
-integration is introduced here. The proposed additive Sales batch-create API is Sales-owned and
-must be approved at ECOM-0; it must not import Ecommerce.
+integration is introduced here. OD-9 requires the additive public Sales batch-create API; its precise
+technical contract must freeze at ECOM-0 and it must not import Ecommerce.
+
+Future optional/deferred directions (none implemented or authorized by this checkpoint):
+
+```text
+Ecommerce Inventory adapter -> Inventory bounded owner projection
+Sales/Ecommerce Billing integration -> Sales public source + Billing public creation contract
+payment-provider adapter -> Payments public receipt/payment contract
+attendance-device adapter -> HR public attendance service
+```
+
+Existing accepted opt-in apps remain `payments_billing`, `accounting_billing` and
+`accounting_payments_billing` with their unchanged owner dependencies. No HR/Ecommerce reverse
+dependency, stock field, daily attendance authority or generic integration framework is added.
 
 ## Core dependencies
 
@@ -209,11 +228,16 @@ party -> hotel
 
 ## Ecommerce rule
 
-Ecommerce must reuse Catalog, Sales and Billing rather than create separate authoritative copies of products, orders or invoices.
+For owner-resolved initial Phase 3B, Ecommerce reuses Catalog/Party/Sales and owns Cart interaction
+and immutable conversion binding only. Minimum conversion is Cart/Checkout -> DRAFT SalesOrder;
+Billing is not mandatory. Future invoice composition must use Billing's public owner contract and
+never create a separate authoritative invoice. ADR 0017 remains Proposed pending final acceptance.
 
 Payment processing, when separately approved, consumes Payments; it is not supplied by Billing.
 
-Inventory availability/reservation is an optional integration so Ecommerce can also support non-stock/service/digital scenarios.
+Inventory display/projection/warehouse selection and reservations are deferred from initial ECOM-1.
+A future separately approved adapter may use a bounded Inventory projection; Inventory remains
+sole stock authority. No stock display or finance integration is needed to pass minimum Phase 3B.
 
 ## Optional integration examples
 

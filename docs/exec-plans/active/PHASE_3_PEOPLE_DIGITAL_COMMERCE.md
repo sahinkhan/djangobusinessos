@@ -1,8 +1,9 @@
 # Phase 3 — People and Digital Commerce
 
-Status: **PROPOSED — NOT ACCEPTED / NOT IMPLEMENTED**.
+Status: **OWNER DECISIONS RESOLVED LOCALLY — FINAL UMBRELLA CONTRACT ACCEPTANCE PENDING**.
+ADR 0017 remains Proposed; implementation NOT AUTHORIZED.
 
-Date: 2026-10-14. Gate: PH3-0 local architecture proposal.
+Date: 2026-10-14. Gate: PH3-0 owner-decision resolution checkpoint.
 
 Canonical base: `0d4a14254889ba1ec06cfb16088009177991d8d8`.
 Planning branch: `phase3-people-commerce-contract`.
@@ -10,10 +11,12 @@ Umbrella: [ADR 0017](../../decisions/0017-phase3-people-digital-commerce-boundar
 
 ## 1. Authority, evidence and current inventory
 
-This document proposes future contracts. It authorizes no model, migration, manifest, permission,
-service, UI or runtime implementation. HR and Ecommerce are both NOT STARTED. No owner decision
-below is accepted merely because a recommendation is specific. No independent Phase 3 audit has
-been performed in this planning task.
+This document records twelve explicitly approved owner policies and proposes their remaining
+technical contracts. It authorizes no model, migration, manifest, permission, service, UI or runtime
+implementation. HR-0, ECOM-0, HR-1 and ECOM-1 are NOT STARTED. The supplied independent architecture
+audit applies to original proposal `15e68828300f40c84165c86317217024f6b9d66d`; the resolution commit
+requires a fresh independent final umbrella audit. This documentation task does not claim to be
+that independent audit or record final umbrella acceptance.
 
 Phase 2 is CANONICALLY CLOSED at the base above. Exact-head main push CI #133 / run `38549126483`
 passed, including 3,015 PostgreSQL tests (zero failures/skips); the Phase 2 final exit matrix is
@@ -56,44 +59,90 @@ inspection of HR/Ecommerce/template paths and employee/attendance/department/che
 filename patterns found no implementation prototype in locally reachable refs. This is not a claim
 about un-fetched/deleted remote history or untracked external backups. No historical code is adopted.
 
-## 2. Tracks and owner decisions
+## 2. Tracks, audit chronology and resolved owner decisions
 
-Phase 3A is reusable People/HR foundation. Phase 3B is a separately gated commerce composition.
-Their common constraints are derived from accepted architecture; their business choices below are
-**OWNER DECISION REQUIRED**. Recommendations make the proposal reviewable, not accepted.
+Phase 3A is reusable People/HR foundation. Phase 3B is independently gated staff-assisted Commerce.
+Accepted Foundation constraints remain authoritative. The owner resolved all twelve product-policy
+choices in the 2026-10-14 resolution instruction; final umbrella acceptance is still pending.
 
-| ID | Recommended choice for review | Alternative / impact / required gate |
+### Preserved proposal and supplied independent audit
+
+Original proposal `15e68828300f40c84165c86317217024f6b9d66d` is one documentation commit above
+the canonical Phase 2 base. Its ten D1–D10 recommendations were unresolved at that time. The supplied
+fresh independent verdict is **FINAL PASS — PHASE 3 UMBRELLA ARCHITECTURE APPROVED FOR OWNER-DECISION
+RESOLUTION**, **Readiness A**, candidate-owned **P0: 0 / P1: 0 / P2: 0 / P3: 0**. That approves
+structure for owner resolution; it does not accept the final resolution contract or authorize runtime.
+
+The historical register is reconciled below, rather than rewritten as though policy had always
+been settled. OD-5 explicitly supersedes the one-per-day attendance recommendation. OD-10 explicitly
+defers the proposed optional Inventory panel. The owner instruction's enumerated decisions govern.
+
+| Historical recommendation | Original proposal position | Current resolution |
 | --- | --- | --- |
-| D1 | One Employee per (Company, person Party), immutable Party binding; optional User link is metadata only; no self-service | Multiple employments/rehire history and User self-service need another identity/lifecycle contract; HR-0 must accept cardinality |
-| D2 | HR fields restricted by HR permissions, but linked Party names/contacts retain existing company-wide Party visibility; no sensitive medical/payroll data | If employee identity/contact confidentiality is required, HR-1 is blocked pending an explicitly approved Party-owner access extension; do not duplicate contacts or silently change ADR 0004 |
-| D3 | Company-wide Department; optional current Employee Branch; HR branch-context filtering, company-wide context retained | Mandatory branch confinement cannot be derived from current Company grants; needs separate Access contract. Department hierarchy/multiple memberships deferred |
-| D4 | One completed attendance interval per Employee/local start date; explicit HR-owned append-only revisions and void correction | Multi-session punch clock/open intervals/shift model changes schema and duplicate rules; HR-0 must choose |
-| D5 | Full inclusive calendar-day leave, company-defined type labels without balances, staff requests and HR decisions; no self-approval | Half days, work-calendar entitlements and multi-stage approval require a later contract; approval/cancellation authority and overlap policy below need HR-0 acceptance |
-| D6 | Authenticated staff-assisted Commerce; Party customer without required User; no public/guest session | A public shop needs a dedicated customer identity/admission contract, not ERP Company access; ECOM-0 must confirm this limited delivery meets its product goal |
-| D7 | Explicit persisted staff-entered unit price, no automatic price discovery; separate price permission | Self-service price offers require a small owner-approved Sales price-source contract before exposure; no Catalog pricing engine is assumed |
-| D8 | One cart converts to one Sales DRAFT through a new bounded Sales public batch-create API; confirmation stays separate | Automatic confirmation changes compound permissions/retry and validation; Sales-owner API extension and retention of converted carts must be accepted at ECOM-0 |
-| D9 | Company-only channel, no Store model/branch/warehouse allocation; optional permissioned Inventory balance display at an explicitly selected warehouse | Branch commerce or Store configuration requires a concrete need and a Sales branch-semantics decision; stock display is never a promise |
-| D10 | No invoice, payment, allocation or Accounting effect during checkout | Financial composition is a later independently approved gate using existing owners; no implicit acceptance from Payments being installed |
+| D1 | Employee/Party cardinality plus optional non-authorizing User | RESOLVED by OD-1 and OD-2 |
+| D2 | Retain Party visibility; additional confidentiality needs another contract | RESOLVED by OD-3, adding mandatory bounded HR PERSON projection |
+| D3 | Company-wide Department and optional current Employee Branch | RESOLVED by OD-4 |
+| D4 | One completed interval per Employee/local start date | SUPERSEDED and RESOLVED by OD-5: multiple completed sessions per day |
+| D5 | Full-day leave; technical approval/retry mechanics proposed | POLICY RESOLVED by OD-6; technical details freeze at HR-0 |
+| D6 | Staff-assisted audience without public/guest access | RESOLVED by OD-7 |
+| D7 | Explicit authorized staff price entry | RESOLVED by OD-8 |
+| D8 | One Cart -> one Sales DRAFT through public batch API | POLICY RESOLVED by OD-9; API details freeze at ECOM-0 |
+| D9 | Company-only channel with possible optional stock panel | RESOLVED: company scope retained; OD-10 defers stock display entirely |
+| D10 | No checkout financial effects | RESOLVED by OD-11 and OD-12; Accounting boundary reaffirmed |
 
-No runtime work may start with an unresolved decision that affects its schema/API or admission.
-HR-0 resolves D1–D5; ECOM-0 resolves D6–D10 and the Sales batch API. Rejected recommendations must
-be revised before implementation. PH3-0 review does not itself grant either implementation authority.
+### Authoritative product-policy register — 12/12 resolved
+
+| ID / state | Owner-approved policy | Technical detail still to freeze |
+| --- | --- | --- |
+| OD-1 — RESOLVED | One stable Employee per Company + same-company PERSON Party; no duplicated name/contact identity. Company-unique immutable number, no reassignment/reuse, simultaneous duplicate employments or rehire episodes | HR-0: exact Employee fields/number format and generation |
+| OD-2 — RESOLVED | Optional User association is authentication linkage only; no inferred identity/grants/self-service. One User cannot ambiguously represent multiple active Employees in one Company | HR-0: exact FK/cardinality mechanics consistent with that rule |
+| OD-3 — RESOLVED | Existing company-wide Party visibility retained. HR uses bounded PERSON identity projection and avoids unnecessary contacts/addresses; additional confidentiality needs separate Party-owner access/privacy contract | HR-0: exact identity projection/selector tests, with no Party authorization redesign |
+| OD-4 — RESOLVED | Company-wide Department without Branch/hierarchy/position/grade/cost-center engine; one optional current Employee Branch, no concurrent multi-branch memberships; historical scope may be frozen | HR-0: fields and branch transfer mechanics under existing Access rules |
+| OD-5 — RESOLVED | Zero/one/multiple completed attendance sessions per local day; aware intervals/cross-midnight, frozen timezone/Branch, overlap denial, immutable revisions and safe retries. No open punch/shift/roster/break/device engine | HR-0: session/request identity, revision schema, exact overlap/timezone/DST/locks |
+| OD-6 — RESOLVED | Full calendar-day Leave; bounded draft/submit/approve/reject/cancel lifecycle, overlap/attendance checks, timezone, retries and approval audit. No partial/hourly leave, entitlement/accrual/payroll/workflow | HR-0: exact fields, transitions/retry payloads, self-approval definition |
+| OD-7 — RESOLVED | Authenticated internal staff-assisted Commerce; operator has Company and exact Ecommerce/Sales permissions and uses existing same-company customer Party. No public/guest/customer login/registration | ECOM-0: bounded customer projection and precise action admission |
+| OD-8 — RESOLVED | Authorized staff-entered Cart price is a commercial instruction; Sales owns converted line snapshots. Browser/client/customer input alone confers no price authority; no generic pricing engine | ECOM-0: exact price permission and Currency/precision policy |
+| OD-9 — RESOLVED | Checkout atomically creates one DRAFT SalesOrder and all lines through a new public Sales service; confirmation separate. Cart lock + permanent CheckoutBinding + canonical input/revision + one outer transaction deduplicate conversion | ECOM-0: API signature/snapshots/locks, canonical encoding, equality, uniqueness/collision recovery |
+| OD-10 — RESOLVED | Initial ECOM-1 has no Inventory display, projection API, warehouse selection, ATP/reservation/backorder/allocation or stock storage. Inventory remains sole stock authority | Future separately approved bounded Inventory adapter; no current ECOM-0 prerequisite |
+| OD-11 — RESOLVED | Billing and Sales-to-Billing integration are not required for minimum Phase 3B; no automatic Invoice | Future separately gated Sales/Ecommerce/Billing composition |
+| OD-12 — RESOLVED | Payments collection/gateways/receipt/allocation/payment-status functionality deferred from ECOM-1 | Future separately approved adapter consuming Payments public contracts |
+
+Accounting's no-direct-write rule is derivable accepted architecture: minimum checkout has no
+Invoice/Payment/Allocation/Journal effect. No owner policy remains unresolved. Detailed schemas,
+wire contracts and permission mechanics below remain technical proposals, not runtime authorization.
+
+### Required detailed contract gates — neither started
+
+**TECHNICAL CONTRACT DETAIL — TO BE FROZEN AT HR-0:** exact Employee fields, number format/generation,
+User FK/cardinality, status transitions, Branch transfers, Department and LeaveType fields; Attendance
+session/request identity, AttendanceRevision schema, overlap algorithm, timezone/DST rules, retry
+keys and reference lock order; LeaveRequest fields, transition matrix, self-approval definition and
+Attendance/Leave conflict rules; exact twelve HR permissions, audit vocabulary, HTTP/UI and alias.
+
+**TECHNICAL CONTRACT DETAIL — TO BE FROZEN AT ECOM-0:** Cart fields/status/revision, CartLine fields,
+Currency/price permission, Variant eligibility, bounded customer Party projection, CheckoutBinding
+fields, canonical encoding/retry equality, one-Cart/one-order uniqueness, locks/final checks,
+Sales batch signature/snapshots/rollback/collision behavior, registry/RBAC, selected alias and HTTP/UI.
+Inventory display and financial compositions are excluded from initial ECOM-1, not prerequisites.
 
 ## 3. Proposed HR ownership and persistence
+
+**TECHNICAL CONTRACT DETAIL — TO BE FROZEN AT HR-0.** Proposed field/bound/mechanical detail below
+must implement OD-1–OD-6; it cannot reintroduce one-per-day attendance or reopen approved policy.
 
 All HR records have UUIDs, immutable Company ownership and aware server timestamps. Reference
 identities are protected from deletion while referenced. No payroll amount, duplicated personal
 name/email/phone/address, tenant field or client-specific branch logic. Proposed string bounds use
 existing conventions: codes/numbers 32, names 160, reasons 2,000 characters; required text trimmed
 and nonblank, optional reason is empty string, optional references/dates are null. HR-0 must freeze
-these bounds along with D1–D5; this table is not a created migration.
+these technical bounds; this table is not a created migration.
 
 | HR-owned record | Proposed minimum facts and authority |
 | --- | --- |
 | Department | Company, immutable normalized uppercase code unique per company, name, `is_active`, edit revision; no parent or Branch. One company-wide department may serve multiple branches |
 | Employee | Immutable company-unique normalized employee number and required person Party; optional User, Department and Branch; `ACTIVE`/`ENDED`, joining date, nullable leaving date and edit revision. No duplicated Party contact fields |
-| Attendance | Immutable Employee/company, company-local business date, Branch-at-recording and IANA timezone snapshot; unique (company, employee, business_date). Identity container, not mutable worked-hours balance |
-| AttendanceRevision | Attendance/company, unique increasing integer revision, aware check-in/check-out, `RECORDED`/`VOID`, correction reason, actor, request UUID. Revision 1 is original; greatest revision is current authority; all revisions append-only |
+| Attendance | Stable UUID session identity, immutable Employee/company, Branch-at-recording and IANA timezone snapshot, recording request identity. Multiple sessions per local date; no unique Employee/date constraint and no mutable daily total. Exact identity/field mechanics freeze at HR-0 |
+| AttendanceRevision | Attendance/company, unique increasing integer revision, aware check-in/check-out, `RECORDED`/`VOID`, correction reason, actor, request UUID. Revision 1 is original; highest valid revision is current effective interval/void state; earlier revisions immutable and all revisions append-only |
 | LeaveType | Company, immutable unique code, name, activity and edit revision only. Labels supplied by authorized HR, no seeded legal entitlement/medical category/paid-day policy |
 | LeaveRequest | Company, Employee, Branch-at-request, IANA timezone-at-request, type, inclusive start/end dates, reason, lifecycle, requester actor, optional decision actor/time/reason, cancellation actor/time/reason, request UUID, edit revision |
 
@@ -106,8 +155,10 @@ invented jurisdictional leave categories; it has no accrual, balance, workflow o
 Creation requires an active same-company person Party. One Party may be a customer, supplier and
 employee in the same Company without identity duplication. A person in another Company has a
 separate company-owned Party/Employee; do not infer cross-company identity by name/email.
-Optional User is an existing active identity with verified access to this Company on assignment;
-at most one Employee per (Company, non-null User). No automatic User creation, email matching,
+Optional User is an existing authentication identity; proposed assignment validation verifies activity
+and Company access. OD-2 requires unambiguous active Employee association within Company. Exact FK,
+uniqueness and inactive-Employee mechanics are HR-0 technical details, not a stronger all-history
+cardinality frozen here. No automatic User creation, email matching,
 credential copy, Company grant or role grant. HR permission does not grant Identity administration.
 
 Employee number/company/Party cannot be reassigned. Optional User linkage may be explicitly
@@ -117,6 +168,13 @@ name/contact owner; changes are made through Party's existing services, not HR d
 Later Party inactivity/type change does not rewrite history. New employment/attendance/leave
 actions revalidate current person eligibility; historical reads/corrections retain the original
 reference and may explain current inactivity. This does not make Party type immutable at rest.
+
+Under OD-3, HR screens and selectors must read a bounded PERSON identity projection (scoped Party
+UUID/type/display identity and only fields required by the accepted HR screen). They must not
+unnecessarily materialize ContactMethod or Address, and `party_detail()` with its contact/address
+prefetch is not the HR identity projection. This minimizes HR data loading; existing company-wide
+Party screens/CRUD retain their visibility. Additional employee contact confidentiality requires
+a separately approved Party-owner contract, never contact copies in HR.
 
 An ACTIVE Employee has no leaving date; proposed joining date cannot be in the future on creation.
 Ending employment sets leaving date >= joining date, no later than company-local today. Historical
@@ -145,20 +203,25 @@ from an authorized company-wide context. No bypass to activate an inactive selec
 
 ### Attendance contract
 
-Staff-operated `record_attendance` submits a completed positive-duration interval. Both instants
-are aware; duration <= 24 elapsed hours; company-local start date equals Attendance business date.
+OD-5 permits zero, one or multiple completed sessions on a local date. Staff-operated
+`record_attendance` submits a completed positive-duration interval with aware start/end instants.
+Session/request identity, elapsed-duration bounds and exact date derivation are HR-0 technical
+details; the original 24-hour duration proposal is not a daily uniqueness rule.
 Cross-midnight is allowed; no shift inference or automatic split. The occupied interval is half-open
 `[check_in, check_out)`; an exact midnight checkout does not occupy the next day. Its occupied dates
-must fall within employment eligibility. One-per-start-date uniqueness is deliberate, not a full punch clock.
+must fall within employment eligibility. No unique Employee/date constraint or one-session-per-day limit.
 Reject overlapping recorded intervals for one Employee even across adjacent dates/branches.
 
 Capture company timezone and branch on first recording; later timezone/branch changes do not
-relabel its date. Corrections interpret the original timezone, preserve the date identity and
-validate interval overlap. Wrong-date entry is explicitly voided, then recorded under the correct
-date; a voided date may be reinstated only by a correction on its existing identity. No hard delete.
+reinterpret its frozen timezone/branch. A session's date classification is derived from its effective
+revision under that timezone; it is not the session or retry identity. Corrections preserve session
+identity and immutable prior revisions while revalidating overlap/employment/leave conflicts. Exact
+date-changing correction/void/reinstatement mechanics freeze at HR-0. No hard delete.
 Each correction requires expected revision + request UUID + nonblank reason, and appends one
 revision. Identical retry returns that revision; same key/different payload conflicts. Record retry
-uses Employee/date + request UUID and canonical payload; another distinct recording conflicts.
+uses session/request identity and canonical payload under HR-0's frozen key contract. A different
+non-overlapping session on the same date is allowed; an exact request retry has one effect, reused
+key with different canonical input conflicts. No request key is merely Employee/date.
 Sequence, not wall-clock timestamp order, establishes correction order.
 
 Reject new naive/ambiguous/nonexistent local instants unless a separately accepted explicit aware
@@ -168,7 +231,8 @@ server created/updated timestamps is proof of causal order. No overtime/payroll 
 
 ### Leave contract
 
-Recommended explicit lifecycle:
+OD-6 accepts full-calendar-day leave with the following bounded lifecycle. Exact transition/retry
+payloads and self-approval semantics are **TECHNICAL CONTRACT DETAIL — TO BE FROZEN AT HR-0**:
 
 ```text
 DRAFT -> SUBMITTED -> APPROVED | REJECTED
@@ -181,7 +245,9 @@ leave.request. Submission freezes Employee/type/dates/reason. Inclusive dates ar
 not UTC instants; no weekends/holiday deduction, partial days, quotas or salary consequence. Dates
 must be ordered and inside employment dates; type must be active at submit/approve. Ended or
 inactive identity cannot gain prospective leave. Approval is HR authority, not inferred manager
-hierarchy; the requester actor cannot approve their own request, including a superuser. Rejection
+hierarchy. The original proposed self-approval rule excludes the requester actor, including a
+superuser; HR-0 must freeze the precise self-approval definition consistently with the staff-request
+contract, rather than treating this preliminary definition as already technically accepted. Rejection
 requires decision reason; cancellation requires reason and leave.cancel. Cancelling APPROVED also
 requires leave.approve. Terminal retries reauthorize and require the same decision payload; another
 decision/reason conflicts, no duplicate success audit or timestamp change.
@@ -201,6 +267,9 @@ historical evidence. Reject/approve/cancel serialize on authoritative request st
 date/reason change requires cancellation and a new request, not silent historical editing.
 
 ## 4. Proposed HR permission and audit contracts
+
+**TECHNICAL CONTRACT DETAIL — TO BE FROZEN AT HR-0:** exact twelve codes, action/response mapping
+and audit vocabulary below. No permission is registered by owner-policy resolution.
 
 Future module code/version: `hr`, `0.1.0`. Exact proposed permission vocabulary:
 
@@ -237,18 +306,21 @@ No audit on every read, true no-op or successful retry. Audit failure rolls back
 
 ## 5. Proposed Ecommerce ownership, customer and pricing
 
-The recommended minimum is an authenticated internal assisted-order channel, not an anonymous
-internet shop. All operators have their own active User, Company grants and exact permissions.
+OD-7 accepts the authenticated internal staff-assisted channel. Public/guest/customer self-login and
+registration are outside initial ECOM-1. All operators have their own active User, Company grants and exact permissions.
 The selected customer is an existing active same-company Party with `is_customer=True`, person
 or organization; no customer User is required. Customer creation happens explicitly through Party,
 not an automatic duplicate match by email/phone. No guest/session/customer-account table, password,
 shipping address copy, delivery instruction or Store model in this slice. Those are later contract
 choices, not hidden fields inside notes. A company-scoped browse screen is the initial channel.
 
-Company-only commerce requires a company-wide context with branch/warehouse unset. An optional
-stock display supplies an explicitly selected warehouse to the Inventory adapter with verified
-warehouse scope. The Sales order has no Branch field; a cart must not pretend to retain commercial
-branch accounting or fulfillment ownership. Warehouse selection never becomes allocation.
+Company-only commerce uses the existing Company boundary; the proposed HTTP/service context has
+branch/warehouse unset, with exact admission mechanics frozen at ECOM-0. OD-10 excludes warehouse
+selection and all Inventory display from this slice. The Sales order has no Branch field; a cart
+must not pretend to retain commercial branch accounting or fulfillment ownership.
+
+**TECHNICAL CONTRACT DETAIL — TO BE FROZEN AT ECOM-0:** exact Cart/Line/Binding schema, bounds,
+Currency and projection/permission mechanics below, under resolved OD-7–OD-12.
 
 | Proposed Ecommerce record | Why owned here / lifecycle / retention |
 | --- | --- |
@@ -262,8 +334,10 @@ and eventual deletion require a later retention policy; initial scope supports a
 CheckoutSession or second customer-order projection table is necessary; status is a bounded read
 through the Sales public selector plus the immutable binding.
 
-Catalog has no approved selling-price authority. Proposed D7 therefore uses explicit **staff**
-price entry under `ecommerce.cart.price`, not a public browser-supplied price. Stored price is a draft
+Catalog has no approved selling-price authority. OD-8 accepts explicit authorized **staff** price
+entry; the proposed narrow `ecommerce.cart.price` permission freezes at ECOM-0. Staff UI input is
+validated/authorized and persisted by the service; a raw browser or customer value is never itself
+price authority. Stored price is a draft
 commercial instruction; Sales owns the resulting order price/snapshot. Cart change permissions do
 not grant price change. Never default a missing price to zero or derive it from stock/UoM. Zero
 explicitly entered under price permission is allowed if Sales allows it. Quantity/price use the
@@ -280,6 +354,10 @@ changed. Price changes require explicit cart review, never a hidden refresh. A p
 offer remains a genuine gap.
 
 ## 6. Checkout to Sales: proposed public seam and retry
+
+OD-9 requires the new atomic public Sales owner operation and a permanent CheckoutBinding.
+**TECHNICAL CONTRACT DETAIL — TO BE FROZEN AT ECOM-0:** exact signature, batch fields/snapshots,
+canonical encoding/revision equality, uniqueness, locks, final checks and rollback/collision rules.
 
 Existing `create_sales_order` and `add_sales_order_line` perform owner validation, snapshots and
 audits, but repeatedly calling them without a reviewed all-reference lock plan is not sufficient
@@ -337,39 +415,37 @@ authorized Sales action, with its own validation, race handling and audit. No st
 
 ## 7. Optional capabilities, authority and admission
 
-| Capability | Initial proposal | Unavailable / deferred meaning |
+| Capability | Owner-resolved initial ECOM-1 scope | Future separately gated relationship |
 | --- | --- | --- |
-| Inventory | Optional read-only balance panel via public `balances_for_warehouse`, preserving posted UoM identity; explicit same-company warehouse and `inventory.balance.view` | Not installed, missing/disabled UI registration, denied or incompatible evidence => unavailable, not zero/in-stock. Negative/zero remains literal ledger balance; no ATP, guarantee or reservation |
-| Billing | No checkout invoice; no direct Invoice persistence/import in base Ecommerce | Future Sales-to-Billing integration needs its own idempotency and source-basis contract; standalone Billing create is not that seam |
-| Payments | No receipt or allocation at checkout, no external-result ingestion | Future payment-provider/receipt flow separately authorized; never treat order/receipt existence as paid or settled |
+| Inventory | OD-10: display/projection/warehouse selection entirely deferred; no Inventory calls or stock quantity storage in base Ecommerce | Future adapter -> bounded Inventory public projection after separate approval; no ATP/reservation promise |
+| Billing | OD-11: no invoice or Sales-to-Billing integration required for initial completion; no direct Invoice persistence/import | Future integration -> public Sales source + Billing creation contract with its own idempotency/source basis |
+| Payments | OD-12: receipt/allocation/collection/payment status/providers deferred | Future payment-provider adapter -> Payments public receipt/payment contract under separate approval |
 | Accounting | No Ecommerce call/write to ledger; no new dependency | Future explicit approved Billing/Payments Accounting outcome services retain control; no duplicated effect |
 
-Inventory's scalar `stock_balance` returns a Decimal, not an availability promise or guaranteed current
-Catalog UoM. The optional UI must use owner-returned posted UoM/quantity evidence or report unavailable;
-do not relabel a historical balance with a changed Product.default_uom. No cross-company warehouse
-enumeration. The current `balances_for_warehouse` materializes warehouse history; it is not a bounded
-page API. If that optional panel is included, ECOM-0 must approve a small Inventory-owned bounded
-projection (including posted UoM and an explicit no-history result) before implementation, or defer
-the panel. Do not load all warehouse history to serve a product page or invent a UoM for no history.
-In a Python service, registry state does not override Inventory RBAC; HTTP display
-admission checks module availability separately. No stock check is a checkout acceptance precondition.
+Inventory remains the sole posted stock authority. Its scalar `stock_balance` is not an availability
+promise, and current `balances_for_warehouse` is not a bounded page API. These observations justify
+OD-10's deferral; they create no API or panel prerequisite for ECOM-0/ECOM-1. A future separately
+approved adapter must preserve posted UoM, complete evidence and explicit unavailable semantics,
+without inventing stock or availability. Initial checkout makes no stock assertion or stock check.
 
-Future direct manifest graph, subject to ADR 0017 acceptance:
+Owner-resolved umbrella direct manifest policy; ADR 0017 final acceptance and manifests still pending:
 
 ```text
 hr (0.1.0)        -> party, organization, reference, access
 ecommerce (0.1.0) -> party, catalog, sales, organization, reference, access
 
 existing: sales -> party, catalog, organization, reference, access
-optional read: Ecommerce Inventory adapter -> inventory public selectors
-deferred: Sales/Billing composition; Ecommerce payment-provider composition
+future deferred: Ecommerce Inventory adapter -> Inventory bounded owner projection
+future deferred: Sales/Ecommerce Billing integration -> Sales source + Billing creation contracts
+future deferred: payment-provider adapter -> Payments public receipt/payment contract
+future deferred: attendance-device adapter -> HR public attendance service
 existing optional: payments_billing -> payments, billing
 existing optional: accounting_billing -> accounting, billing
 existing optional: accounting_payments_billing -> accounting, accounting_billing, payments_billing
 ```
 
-The stock read adapter is explicitly wired only when installed; no optional FK/migration or eager
-Inventory import in base Ecommerce. No generic adapter framework. Base HR and Commerce bootstrap
+No Inventory adapter, optional FK/migration, warehouse control or eager Inventory import belongs
+to initial ECOM-1. Future adapters require separate approval; no generic adapter framework. Base HR and Commerce bootstrap
 without Inventory/Billing/Payments/Accounting or each other. Existing owners bootstrap without both.
 Core common/identity/audit/time/database/registry are allowed infrastructure, not new business manifest
 dependencies. No reverse owner import, cycle, dynamic plugin installer or auto dependency enablement.
@@ -400,9 +476,9 @@ superuser namespace handling remains Core-owned. Do not copy an older pre-final-
 | Mutation family | Authoritative serialization and retry identity |
 | --- | --- |
 | Department / LeaveType create/update/activity | Company -> existing setup row if any; company/code DB uniqueness. Duplicate create conflicts; response-loss recovery is an authorized lookup, not certification of unchanged original values. Update uses expected revision; no-op no audit |
-| Employee create | Company -> referenced Department/Branch/Party and optional User in a documented stable order -> final authority; unique company/number, company/Party, non-null company/User. Duplicate create conflicts; authorized lookup by number recovers identity, not a historical-create receipt |
+| Employee create | Company -> referenced Department/Branch/Party and optional User in HR-0's stable order -> final authority; unique company/number and company/Party, with User mechanics implementing OD-2. Duplicate create conflicts; authorized lookup recovers identity, not a historical-create receipt |
 | Employee update/end/association | Company -> Employee -> affected reference set; expected revision rejects stale writes. Recheck attendance/leave before date/end changes; no inferred history rewrite |
-| Attendance record | Company -> Employee -> Attendance if present -> revisions. Natural Employee/date uniqueness plus request UUID. Check cross-date overlap/approved leave under Employee lock; full failure rollback |
+| Attendance record | Company -> Employee -> session/request identity if present -> revisions. HR-0 freezes request uniqueness/canonical comparison; no Employee/date uniqueness. Same-day non-overlapping sessions allowed; check overlap/approved leave under Employee lock; full failure rollback |
 | Attendance correction | Company -> Employee -> persisted Attendance -> latest revision; expected revision and unique request UUID. Append exactly once; reject stale/reused-different input and in-memory parent substitution |
 | Leave create/edit/submit | Company -> Employee -> existing Leave -> type; unique company/request UUID for create. Duplicate create returns conflict with authorized identity lookup, not an unchanged-history receipt. Expected revision for edit/submit. Range conflicts checked across company/Employee regardless branch, not only visible list |
 | Leave approve/reject/cancel | Company -> Employee -> authoritative Leave/type -> final authority; exact request/status/decision payload retry. Recheck overlap, attendance, employment and self-approval rule after waits |
@@ -442,10 +518,11 @@ No success event on conflict, validation/RBAC failure, rollback or exact retry.
 
 ## 9. UI and explicit exclusions
 
-HR: Employee list/detail/create/edit/end; Department list/manage; daily attendance list/record and
+HR: Employee list/detail/create/edit/end; Department list/manage; completed-session attendance list/record and
 correction history; Leave list/detail/draft/request/submit/approve/reject/cancel and type setup.
 Commerce: authenticated company catalog browse, cart and staff price entry, checkout review, bound
-Sales confirmation/status screen. No public customer portal is promised by this recommended slice.
+Sales conversion-confirmation/status screen (conversion confirmation does not mean SalesOrder
+confirmation). OD-7 excludes public/customer/guest admission; no Inventory panel or warehouse choice.
 Existing Django templates/Tailwind/HTMX/Alpine shell remains. GET-only safe navigation, bounded
 list-results swaps, query-preserving 50-row pagination, full-page/no-JS fallback; mutations remain
 normal CSRF-protected POST. Action forms/buttons require exact permissions and stale company forms
@@ -464,8 +541,8 @@ Commerce exclusions: pricing/pricelist/promotions/coupons/tax engines, shipping 
 integration, multi-vendor marketplace, returns/exchanges, refunds, subscriptions, loyalty,
 recommendations, search infrastructure, reservation/ATP/backorders/multi-warehouse allocation,
 fraud engine, bKash/Stripe/SSLCommerz/card adapters or authorization/capture, CMS/page builder/SEO.
-No automatic Invoice/Payment/Allocation/Journal or stock mutation. Guest/public checkout is deferred
-under the recommended D6, not silently implemented. No new Redis/Celery/event bus/metadata engine,
+No automatic Invoice/Payment/Allocation/Journal or stock mutation/display. Guest/public checkout is
+deferred by OD-7. No new Redis/Celery/event bus/metadata engine,
 custom runtime, tenancy activation, Phase 4 vertical or production deployment.
 
 ## 10. Future acceptance matrix — HR
@@ -475,18 +552,18 @@ These are required future tests/evidence, **not executed or passing in PH3-0**.
 | ID | Objective acceptance evidence |
 | --- | --- |
 | H01 | Two companies; direct/list/search/choice/history and every mutation reject foreign IDs, mixed parents and stale company form submissions |
-| H02 | Branch context filters current Employees and historical branch snapshots exactly; null/foreign/inactive branch denied; company-wide semantics explicit; transfers preserve past scope |
-| H03 | Person Party reuse, company/Party and company/User cardinality, immutable IDs/number, inactive/type-changed Party and revoked User access behavior; no contact duplication or implicit grants |
+| H02 | OD-4 company-wide Department and one optional current Employee Branch; HR-0 transfer/snapshot rules under existing Access; branch-filtered direct/list/mutation scope, company-wide semantics and past scope preserved |
+| H03 | OD-1 stable Company/PERSON Party identity/immutable number and OD-2 unambiguous active User association under HR-0 FK mechanics; OD-3 bounded PERSON projection without unnecessary contacts/addresses; existing Party visibility retained, no contact copies or implicit grants |
 | H04 | Duplicate Employee/Department/type codes under real PostgreSQL contention: one fact, explicit conflict/recovery; Department retirement/reassignment rules |
-| H05 | Every HR code and compound read/action permission; non-superuser happy path; no self-approval; active-registered permission required for superusers |
+| H05 | Exact twelve HR-0 codes and compound read/action permissions; non-superuser happy path; HR-0 frozen self-approval semantics; active-registered permission required for superusers |
 | H06 | Missing/disabled registry hides navigation/404; installed service remains callable with valid RBAC; deterministic migration registration preserves enablement |
 | H07 | Selected non-default alias with default-cursor trap for reads/mutations/audit/registration; rollback and unknown/nested alias refusal |
-| H08 | Attendance same-day duplicate race, adjacent-day overlap, different-branch same-Employee conflict; one original plus ordered revisions only |
-| H09 | Midnight, company-time changes, DST folds/gaps, exact unchanged precision, 24h elapsed boundary and employment date limits; clock rollback not mistaken for causal corruption |
+| H08 | OD-5 multiple same-day non-overlapping completed sessions succeed; HR-0 request-key retry/conflict and same-day/cross-date/branch overlap races reject safely; one original revision per session plus immutable corrections, no mutable daily authority |
+| H09 | HR-0 frozen timezone/DST/date/duration rules: midnight, timezone changes, folds/gaps, preserved precision and employment limits; cross-midnight sessions supported; clock rollback not mistaken for causal corruption |
 | H10 | Correction/void/reinstate retry, stale revision, altered key payload, immutable prior facts and wrong-parent save/delete/bulk paths |
-| H11 | Full leave transition matrix; ordered/inclusive dates, inactive type, employment eligibility, reason/actor fields and terminal retries |
+| H11 | OD-6 full-calendar-day Leave only; HR-0 exact transition/retry/self-approval contract, ordered/inclusive dates, inactive type, employment eligibility, reason/actor fields; no entitlement/payroll/workflow |
 | H12 | Concurrent overlapping submit, approve versus cancel, approve versus attendance and reverse winner orders; no phantom overlap or partial history |
-| H13 | Role/access/actor/Permission revocation while waiting: post-wait and final authorization deny; supported batch writers and both winner orders tested |
+| H13 | HR-0 freezes exact reference/final-authority lock protocol; real PostgreSQL Role/access/actor/Permission revocation waits deny after recheck; supported batch writers and both winner orders tested |
 | H14 | Audit on every actual significant change, no-op/retry no duplicate, injected audit failure rolls back identity/revision/lifecycle |
 | H15 | HTTP GET/action permission, CSRF POST-only, stale company, hostile text, bounded pagination/query preservation and non-JS fallback |
 | H16 | Actual browser 390/768/1280, overflow/focus/keyboard/errors, approved shell and navigation unchanged |
@@ -498,18 +575,18 @@ These are required future tests/evidence, **not executed or passing in PH3-0**.
 | ID | Objective acceptance evidence |
 | --- | --- |
 | E01 | ProductVariant identity for simple/variable/service products; inactive/unsellable/foreign variants rejected; no duplicate catalog/order/stock authority |
-| E02 | Explicit Party customer ownership/role/activity; no email/name merge or User/Company grant; no guest/public access without a separately accepted contract |
-| E03 | Finite exact Sales-compatible quantities/prices, missing price denial, dedicated price permission, currency/customer repricing acknowledgement and stale revision rejection |
-| E04 | Sales public batch API only; one DRAFT, correct owner snapshots/date/lines and no private persistence token/direct Sales table write |
-| E05 | Concurrent same-cart checkout: one binding/order; response-loss and midnight retry recover; differing revision/payload conflicts; no duplicate audit |
+| E02 | OD-7 authenticated staff-assisted audience and ECOM-0 bounded same-company customer Party projection/eligibility; no email match/implicit grants or public/guest/customer login/registration |
+| E03 | OD-8 authorized staff-entered prices with ECOM-0 exact price permission/Currency policy; finite Sales-compatible values, missing/client-authoritative price denied, repricing acknowledgement and stale revision rejection |
+| E04 | OD-9 new public Sales batch service, ECOM-0 signature/snapshots/position/alias/RBAC/rollback frozen; one atomic DRAFT and all lines, no automatic confirm or private/direct persistence |
+| E05 | ECOM-0 canonical checkout/revision encoding/equality frozen; concurrent same-cart conversion has one binding/order, response-loss/midnight retry recovers, changed input conflicts and no duplicate audit |
 | E06 | Binding/owner references protected, foreign/orphan/corrupt provenance fails; later legitimate Sales edit/confirm/cancel returns current state without resetting or falsely certifying original content |
 | E07 | Inject every line/binding/audit failure: no partial order/cart transition or success event; known uniqueness collision recovery after savepoint rollback only |
 | E08 | Checkout versus cart edit/price/abandon both winner orders; shared actor/Currency cross-company contention and owner-reference changes; real PostgreSQL lock blocking, no timing sleeps |
 | E09 | Exact compound Ecommerce/Sales RBAC and final guards; Role/access/actor/Permission revocation and supported batch writer races; no privileged context substitution |
 | E10 | Company-only scope explicitly enforced, foreign Cart/Party/Variant/order denied, branch/warehouse context rejected for base checkout, stale company HTTP matrix |
-| E11 | Optional Inventory absent/disabled/denied/incompatible -> unavailable; posted UoM preserved, negative/zero exact; no reservation/ATP or stock write; service product without Inventory |
-| E12 | Billing absent/present: no invoice generation; original invoice total never mislabeled as outstanding; no eager optional import |
-| E13 | Payments/allocation absent/present: no checkout receipt/allocation/provider request and no fabricated paid/unpaid state |
+| E11 | OD-10: ECOM-1 has no Inventory import/call/display/projection requirement, warehouse selection, stock storage/assertion/mutation or ATP/reservation; works with Inventory absent or installed; stock authority retained |
+| E12 | OD-11: Billing/Sales-to-Billing not required for Phase 3B exit; absent/present gives no invoice generation or eager dependency; no outstanding inference |
+| E13 | OD-12: Payments/allocation/providers/payment status deferred; absent/present gives no checkout receipt/allocation/collection or fabricated paid/unpaid state |
 | E14 | Accounting absent/present: no direct journal write or implicit outcome posting; existing explicit integrations unchanged |
 | E15 | Manifest dependency/permission vocabulary, fresh bootstrap with only hard owners and with all optional owners; disabled/missing HTTP/navigation gating, authorized Python service independence |
 | E16 | Selected alias including nested Sales/audit/unique recovery; default-cursor trap, no alias switch or cached cross-database models |
@@ -522,10 +599,10 @@ These are required future tests/evidence, **not executed or passing in PH3-0**.
 
 | Gate | Required output / stop boundary |
 | --- | --- |
-| PH3-0 (this task) | Local umbrella proposal, inspection evidence, decision register and matrices; independent architecture audit next; no acceptance/publication/runtime |
-| HR-0 | Explicit D1–D5 decisions, final fields/bounds/retry payloads/reference lock order and HR contract acceptance; implementation separately authorized |
+| PH3-0 (current checkpoint) | Original structure approved for owner resolution; OD-1–OD-12 resolved locally; fresh final umbrella audit and separate final acceptance next; no publication/runtime |
+| HR-0 | NOT STARTED; freeze HR technical details listed in section 2 under resolved OD-1–OD-6, including exact twelve permissions, then detailed contract acceptance; implementation separately authorized |
 | HR-1 | Bounded HR runtime only after authorization; H01–H18 evidence, independent audit, then separately authorized publication/acceptance/adoption |
-| ECOM-0 | Explicit D6–D10 decisions, price/customer admission, Sales batch API and exact fingerprint/lock contract, optional display topology; no implied owner API permission |
+| ECOM-0 | NOT STARTED; freeze Commerce/Sales technical details listed in section 2 under resolved OD-7–OD-12, including price permission, canonical retry/locks/public batch API; no Inventory or finance prerequisites |
 | ECOM-1 | Bounded Commerce and accepted additive Sales API only after authorization; E01–E20 evidence and independent audit before separate publication/adoption |
 | PH3-FINAL | Combined canonical regression and independent final Phase 3 exit audit, formal closure and exact-head CI under separate authorization |
 
@@ -539,21 +616,21 @@ Thirteen finite exit criteria, all currently **NOT STARTED**:
 
 | Exit | Required PASS evidence |
 | --- | --- |
-| X01 | HR ownership/identity/privacy/attendance/leave choices explicitly accepted; H01–H18 complete |
-| X02 | Ecommerce audience/price/conversion/dependencies accepted; E01–E20 complete; no unresolved public-shop expectation |
+| X01 | Resolved OD-1–OD-6 implemented under accepted HR-0; HR-1 independently accepted with H01–H18 complete, including multiple completed sessions and bounded PERSON projection |
+| X02 | Resolved OD-7–OD-12 implemented under accepted ECOM-0; ECOM-1 independently accepted with E01–E20 complete: staff-assisted Cart/Checkout -> one DRAFT SalesOrder and lines |
 | X03 | One authority each for Party/ProductVariant/Order/stock/Invoice/Payment/allocation/GL; architecture and runtime regressions prove no duplicate writes |
 | X04 | Company/branch isolation across direct reads, lists, mutations and stale forms verified on two companies |
-| X05 | Exact registered active permissions and post-wait/final authorization verified, including revocation and forbidden self-approval |
+| X05 | Exact registered active permissions and post-wait/final authorization verified, including revocation and HR-0 frozen self-approval rules |
 | X06 | Non-default execution and default trap pass for all new reads/mutations/audit/bootstrap; no tenant identity introduced |
 | X07 | Real PostgreSQL races, retries, response loss, nested rollback, immutable history and uniqueness protections pass |
-| X08 | Optional Inventory/financial absence and explicit unavailable semantics pass; no unintended checkout financial/stock effect |
+| X08 | Initial Phase 3B completes without Inventory display/projection/warehouse selection, Billing, Payments, Accounting or public/guest storefront; absence/presence tests prove no stock/financial effects or fabricated availability/payment state |
 | X09 | HTTP/module admission, CSRF, Python service independence, list bounds and HTMX/no-JS security verified |
 | X10 | Minimum accepted HR and Commerce flows demonstrated at 390/768/1280 with accessible keyboard/errors and no page overflow |
 | X11 | Combined full PostgreSQL, classified SQLite, fresh migrations, lint/format/Django/drift/JS/Tailwind and exact-head hosted CI pass |
 | X12 | Scope/dependency review confirms no Payroll, gateway, speculative framework, reverse imports, historical migration rewrite or Phase 4 work |
 | X13 | Fresh independent final Phase 3 audit plus explicit formal acceptance/canonical closure; no self-approval or production-readiness inference |
 
-## 13. Local proposal checks and next action
+## 13. Historical local proposal checks — 2026-10-14
 
 Before the one local proposal commit: documentation-only diff; Markdown relative links and anchors;
 whitespace; internal consistency against accepted owners; Django system check and migration drift.
@@ -581,9 +658,39 @@ No customer/demo database, generated CSS, migration or runtime file was modified
 PostgreSQL/SQLite suite, browser test or hosted CI is claimed for this documentation-only task.
 Those remain required for future separately authorized implementation candidates.
 
-Smallest next action is a fresh independent PH3-0 architecture audit, followed by explicit owner
-choices, not implementation. Remaining material ambiguities are D1–D10, exact public Sales batch
-lock/validation API, optional bounded Inventory display API and final HR-0/ECOM-0 wire bounds/canonical
-retry encodings. No unknown current
-price/customer-portal API is treated as implemented. Phase 3 remains PROPOSED; HR and Ecommerce
-NOT STARTED; no publication, acceptance, Phase 4 or deployment authorization is implied.
+At original proposal `15e68828300f40c84165c86317217024f6b9d66d`, the next action was an independent
+structure audit and owner resolution. D1–D10 were unaccepted at that checkpoint. Those original
+checks/history remain above; the subsequent supplied audit and twelve owner resolutions are in
+section 2. The current checkpoint supersedes pending owner-policy wording, not historical evidence.
+
+## 14. Current resolution checkpoint and stop boundary
+
+**12/12 owner policies are RESOLVED.** No remaining owner-policy ambiguity is claimed. Technical
+details are explicitly labelled for HR-0/ECOM-0 in section 2; neither gate has started. Inventory
+display API and financial integrations are future separately approved work, not initial blockers.
+The minimum Phase 3 exit requires accepted HR-1 **and** accepted ECOM-1; the latter is staff-assisted
+Cart/Checkout -> DRAFT SalesOrder. The thirteen exit criteria remain future requirements, not PASS
+results or evidence of completed implementation.
+
+This task creates one local documentation resolution commit above the original proposal, retaining
+canonical Phase 2 main. ADR 0017 stays **PROPOSED — FINAL ACCEPTANCE PENDING**. Next action is a
+fresh independent final umbrella-contract audit of this resolution checkpoint. Formal acceptance,
+publication, HR-0, ECOM-0, HR-1, ECOM-1, Phase 4 and deployment remain unauthorized in this task.
+
+Local owner-resolution checks on 2026-10-14, separate from the supplied independent audit:
+
+| Check | Actual result |
+| --- | --- |
+| Pre-edit integrity | Clean planning branch at `15e68828300f40c84165c86317217024f6b9d66d`, parent and local/remote main at canonical base; remote planning branch absent |
+| Scope and policy review | Four authorized Markdown files only; OD-1–OD-12 resolved; technical detail separately labelled; no runtime or Phase 2 historical-record changes |
+| Documentation | 26 relative links and 8 heading anchors resolve; balanced fences; whitespace checks PASS |
+| Matrix preservation | 18 HR criteria, 20 Ecommerce criteria and 13 exits retained as future requirements; none reported as executed PASS |
+| `python manage.py check` | PASS, zero issues |
+| `python manage.py makemigrations --check --dry-run` | PASS, no changes detected |
+| `ruff check . --no-cache` | PASS |
+| `pytest tests/test_database_architecture.py -q -p no:cacheprovider` | 222 passed in 3.32s |
+
+Checks used the existing QA image with Python 3.13.16, a read-only source mount, no network,
+in-memory SQLite settings and all three existing financial integration flags enabled, as in the
+historical proposal check. No full runtime suite or hosted CI is claimed. These local documentation
+checks and internal consistency review are not the required fresh final independent umbrella audit.
