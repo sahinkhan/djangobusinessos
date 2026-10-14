@@ -3365,3 +3365,176 @@ STOP after the single local candidate commit. No push, PR, merge, tag, main upda
 amendment or additional authorization audit. The next task requires separately scoped inherited
 Accounting clock-sensitivity remediation, followed by one combined independent Phase 2 corrective
 audit. This local freeze does not repair PH2-CLOCK-1 or approve deployment.
+
+## PH2-CLOCK-1 fourth corrective implementation — 2026-10-14
+
+Owner-authorized bounded correction starting from clean third-corrective
+`f4925f70fa2efc12a6c0dabad9facc515213efe9` on `phase2-final-authorization-remediation`.
+Parents remain `368dc70aa7bdcefd3191661b4569ccfad29f4069`,
+`2fbd4a2ae02eda31c6273456a2599b0a2f90339a`, and canonical
+`669936df432ec1bb12792ed8d31741fbb1b1287a`. Main is not updated. The owner authorizes the narrow
+ADR 0016 clarification: independent wall-clock order is not causal evidence. Original historical
+SQLite failure attribution remains NOT PROVEN; the canonical sensitivity was separately reproduced.
+This section records implementation evidence, not a fresh independent review or Phase 2 closure.
+
+### Complete Phase 2 temporal comparison inventory and decision
+
+Search covered all Phase 2 runtime modules, including multiline Python comparisons, ORM Q/F
+lookups, owner basis readers, binding history, source selectors and model lifecycle checks.
+The following entries classify the pre-correction comparisons; source positions can move with
+this corrective diff. There are no other discovered independent-clock causal-order comparisons
+in the inspected Phase 2 runtime.
+
+| Location / comparison | Classification / action | Retained structural proof |
+|---|---|---|
+| `accounting/posted_basis.py`: Entry.created_at <= Entry.updated_at | Independent reads; remove inequality | Same-company POSTED Entry, canonical number, Journal provenance, complete exact two-line owner basis |
+| Same owner basis: Entry.updated_at == Entry.posted_at | Same atomic `_post` UPDATE with one supplied value; KEEP | Owner write identity; presence/awareness also retained |
+| Same owner basis: Entry.created_at <= Line.created_at <= Line.updated_at <= Entry.posted_at | Independent reads; remove all three inequalities | Exact parent FK, Company/Account/Party scope, valid positions/sides, two complete balanced lines; timestamps remain required and aware |
+| `integrations/evidence.py`: Entry.posted_at <= Binding.created_at <= Binding.updated_at | Independent reads; remove both inequalities | Posted owner basis and exact binding/source/effect/Journal/accounts/Parties/amount/date/memo; aware binding metadata retained |
+| Same file, `invoice_certificate`: Invoice.issued_at <= InvoicePosting.created_at | Independent reads; remove | Billing owner proves ISSUED state and immutable source facts; binding and exact owner Entry proof |
+| `payments_billing/selectors.py`: prior InvoicePosting.created_at, PaymentAllocation.created_at, Payment.recorded_at <= AllocationPosting.created_at | Three independent-read comparisons; remove | Required exact prerequisite binding UUID/Invoice, same AR, complete invoice certificate and source allocation basis |
+| `integrations/history.py`: Entry.created_at <= Entry.updated_at; Binding.created_at >= Entry.posted_at; Binding.updated_at >= Binding.created_at | Independent reads; replace ordering with explicit timestamp presence | SQL-only complete-history Company/provenance/POSTED/number/date/unit/count/amount/line-shape probes; same-write Entry equality retained |
+| Same history: each line's created_at >= Entry.created_at, updated_at >= its created_at, updated_at <= Entry.posted_at | Six independent-read comparisons; replace with timestamp presence | First/second positions, exact identities/types/Parties/descriptions/debits/credits/precision; schema NOT NULL/timezone types and direct owner awareness checks |
+| Same history: prior binding/Allocation/Payment times <= AllocationPosting.created_at | Three independent reads; replace with presence | Exact prerequisite source and same AR, complete PAY-INT history, raw FK/Company provenance and immutable financial facts |
+| Same history: Invoice.issued_at <= InvoicePosting.created_at | Independent reads; replace with presence | Complete issued-invoice SQL basis, Party type/Company, currency identity, exact invoice amount |
+| `billing/accounting_basis.py`, `payments/integrations/billing/accounting_basis.py` | Presence/awareness, not ordering; KEEP unchanged | Owner ISSUED/allocation/receipt evidence, matching parents/capacity/currency/Party |
+| Billing/Accounting/Inventory/Procurement model lifecycle posted_at/issued_at null checks; Billing/Payments/PAY-INT selectors' timestamp presence checks | State/presence, not chronology; KEEP unchanged | Required lifecycle/source metadata |
+| Sales/Procurement/Inventory/Billing/Payments/Accounting model/selector order_by and PAY-INT history created_at ordering | Presentation/stable pagination, not a causal certificate; KEEP unchanged | UUID tie-breakers and existing scope/bounds unchanged |
+| Phase 2 user-requested business-date/effective-date filtering, snapshot metadata returns and schema-profile timestamp declarations | Filtering/traceability/schema, not independent-clock causal proof; KEEP unchanged | Existing source business-date policy and fixed schema admission |
+
+No schema or DateTimeField definition changes, timestamp fabrication, tolerance, retry, sleep,
+clock polling, monotonic-clock storage or historical rewrite. The four runtime changes are
+Accounting `posted_basis.py` and integration `evidence.py`, `history.py`, and
+`payments_billing/selectors.py`. Authorization and mutation services remain byte-for-byte
+unchanged. Invoice 41.37 AR/Revenue and Allocation 17.25 Cash/AR, Payment.payment_date, zero,
+exact prerequisite/same AR, uniqueness, immutable ORM, locks, outer atomicity, owner schema/RLS
+admission and alias routing remain required. ADR 0016 records only this corrective clarification.
+
+### Regression design and corruption reclassification
+
+New `integrations/tests/test_clock_safety.py` exercises normal posting, 1ms Entry-to-binding
+rollback, separate binding pre_save inversion, posting earlier than Entry/line creation, and
+line pre_save inversion, for both effects. Test-scoped clocks preserve exact injected values.
+Reloaded native rows, owner basis, status, matching retry and complete history must agree without
+new Entry/binding/audit facts or refreshed timestamps; a fresh unpatched posting follows each
+case. Separate tests preserve missing/naive metadata rejection and same-write equality.
+
+The old `test_corrupt_allocation_never_certified[timestamp]` changed only created_at to year
+2000, not structural provenance. It is reclassified, not discarded: the new isolated timestamp
+matrix includes that case, plus binding updated_at, Entry/line times, Invoice.issued_at, prior
+InvoicePosting.created_at, Allocation.created_at and Payment.recorded_at. Each must retain a
+valid certificate and exact metadata; adding wrong immutable memo afterwards must fail closed.
+These privileged synthetic alterations are not supported business mutation paths. Existing wrong
+AR, prerequisite, Entry reuse, source amount and all other structural-corruption tests retain
+their failure expectations. Complete owner-evidence/RLS/schema/alias regressions remain required.
+
+### Verification and freeze gate
+
+Verification completed: PH2-CLOCK-1 is REMEDIATED LOCALLY — INDEPENDENT VERIFICATION PENDING.
+Only new disposable synthetic databases were used. PostgreSQL QA used C-locale UTF-8 and disabled
+autovacuum only in the disposable cluster to exclude the separately known synthetic policy-DDL
+maintenance deadlock; real application locks and authorization races are unchanged. Full
+PostgreSQL/SQLite, targeted integration/authorization, bootstrap/alias/architecture, lint/format,
+Django/drift and frontend checks passed before the single local commit. No unexplained failure
+remains. PH2-FINAL-DOC-1 stays OPEN / P3 NONBLOCKING; Phase 2 NOT COMPLETE; Phase 3 NOT
+AUTHORIZED. No push, PR, merge, tag, main update, earlier-commit amendment or formal closure.
+
+Verification history retained: the initial dedicated PAY-INT run returned 298 passed / 2 failed
+in 281.48s. Both failures were fresh PostgreSQL standalone-owner subprocess bootstraps trying
+`localhost:5432`: the external QA settings selected the disposable database correctly, but the
+subprocesses intentionally load `config.settings.development` and lacked matching POSTGRES_HOST /
+USER / PASSWORD environment variables. No application assertion or posting invariant failed in
+those two traces. The first full PostgreSQL run was stopped before completion once this harness
+misconfiguration was identified; it is not counted as a passing full run. Only the disposable
+runner environment was corrected, with the failed logs retained and new database names used.
+Repository settings, tests and runtime were not changed to accommodate this harness error.
+
+Completed local verification evidence (all pytest counts below distinguish implementation-run
+evidence from the still-required independent combined re-audit):
+
+| Run | Passed | Failed | Skipped | Pytest runtime |
+|---|---:|---:|---:|---|
+| Final clock-safety file, PostgreSQL | 34 | 0 | 0 | 168.39s |
+| Final clock-safety file, SQLite | 34 | 0 | 0 | 71.98s |
+| Exact original HTTP case with external 1ms rollback probe, PostgreSQL | 1 | 0 | 0 | 15.73s |
+| Exact original HTTP case with external 1ms rollback probe, SQLite | 1 | 0 | 0 | 12.30s |
+| Existing three authorization corrective suites, PostgreSQL | 227 | 0 | 0 | 534.33s |
+| Fresh standalone-owner and Accounting installation topologies, corrected harness | 26 | 0 | 0 | 175.66s |
+| Complete PAY-INT, corrected harness | 300 | 0 | 0 | 300.21s |
+| Complete ACC-INT, corrected harness | 1,175 | 0 | 0 | 1,812.90s |
+| Full PostgreSQL 17, corrected harness | 3,015 | 0 | 0 | 2,977.23s |
+| Full supported SQLite | 1,618 | 0 | 1,397 | 897.82s |
+
+SQLite skip classification from the actual JUnit reasons: 649 real PostgreSQL row-lock/concurrency;
+722 PostgreSQL roles/RLS/catalog/FK/CHECK admission; 15 PostgreSQL alias/fresh-bootstrap;
+11 exact PostgreSQL numeric/high-precision SQL cases. There are no unexplained SQLite failures.
+The exact reproduced HTTP case is
+`test_http.py::test_complete_action_rbac[get-allocation-accounting.entry.post]`; the external
+probe records binding created_at minus posted_at = -1000us and updated_at minus created_at = 1us
+on both backends, validates successfully, and verifies patch restoration.
+
+Runtime: Linux Docker, Python 3.13.16, Django 5.2.17, PostgreSQL 17.11, Ruff 0.16.7,
+Node 22.23.3. Source was mounted read-only in every application test runner. The disposable
+PostgreSQL cluster used tmpfs storage; final successful test databases were dropped by pytest.
+The interrupted run's remaining synthetic test database and all other task-created database
+fixtures were destroyed with that verified tmpfs container. All ten `bos-clock4-*` QA containers
+and the dedicated network were removed; pre-existing Docker/demo resources were untouched.
+External command logs, exit-code JSON and JUnit XML remain in the task's `ph2_clock4_qa`
+evidence directory, outside the repository. No customer database or production service was used.
+
+The full PostgreSQL JUnit breakdown includes Core/foundation/database 408; Sales 98;
+Procurement 115; Inventory 80; Billing 104; Payments 136; Accounting 304; PAY-INT 300;
+ACC-INT 1,175; first/second/third authorization corrective suites 122/60/45; other tests 68.
+ACC-INT contains all 225 owner-evidence tests, 442 profile tests, 4 extra PostgreSQL evidence
+tests, 228 concurrency tests, 25 atomicity tests and 23 alias/topology tests. Complete owner
+RLS/schema/NOT VALID/constraint/identity/default-cursor-trap/two-line/four-line rejection
+coverage passed unchanged. ACCINT1-AUD-1 remains resolved; this correction introduces no
+weakening of complete-evidence admission. All existing corruption and financial-effect
+regressions passed, including the new metadata-versus-structural distinction.
+
+Commands executed (external `qa_settings` only selects each new synthetic PostgreSQL database;
+the three installed-integration flags were enabled; bootstrap subprocesses received the same
+disposable POSTGRES_HOST/USER/PASSWORD/PORT environment):
+
+```text
+python -m pytest -q --ds=qa_settings --tb=short --junitxml=/qa/full-pg-final.xml
+python -m pytest -q --ds=config.settings.test --tb=short --junitxml=/qa/full-sqlite.xml
+python -m pytest -q --ds=qa_settings businessos/modules/accounting/integrations/tests/test_clock_safety.py
+python -m pytest -q --ds=config.settings.test businessos/modules/accounting/integrations/tests/test_clock_safety.py
+python -m pytest -q --ds=qa_settings tests/test_final_authorization.py tests/test_authority_batches.py tests/test_permission_upserts.py
+python -m pytest -q --ds=qa_settings businessos/modules/payments/integrations/billing/tests
+python -m pytest -q --ds=qa_settings businessos/modules/accounting/integrations/tests
+ruff check . --no-cache
+ruff format --check --no-cache <all six Python files in this corrective diff, explicitly named>
+python manage.py migrate --noinput
+python manage.py check
+python manage.py makemigrations --check --dry-run
+git diff --check
+git diff --check 669936df432ec1bb12792ed8d31741fbb1b1287a..HEAD
+npm ci
+node --check static/js/app-navigation.js
+node --test tests/js/test_app_navigation.cjs
+npm run build:css
+```
+
+Fresh complete-topology migrations passed; Django reported zero issues and no migration drift.
+All six changed Python files pass explicit formatting; lint and whitespace checks pass. The
+frontend commands ran in a disposable copy, not the source checkout: 21 JavaScript tests pass,
+generated CSS is byte-identical, and no frontend/dependency file changed. `npm ci` still reports
+eight inherited dependency advisories (two moderate, six high); outdated Browserslist data is
+also reported. These are retained concerns, not repaired or concealed by this bounded task.
+Initial development-focused clock/contract/evidence runs also passed: PostgreSQL 127/0/0 in
+262.29s and SQLite 123/0/4 in 110.51s, before ten additional missing/naive-owner cases brought
+the final clock file to 34 tests. The final full suites contain all final cases.
+
+Only four Accounting evidence readers, two Accounting integration test files and the two
+authorized documents changed. Core Access, all six standalone mutation services, the three
+authorization corrective test files, schemas, migrations, settings and frontend are unchanged
+from the third corrective. No independent audit was performed in this implementation session.
+PH2-FINAL-AUD-1, PH2-AUTH-CORR-1 and PH2-AUTH2-AUD-1 remain remediated locally as their frozen
+commits. Canonical clock-sensitivity reproduction is closed by this local correction; the
+original historical SQLite failure's cause remains NOT PROVEN. The fourth local commit is
+identified by its exact parent `f4925f70fa2efc12a6c0dabad9facc515213efe9` and message
+`fix: remove wall-clock causality from accounting evidence`; its resulting SHA is reported in
+the handoff, not fabricated inside its own content. STOP for the separately authorized combined
+independent re-audit. No publication, main adoption, Phase 2 closure or Phase 3 authorization.

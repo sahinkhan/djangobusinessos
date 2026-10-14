@@ -361,6 +361,41 @@ propagates and rolls back. UUID/Entry-number collision handling remains bounded 
 attempts); no catch-all retry loop or querying a broken transaction. Supported Company serialization
 normally avoids a source-key collision, but database uniqueness remains the backstop.
 
+## PH2-CLOCK-1 corrective clarification — 2026-10-14
+
+Owner-authorized narrow correction: **wall-clock timestamps are immutable traceability
+metadata, not causal-order certificates**. Canonical `669936df432ec1bb12792ed8d31741fbb1b1287a`
+was demonstrated to reject otherwise valid Invoice and Allocation compositions under a
+controlled 1ms backward clock read on both SQLite and PostgreSQL 17. This establishes inherited
+clock sensitivity, not attribution of the earlier historical SQLite failure (cause NOT PROVEN).
+The corrective implementation remains a local candidate requiring independent verification;
+this clarification does not grant publication, canonical adoption or Phase 2 closure.
+
+Every required timestamp must still be present and aware, including posted Entry metadata,
+line metadata, binding created_at/updated_at and owner-issued/recorded facts. Their original
+values remain in native records and existing DTOs; retries never refresh them. Separate
+DateTimeField pre_save calls and separate writes can legitimately observe decreasing wall
+time. Relative chronology among Entry/line/binding/source timestamps therefore does not prove
+intrinsic corruption and is not required by a POSTED certificate or complete-history probe.
+Entry updated_at == posted_at remains required: Accounting's _post writes the same exact value
+to both fields in one atomic UPDATE. This same-write equality is not an ordering assumption.
+
+Causal validity remains established by complete owner evidence, valid immutable source state,
+explicit Company and FK provenance, exact source/effect/Entry/Journal/account identities,
+POSTED status, exactly two prescribed lines/positions/Parties/descriptions, exact amount/unit/
+precision/date/memo, unique source/effect and Entry bindings, the exact valid InvoicePosting
+prerequisite and same AR, and atomic composition through owner services. Existing schema/RLS
+admission, authorization, lock order, rollback, zero-effect and retry rules are unchanged.
+No tolerance/window, retry, sleep, logical clock, new field, fabricated timestamp or historical
+rewrite is introduced. Privileged SQL metadata alteration remains unsupported business behavior;
+relative time order alone is simply not a reliable integrity test. Structural corruption must
+still fail closed even when timestamps are present and otherwise acceptable.
+
+For I09 below, corrupt "time" means missing/naive required metadata or violation of the exact
+same-write equality, not relative ordering of independent wall-clock reads. Historical acceptance
+records remain evidence of their respective checkpoints; this bounded clarification supersedes
+only that implementation interpretation, not financial semantics or the rest of the matrix.
+
 ## Exact lock protocol, alias and authorization linearization
 
 Observed existing order: Billing mutation Company -> Invoice -> Party -> Currency -> affected

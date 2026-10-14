@@ -176,8 +176,8 @@ def validate_posting(
 ):
     _timestamps(binding)
     entry = posted_journal_basis(context, binding.journal_entry_id, lock=False)
-    if not entry.posted_at <= binding.created_at <= binding.updated_at:
-        _bad()
+    # Owner basis and exact immutable provenance establish validity, not ordering
+    # of independent wall-clock reads. Preserve the recorded timestamps verbatim.
     source_id = binding.invoice_id if source == "invoice" else binding.allocation_id
     memo = f"ACC-INT-1 v1 {source} {source_id}"
     first, second = entry.lines
@@ -223,8 +223,6 @@ def validate_posting(
 
 def invoice_certificate(context, binding):
     basis = invoice_accounting_basis(context, binding.invoice_id, lock=False)
-    if basis.issued_at > binding.created_at:
-        _bad()
     return validate_posting(
         context,
         binding,

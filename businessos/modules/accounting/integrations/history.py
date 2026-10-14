@@ -81,10 +81,12 @@ def _probe(context, posts, *, allocation=False, amounts=None):
         journal_entry__number=F("proof_number"),
         journal_entry__entry_date=F(date_field),
         journal_entry__base_currency_code_snapshot=F(unit_field),
-        journal_entry__created_at__lte=F("journal_entry__updated_at"),
+        journal_entry__created_at__isnull=False,
+        # Same atomic _post UPDATE; unlike independent wall-clock reads, equality
+        # of these two fields is guaranteed by the owner write contract.
         journal_entry__updated_at=F("journal_entry__posted_at"),
-        created_at__gte=F("journal_entry__posted_at"),
-        updated_at__gte=F("created_at"),
+        created_at__isnull=False,
+        updated_at__isnull=False,
         proof_amount__gt=0,
         proof_count=2,
         proof_first_id__isnull=False,
@@ -103,12 +105,10 @@ def _probe(context, posts, *, allocation=False, amounts=None):
         proof_second_credit__exact=F("proof_second_rounded"),
         proof_first_description=Concat(memo, Value(" / Cash-Bank" if allocation else " / AR")),
         proof_second_description=Concat(memo, Value(" / AR" if allocation else " / Revenue")),
-        proof_first_created_at__gte=F("journal_entry__created_at"),
-        proof_first_updated_at__gte=F("proof_first_created_at"),
-        proof_first_updated_at__lte=F("journal_entry__posted_at"),
-        proof_second_created_at__gte=F("journal_entry__created_at"),
-        proof_second_updated_at__gte=F("proof_second_created_at"),
-        proof_second_updated_at__lte=F("journal_entry__posted_at"),
+        proof_first_created_at__isnull=False,
+        proof_first_updated_at__isnull=False,
+        proof_second_created_at__isnull=False,
+        proof_second_updated_at__isnull=False,
     )
     if allocation:
         valid &= Q(
@@ -117,9 +117,9 @@ def _probe(context, posts, *, allocation=False, amounts=None):
             proof_second_party_id=F(party_field),
             invoice_posting__invoice_id=F("allocation__invoice_id"),
             invoice_posting__ar_account_id=F("ar_account_id"),
-            invoice_posting__created_at__lte=F("created_at"),
-            allocation__created_at__lte=F("created_at"),
-            allocation__payment__recorded_at__lte=F("created_at"),
+            invoice_posting__created_at__isnull=False,
+            allocation__created_at__isnull=False,
+            allocation__payment__recorded_at__isnull=False,
             allocation__payment__currency_id=F("company__base_currency_id"),
         ) & ~Q(cash_account_id=F("ar_account_id"))
     else:
@@ -128,7 +128,7 @@ def _probe(context, posts, *, allocation=False, amounts=None):
             proof_first_party_id=F(party_field),
             proof_second_party_id__isnull=True,
             invoice__bill_to_party__party_type__in=["person", "organization"],
-            invoice__issued_at__lte=F("created_at"),
+            invoice__issued_at__isnull=False,
             invoice__currency_id=F("company__base_currency_id"),
         )
     if posts.exclude(valid).exists():

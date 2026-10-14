@@ -107,7 +107,7 @@ def test_unrequested_bound_corruption_is_not_ignored(business_context, outcomes)
 
 @pytest.mark.parametrize(
     "mutation",
-    ["wrong_ar", "same_cash_ar", "entry_reuse", "source_amount", "timestamp", "prerequisite"],
+    ["wrong_ar", "same_cash_ar", "entry_reuse", "source_amount", "prerequisite"],
 )
 def test_corrupt_allocation_never_certified(business_context, outcomes, mutation):
     invoice, _, allocation = outcomes["sources"]()
@@ -118,7 +118,6 @@ def test_corrupt_allocation_never_certified(business_context, outcomes, mutation
         "wrong_ar": {"ar_account_id": outcomes["cash"].pk},
         "same_cash_ar": {"cash_account_id": outcomes["ar"].pk},
         "entry_reuse": {"journal_entry_id": prior.journal_entry_id},
-        "timestamp": {"created_at": "2000-01-01T00:00:00Z"},
         "prerequisite": {"invoice_posting_id": uuid4()},
     }
     if mutation == "source_amount":

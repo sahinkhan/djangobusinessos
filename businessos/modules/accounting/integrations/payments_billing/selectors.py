@@ -23,9 +23,6 @@ def certificate(context, binding, basis, prior):
         or prior.id != binding.invoice_posting_id
         or prior.invoice_id != basis.invoice_id
         or prior.ar_account_id != binding.ar_account_id
-        or prior.created_at > binding.created_at
-        or basis.created_at > binding.created_at
-        or basis.recorded_at > binding.created_at
     ):
         raise ValidationError("Invoice posting prerequisite is incompatible.")
     invoice_certificate(context, prior)

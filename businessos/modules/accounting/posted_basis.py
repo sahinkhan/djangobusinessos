@@ -118,13 +118,10 @@ def _posted_journal_basis(context, entry_id, *, lock):
     for stamp in (entry.posted_at, entry.created_at, entry.updated_at):
         if stamp is None or timezone.is_naive(stamp):
             raise ValidationError("Posted header timestamp is incomplete.")
-    if not entry.created_at <= entry.updated_at == entry.posted_at:
-        raise ValidationError("Posted header timestamp order is incompatible.")
-    if any(
-        not entry.created_at <= line.created_at <= line.updated_at <= entry.posted_at
-        for line in lines
-    ):
-        raise ValidationError("Posted line timestamp order is incompatible.")
+    # _post writes this exact value to both fields in one atomic UPDATE. Separate
+    # wall-clock reads (including line timestamps) cannot certify causal order.
+    if entry.updated_at != entry.posted_at:
+        raise ValidationError("Posted header same-write timestamps are incompatible.")
     debit, credit = domain.totals((line.debit, line.credit) for line in lines)
     if debit <= 0 or debit != credit:
         raise ValidationError("Posted journal is not balanced.")
