@@ -577,15 +577,19 @@ Accounting and Inventory require transactional tests and duplicate-posting prote
 
 ## Phase 3 — People and Digital Commerce
 
-Status: **OWNER DECISIONS RESOLVED LOCALLY — FINAL UMBRELLA CONTRACT ACCEPTANCE PENDING**.
-ADR 0017 remains Proposed. Based on the canonical Phase 2 freeze above; implementation NOT AUTHORIZED.
+Status: **PHASE 3 UMBRELLA CONTRACT FORMALLY ACCEPTED FOR CANONICAL ADOPTION**.
+ADR 0017 is **Accepted — Phase 3 Umbrella Contract**. Canonical adoption PENDING at this acceptance
+checkpoint. Phase 2 remains CANONICALLY CLOSED; implementation NOT AUTHORIZED.
 
-Review [proposed ADR 0017](decisions/0017-phase3-people-digital-commerce-boundaries.md) and the
+Review [accepted ADR 0017](decisions/0017-phase3-people-digital-commerce-boundaries.md) and the
 [Phase 3 execution plan](exec-plans/active/PHASE_3_PEOPLE_DIGITAL_COMMERCE.md). Original proposal
 `15e68828300f40c84165c86317217024f6b9d66d` received the supplied independent structural audit
 FINAL PASS / Readiness A for owner-decision resolution, with zero candidate-owned P0–P3 findings.
-On 2026-10-14 the owner explicitly resolved OD-1–OD-12; final acceptance of the resolution contract
-requires a fresh independent audit. Original proposal/audit chronology remains in the ADR and plan.
+On 2026-10-14 the owner explicitly resolved OD-1–OD-12 at
+`17339a0ae4fdfdb9cf69df74afb98b04c07c9136`. The supplied fresh final verdict against that resolution
+is **FINAL PASS — PHASE 3 UMBRELLA CONTRACT APPROVED FOR FORMAL ACCEPTANCE**, Readiness A,
+zero candidate-owned P0–P3. Owner authorization now records formal acceptance and permits normal
+publication/CI followed on success by direct fast-forward/main CI. Original chronology remains.
 
 Owner-approved initial product scope:
 
@@ -604,7 +608,11 @@ The owner explicitly clarifies the previous roadmap wording: Billing is not mand
 Phase 3B. No duplicate product/variant/order/stock/invoice/payment/ledger authority. Thirteen bounded
 exit criteria require both HR and minimum Ecommerce implementations accepted. HR-0 and ECOM-0 must
 freeze detailed technical contracts after final umbrella acceptance; HR-0/ECOM-0/HR-1/ECOM-1 are
-NOT STARTED. Runtime, publication, canonical adoption and Phase 4 remain separately authorized.
+NOT STARTED. This one acceptance commit becomes the canonical umbrella freeze only after successful
+branch push CI, unchanged-main/three-commit ancestry verification, normal direct fast-forward push,
+separate successful main push CI and local main synchronization; see the plan's completion rule.
+Canonical acceptance does not complete Phase 3 or authorize runtime. HR-0/ECOM-0 then become
+eligible for separate authorization; HR-1/ECOM-1 and Phase 4 remain unauthorized. No PR or tag.
 
 ---
 

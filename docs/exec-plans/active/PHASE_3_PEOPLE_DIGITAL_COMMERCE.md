@@ -1,9 +1,10 @@
 # Phase 3 — People and Digital Commerce
 
-Status: **OWNER DECISIONS RESOLVED LOCALLY — FINAL UMBRELLA CONTRACT ACCEPTANCE PENDING**.
-ADR 0017 remains Proposed; implementation NOT AUTHORIZED.
+Status: **PHASE 3 UMBRELLA CONTRACT FORMALLY ACCEPTED FOR CANONICAL ADOPTION**.
+Owner decisions 12/12 RESOLVED; final contract audit PASS / Readiness A; formal acceptance COMPLETE;
+canonical adoption PENDING at this acceptance checkpoint. Implementation NOT AUTHORIZED.
 
-Date: 2026-10-14. Gate: PH3-0 owner-decision resolution checkpoint.
+Date: 2026-10-14. Gate: PH3-0 formal acceptance/publication/canonical adoption checkpoint.
 
 Canonical base: `0d4a14254889ba1ec06cfb16088009177991d8d8`.
 Planning branch: `phase3-people-commerce-contract`.
@@ -13,10 +14,11 @@ Umbrella: [ADR 0017](../../decisions/0017-phase3-people-digital-commerce-boundar
 
 This document records twelve explicitly approved owner policies and proposes their remaining
 technical contracts. It authorizes no model, migration, manifest, permission, service, UI or runtime
-implementation. HR-0, ECOM-0, HR-1 and ECOM-1 are NOT STARTED. The supplied independent architecture
-audit applies to original proposal `15e68828300f40c84165c86317217024f6b9d66d`; the resolution commit
-requires a fresh independent final umbrella audit. This documentation task does not claim to be
-that independent audit or record final umbrella acceptance.
+implementation. HR-0, ECOM-0, HR-1 and ECOM-1 are NOT STARTED. The first supplied architecture
+audit applies to original proposal `15e68828300f40c84165c86317217024f6b9d66d`; the subsequent final
+contract audit passed against resolution `17339a0ae4fdfdb9cf69df74afb98b04c07c9136`.
+Section 15 records supplied final evidence, explicit formal acceptance and the conditional canonical
+completion rule. This documentation task does not claim to be either independent audit.
 
 Phase 2 is CANONICALLY CLOSED at the base above. Exact-head main push CI #133 / run `38549126483`
 passed, including 3,015 PostgreSQL tests (zero failures/skips); the Phase 2 final exit matrix is
@@ -63,7 +65,8 @@ about un-fetched/deleted remote history or untracked external backups. No histor
 
 Phase 3A is reusable People/HR foundation. Phase 3B is independently gated staff-assisted Commerce.
 Accepted Foundation constraints remain authoritative. The owner resolved all twelve product-policy
-choices in the 2026-10-14 resolution instruction; final umbrella acceptance is still pending.
+choices in the 2026-10-14 resolution instruction. Formal acceptance follows the final audit at
+section 15; original policy/audit chronology remains below.
 
 ### Preserved proposal and supplied independent audit
 
@@ -428,7 +431,7 @@ OD-10's deferral; they create no API or panel prerequisite for ECOM-0/ECOM-1. A 
 approved adapter must preserve posted UoM, complete evidence and explicit unavailable semantics,
 without inventing stock or availability. Initial checkout makes no stock assertion or stock check.
 
-Owner-resolved umbrella direct manifest policy; ADR 0017 final acceptance and manifests still pending:
+Accepted umbrella direct manifest policy; future technical contracts and runtime manifests remain pending:
 
 ```text
 hr (0.1.0)        -> party, organization, reference, access
@@ -599,7 +602,7 @@ These are required future tests/evidence, **not executed or passing in PH3-0**.
 
 | Gate | Required output / stop boundary |
 | --- | --- |
-| PH3-0 (current checkpoint) | Original structure approved for owner resolution; OD-1–OD-12 resolved locally; fresh final umbrella audit and separate final acceptance next; no publication/runtime |
+| PH3-0 (current checkpoint) | Both supplied independent audits PASS / A; OD-1–OD-12 resolved; formally accepted for canonical adoption, pending successful branch/main CI and direct fast-forward; no runtime |
 | HR-0 | NOT STARTED; freeze HR technical details listed in section 2 under resolved OD-1–OD-6, including exact twelve permissions, then detailed contract acceptance; implementation separately authorized |
 | HR-1 | Bounded HR runtime only after authorization; H01–H18 evidence, independent audit, then separately authorized publication/acceptance/adoption |
 | ECOM-0 | NOT STARTED; freeze Commerce/Sales technical details listed in section 2 under resolved OD-7–OD-12, including price permission, canonical retry/locks/public batch API; no Inventory or finance prerequisites |
@@ -663,7 +666,10 @@ structure audit and owner resolution. D1–D10 were unaccepted at that checkpoin
 checks/history remain above; the subsequent supplied audit and twelve owner resolutions are in
 section 2. The current checkpoint supersedes pending owner-policy wording, not historical evidence.
 
-## 14. Current resolution checkpoint and stop boundary
+## 14. Historical resolution checkpoint — 17339a0 — 2026-10-14
+
+The following boundary and checks describe the completed resolution task, before the final audit
+and present acceptance. Its then-pending authorization wording is historical; current status is section 15.
 
 **12/12 owner policies are RESOLVED.** No remaining owner-policy ambiguity is claimed. Technical
 details are explicitly labelled for HR-0/ECOM-0 in section 2; neither gate has started. Inventory
@@ -694,3 +700,48 @@ Checks used the existing QA image with Python 3.13.16, a read-only source mount,
 in-memory SQLite settings and all three existing financial integration flags enabled, as in the
 historical proposal check. No full runtime suite or hosted CI is claimed. These local documentation
 checks and internal consistency review are not the required fresh final independent umbrella audit.
+
+## 15. Final independent audit and formal acceptance — 2026-10-14
+
+Original proposal `15e68828300f40c84165c86317217024f6b9d66d` received supplied independent
+**FINAL PASS — PHASE 3 UMBRELLA ARCHITECTURE APPROVED FOR OWNER-DECISION RESOLUTION**, Readiness A,
+zero candidate-owned P0–P3. Owner resolution `17339a0ae4fdfdb9cf69df74afb98b04c07c9136` then
+recorded twelve authoritative owner decisions without runtime changes. The subsequent supplied
+fresh final verdict against that resolution is **FINAL PASS — PHASE 3 UMBRELLA CONTRACT APPROVED
+FOR FORMAL ACCEPTANCE**, **Readiness A**, **P0: 0 / P1: 0 / P2: 0 / P3: 0**.
+
+The owner authorizes this one documentation acceptance commit, its normal publication and CI,
+followed only on success by direct normal fast-forward main adoption and separate CI. ADR 0017 is
+**Accepted — Phase 3 Umbrella Contract**; OD-1–OD-12 and hard dependency sets are frozen as recorded.
+Formal acceptance is COMPLETE; canonical adoption is PENDING at this acceptance checkpoint.
+The original Proposed and owner-resolution history remains, rather than backdating acceptance.
+
+The final audit confirms owner boundaries/privacy, session/revision attendance authority, bounded
+Leave, staff-assisted Commerce and pricing, public Sales batch direction, deferred Inventory/
+Billing/Payments, no duplicated authority or cycles, bounded HR-0/ECOM-0 deferrals, eighteen HR
+requirements, twenty Commerce requirements and thirteen future exit criteria. This is supplied
+contract review evidence, not new runtime test evidence. No policy or detailed technical design is
+changed by acceptance; HR-0 and ECOM-0 still must freeze all items listed in section 2.
+
+The accepted minimum requires both HR-1 and ECOM-1 accepted implementations, with initial Commerce
+Cart/Checkout -> one atomic DRAFT SalesOrder + lines. Neither exists. No Inventory display,
+Billing, Payments, Accounting or public/guest storefront is required for minimum Phase 3B.
+
+### Publication and canonical completion rule
+
+Required chain: canonical base `0d4a14254889ba1ec06cfb16088009177991d8d8` -> proposal
+`15e68828300f40c84165c86317217024f6b9d66d` -> resolution
+`17339a0ae4fdfdb9cf69df74afb98b04c07c9136` -> this one acceptance commit. No extra commit.
+Publish only `phase3-people-commerce-contract` normally, require successful `Phase 0 checks`
+push CI at this exact SHA, then verify unchanged remote main, ancestry and three commits above base.
+Push this same SHA normally to main, require a separate successful main push CI at that exact SHA,
+then fast-forward local main. Keep the planning branch as evidence; no PR or tag is specified.
+
+Only after all gates pass does this acceptance SHA become the canonical umbrella freeze and
+ADR 0017/Phase 3 umbrella become CANONICALLY ACCEPTED. Pending wording is this acceptance-stage
+record; verified fulfillment of this rule supersedes it. No future run number, ID, test count or
+success is claimed before observation. Failure or unexpected state stops without automatic correction.
+
+HR-0 and ECOM-0 become eligible for separate authorization after canonical acceptance but remain
+NOT STARTED in this task. HR-1/ECOM-1/runtime, Phase 4 and deployment are NOT AUTHORIZED.
+Phase 3 is not complete and no production readiness is claimed.

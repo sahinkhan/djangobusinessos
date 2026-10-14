@@ -21,8 +21,8 @@ consumer -> dependency
 ## Initial hard-dependency graph
 
 The graph includes future module declarations, not proof of installed HR/Ecommerce. Phase 3's
-owner-resolved refinement below governs its future HR/Ecommerce manifest direction; final umbrella
-acceptance remains pending. The older Ecommerce/Billing allowance is retained here as original
+accepted refinement below governs its future HR/Ecommerce manifest direction; canonical adoption
+is pending at the acceptance checkpoint. The older Ecommerce/Billing allowance is retained as original
 planning history and does not make Billing mandatory for initial Phase 3B.
 
 ```text
@@ -52,11 +52,14 @@ This graph is intentionally conservative. A module may use fewer hard dependenci
 
 Inventory, Accounting and other capabilities may be composed with these modules through optional integrations without becoming mandatory hard dependencies.
 
-## Phase 3 owner-resolved dependency policy — final contract acceptance pending
+## Accepted Phase 3 umbrella dependency policy
 
 [ADR 0017](../decisions/0017-phase3-people-digital-commerce-boundaries.md) and the
 [Phase 3 plan](../exec-plans/active/PHASE_3_PEOPLE_DIGITAL_COMMERCE.md) record the twelve owner
-decisions at the 2026-10-14 resolution checkpoint. Future direct manifest policy is resolved:
+decisions at resolution `17339a0ae4fdfdb9cf69df74afb98b04c07c9136`. The supplied final independent
+contract audit returned FINAL PASS / Readiness A with zero P0–P3. The owner now formally accepts
+the umbrella policy; canonical adoption remains pending under the ADR/plan completion rule.
+Future direct manifest policy is accepted (runtime manifests and detailed gates are not implemented):
 
 ```text
 hr        -> party, organization, reference, access
@@ -67,8 +70,9 @@ The earlier conservative future Ecommerce graph is retained above as historical 
 not proof of an installed module. OD-11 removes Billing as a mandatory prerequisite for minimum
 Phase 3B, explicitly declares consumed Party/Core contracts, and OD-10 defers Inventory display
 entirely from initial ECOM-1. OD-12 defers Payments; Accounting remains outside checkout by accepted
-owner architecture. These are approved product policies, not final ADR acceptance or implementation
-authority. Existing financial opt-in apps and all accepted owner dependencies remain unchanged. No reverse import from
+owner architecture. These are formally accepted umbrella product policies, not HR-0/ECOM-0 technical
+acceptance or implementation authority. Existing financial opt-in apps and all accepted owner
+dependencies remain unchanged. No reverse import from
 owners to HR/Ecommerce, no HR/Ecommerce dependency on one another, and no new runtime manifest or
 integration is introduced here. OD-9 requires the additive public Sales batch-create API; its precise
 technical contract must freeze at ECOM-0 and it must not import Ecommerce.
@@ -231,7 +235,8 @@ party -> hotel
 For owner-resolved initial Phase 3B, Ecommerce reuses Catalog/Party/Sales and owns Cart interaction
 and immutable conversion binding only. Minimum conversion is Cart/Checkout -> DRAFT SalesOrder;
 Billing is not mandatory. Future invoice composition must use Billing's public owner contract and
-never create a separate authoritative invoice. ADR 0017 remains Proposed pending final acceptance.
+never create a separate authoritative invoice. ADR 0017 is Accepted; canonical adoption is pending
+at its acceptance checkpoint, and HR-0/ECOM-0 technical contracts remain separately required.
 
 Payment processing, when separately approved, consumes Payments; it is not supplied by Billing.
 
