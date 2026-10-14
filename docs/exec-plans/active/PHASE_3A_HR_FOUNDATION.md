@@ -1,6 +1,7 @@
 # Phase 3A — HR Foundation
 
-Status: **PROPOSED — HR-0; NOT ACCEPTED**. HR-1 NOT AUTHORIZED.
+Status: **CORRECTIVE CANDIDATE — RE-AUDIT PENDING**.
+ADR 0018: **PROPOSED — NOT ACCEPTED**. HR-1 NOT AUTHORIZED.
 
 Date: 2026-10-14. Local branch: `phase3a-hr-contract`.
 Canonical base: `6453c8f3202335aabe8a872046fea2e607dac858`.
@@ -13,10 +14,13 @@ and [Phase 3 plan](PHASE_3_PEOPLE_DIGITAL_COMMERCE.md).
 The umbrella completion rule is fulfilled at the canonical base: acceptance CI #134 / run
 `38570976500` and main CI #135 / run `38576825532` SUCCESS, 3,015 PostgreSQL tests each.
 Those inherited results do not execute HR. OD-1–OD-12 remain resolved/frozen; only OD-1–OD-6's
-remaining HR technical details are proposed here. No owner-policy conflict was found in the internal
-design review. This is not the required fresh independent HR-0 audit or acceptance.
+remaining HR technical details are proposed here. The original internal review's no-conflict
+conclusion was subsequently corrected by the supplied independent Readiness B audit below.
+Internal review was not independent approval.
 
-This task authorizes exactly one local docs-only proposal commit with that canonical parent.
+Original proposal `5be60f19e3bf654786abcd06b61149bc4a962ea9` is preserved above that canonical parent.
+Current authorization permits exactly one local docs-only corrective commit above the proposal,
+only after coherent corrections and credible User-lock proof. No amendment or acceptance.
 No runtime exists for these six models/services/permissions. No push, PR, merge, tag, main update,
 HR-1, ECOM-0/1, Phase 4 or production deployment. Future implementation requires independent
 contract review, explicit acceptance/publication/adoption and separate HR-1 authorization.
@@ -63,6 +67,20 @@ Actual pinned source inspected (these are current owners, not hypothetical HR AP
   explicit transaction/audit/numbering conventions and trusted DST-fold preservation pattern.
 
 HR consumes owners; none imports HR. No Party/Core public API change is needed by this proposal.
+
+### Supplied independent audit — original proposal
+
+Verdict: **REVISE — HR-0 TECHNICAL CONTRACT REQUIRES CORRECTION**; **Readiness B**;
+P0 0 / P1 0 / P2 4 / P3 0. These supplied findings are not erased or self-declared resolved:
+
+| Finding | Original defect | Current proposed correction / review boundary |
+| --- | --- | --- |
+| HR0-AUD-1 — P2 | HR shared User locks deadlock inherited B→A batch writers; Core actor guard also matters | Section 8 three-relation nonwaiting admission, no unnecessary User locks, nested entry rejection; disposable proofs below; independent resolution pending |
+| HR0-AUD-2 — P2 | Unsupported 24-hour Attendance ceiling and dependent lookback | No duration ceiling; complete interval predicate; long-interval/resource-error oracles |
+| HR0-AUD-3 — P2 | Unsupported 366-date Leave ceiling/per-date validation | No span ceiling; exact transition-driven civil-boundary certification and long-range oracles |
+| HR0-AUD-4 — P2 | Latest/immediate predecessor misses older gaps/corruption | Complete selected-chain aggregate and every-row transition checks before authority/retry; corrupt-chain oracles |
+
+All remedies require fresh independent re-audit. No HR implementation test or acceptance PASS.
 
 ## 2. Common schema and domain rules
 
@@ -182,7 +200,8 @@ Company-context `transfer_employee_branch` is the only Branch change operation; 
 unassigns, otherwise new Branch must be active/same-company. Increment revision once; dedicated
 branch_changed audit includes old/new IDs. Snapshot facts stay unchanged. Context Branch is actor
 scope, not permission to transfer into another Branch. A new association during a race re-reads
-activity after all reference waits. Use shared referenced User locking as section 8 specifies.
+activity after all reference waits. Use section 8 admission on every final-Core path;
+no ordered multi-User shared-row protocol is retained.
 
 ## 5. Attendance identity and revisions
 
@@ -195,12 +214,13 @@ DB Attendance: unique(company,record_request_key); nonblank timezone; indexes
 (company,branch,employee,id), (company,employee,id). Revision: unique(attendance,number),
 unique(attendance,request_key); CHECK number>=1, expected_revision=number-1; supported operations
 RECORD/CORRECT/VOID/REINSTATE and effects ACTIVE_INTERVAL/VOIDED; number=1 iff operation=RECORD;
-VOID iff effect=VOIDED; start<end; elapsed<=24h; local_start_date<=local_end_date; reason nonempty
+VOID iff effect=VOIDED; start<end; local_start_date<=local_end_date; reason nonempty
 for number>1. These are same-row facts, not DB enforcement of contiguous history/parent ownership.
-Composite indexes (company,employee,start_at,id), (company,start_at,id),
+Composite indexes (company,employee,start_at,id), (company,employee,end_at,id),
+(start_at,id), (end_at,id), (company,start_at,id),
 (company,employee,local_start_date,id), (company,employee,local_end_date,id), plus unique parent/ordinal.
-Duration CHECK is represented with backend-supported datetime arithmetic; PostgreSQL/SQLite migration
-round-trip tests must prove equivalent semantics, not silently omit SQLite checks.
+There is NO maximum elapsed-duration CHECK, service, widget or domain rule. PostgreSQL/SQLite
+migration round-trip tests must prove start<end without restoring a ceiling.
 
 Revision 1: RECORD/ACTIVE_INTERVAL, expected_revision=0, actor=recorded_by, request_key=record key;
 original interval and optional recording reason. Correction requires latest ACTIVE, changes interval,
@@ -210,28 +230,29 @@ explicit new valid interval (may equal original), nonblank reason. CORRECT with 
 and a new key rejects as no-effective-change, not an unrecorded successful correction receipt.
 VOID→VOID and ACTIVE→REINSTATE also reject; exact prior-key retry is handled first.
 
-Highest revision of ANY effect is current authority; never highest ACTIVE. Latest structurally
-invalid scope/ordinal/interval/date/effect fails closed, never skips to older state. Current ordinal
-is indexed MAX/ORDER BY number DESC LIMIT 1; no wall-clock authority and no Audit reconstruction.
-Private append validates predecessor number/operation and parent; no generic mutable cache.
-On a normal supported path, positive monotone append plus unique keys makes a contiguous chain;
-unrestricted SQL/disabled constraints are not a supported mutation API or security sandbox.
+Highest revision of ANY effect is current authority only AFTER complete chain certification in
+section 7, never highest ACTIVE or fallback past bad history. Private append checks the complete
+persisted chain as well as the new transition; normal append correctness alone is insufficient.
+No wall-clock authority, Audit reconstruction or generic event-sourcing system. Corrupt earlier
+history fails closed when certifying authority, even though arbitrary SQL remains unsupported.
+Contiguity and every earlier intrinsic transition both matter.
 
 ## 6. Time semantics and civil-date boundaries
 
 Public attendance API accepts aware datetimes only, preserves microseconds and normalizes to UTC;
 aware offset/fold explicitly identifies an instant. Invalid/overflowing dates/offsets or naive data
-produce field ValidationError before comparison. `0 < elapsed <= 24 hours` uses UTC instants,
-not wall-clock subtraction. Cross-midnight/multiple sessions are valid; no shifts/breaks/daily cap.
+produce field ValidationError before comparison. `start_at < end_at` uses UTC instants, not
+wall-clock subtraction. NO elapsed-duration ceiling: valid 25h, >48h and longer completed intervals
+are admitted subject to employment/overlap/calendar rules, not another numeric duration cap.
+Cross-midnight/multiple sessions are valid; no shifts/breaks/daily cap.
 Frozen Attendance timezone comes from locked Company on initial creation, not arbitrary client input.
-Occupied dates are validated search facts, not independent interval authority. Reuse the civil-day
-boundary helper below on a conservative UTC-date envelope (start UTC date−2 through end UTC date+2,
-at most seven midnights for <=24h). Reject unsupported boundary/overflow geometry. Positive
-intersection of [start,end) with admitted day windows determines occupied dates; prove endpoint
-start/end−1 microsecond date equivalence within that admitted geometry before caching first/last
-local dates. This avoids silently misclassifying historical date-line retreats. Ordinary New York
-fall-back/spring-forward days have unique midnights and remain supported. Employment checks use
-these frozen local dates, not naive endpoint assumptions on unsupported calendars.
+Occupied dates are validated search facts, not independent interval authority. The transition-driven
+helper below certifies civil-midnight geometry across the whole interval without iterating each day;
+then start and end−1 microsecond local dates give the occupied inclusive range. Unsupported date-line
+retreat/midnight ambiguity/gap geometry fails closed, not approximates intermediate dates. Ordinary
+New York DST remains supported, including a 25h fall-back calendar day. Employment checks use the
+certified frozen-zone dates. No fixed lookback/envelope length follows from the removed duration
+bound; arithmetic overflow is an explicit boundary error.
 
 HTTP datetime-local is a presentation adapter, not business rule authority. New ambiguous/nonexistent
 input fails normal Django timezone validation. Corrections render each endpoint in Attendance's frozen
@@ -241,14 +262,49 @@ original is trusted. A changed minute follows normal validation and starts at :0
 New York folds, spring gaps, sub-minute precision and changed time, following Inventory's pattern.
 
 Leave day interpretation uses Leave's frozen timezone, not Attendance's or newly current Company zone.
-For a requested inclusive 1..366 dates, compute each local midnight through end+1 (<=367 boundaries).
-Try fold=0 and fold=1, UTC round-trip back to the exact wall datetime; deduplicate equal UTC instants.
-Exactly one valid instant per midnight is required; gap, ambiguity, date overflow, nonincreasing UTC
-boundaries or skipped-date geometry rejects with an explicit unsupported-calendar-boundary error.
-No silent ZoneInfo attachment/24-hour assumption. The admitted day windows are half-open consecutive
-UTC intervals; their union [first boundary,last boundary) is exact admitted full-day coverage.
-Very unusual historical date-line/calendar transitions need explicit failing fixtures and must not
-be approximated as ordinary DST. HR-1 must demonstrate the admitted geometry before release.
+Validate start_date<=end_date and employment containment with Date comparisons. Inclusive count is
+`(end_date-start_date).days+1`, never elapsed-hour division; it has NO admission maximum.
+Compute only start midnight and exclusive `end_date+1` midnight by both-fold UTC round-trip,
+deduplicate equal instants and require one valid instant each. Overflow at date.max is an explicit
+unrepresentable-exclusive-boundary error, not a span ceiling. Interior safety needs the following
+exact transition algorithm, not endpoint-only guesswork or a loop per requested date.
+
+HR-local framework-neutral rule analysis (future HR-1, not new Core infrastructure):
+
+1. Resolve the zone from the same configured ZoneInfo TZPATH/available tzdata source. Read exact
+   TZif bytes once; instantiate ZoneInfo.from_file from those bytes. Parse reviewed TZif v2/v3/v4
+   explicit UTC transitions, pre-first-transition offset and POSIX footer recurring rules (time
+   basis and signed/extended transition hours included); handle fixed-offset tails explicitly.
+   No private ZoneInfo internals, guessed modern rules or coarse sampling.
+2. Generate applicable offset transitions for the representable requested year range using annual
+   footer rules plus explicit records and sufficient boundary halo. Work is proportional to actual
+   transitions/years, not each requested date. The native Date/datetime domain is finite; no shorter
+   duration/span admission ceiling is added.
+3. For transition UTC t, old/new offsets give its local skipped/repeated wall interval. Arithmetic
+   ceiling-to-midnight and interval intersection detects ANY midnight from start_date through
+   end_date+1 in that gap/fold; reject if present. Validate strict increasing endpoint UTC order and
+   no unsupported date-line/skipped-date geometry. Ordinary 02:00 DST transitions remain valid.
+4. With exact covered rules and no invalid intervening midnight, full-day occupancy is
+   `[B(start_date),B(end_date+1))`. Use that UTC interval for bidirectional conflicts and local dates
+   for employment/leave overlap. UTC boundaries are verified derivatives, never separate facts.
+5. Unverified TZif/footer/version/offset coverage, conversion parity mismatch or unsupported boundary
+   returns UnsupportedCalendarBoundary, never guessed coverage or a shorter span cap. CPU/statement
+   timeout returns ResourceBudgetExceeded with no effect, never claims no conflict.
+
+Full-chain date validation first obtains selected-chain UTC min/max scalars, then compiles that
+same zone's exact UTC offset segments and invalid-boundary intervals to finite selected-alias SQL
+parameters. EVERY historical revision must satisfy admitted geometry and cached-date conversion:
+exactly one segment covers each start/end-minus-one-microsecond instant; derive the local date from
+the UTC value plus that verified integer offset, not PostgreSQL's separately installed named-zone
+rules. UTC conversion only is fixed; no guessed cross-platform tzdata parity. Require complete
+nonoverlapping segment coverage and overflow checks; parameter/work overflow fails closed. SQLite's
+functional oracle uses exact integer microseconds/offsets, not float epoch arithmetic. A current-offset
+database timezone catalog does not substitute for historical transitions.
+
+Format reference: [TZif RFC 9636](https://www.rfc-editor.org/rfc/rfc9636.html);
+data sources: [Python ZoneInfo](https://docs.python.org/3.13/library/zoneinfo.html).
+HR-1 must prove parser/footer/SQL-offset equivalence/extreme-year handling. Focused probes below cover explicit-rule
+fixture ranges, not complete POSIX-tail/parser implementation certification.
 
 No attendance/leave rule compares unrelated server creation/update/audit clocks to prove order.
 Expected revisions, locks and state transitions provide causality; company_local_today is used only
@@ -257,39 +313,39 @@ interpretation, not a second current Company configuration authority.
 
 ## 7. Bounded conflict and eligibility queries
 
-Technical constants proposed for v1: maximum attendance elapsed 24h; maximum leave dates 366;
-maximum conflict work 1,000 candidates + one sentinel; UTC scanning chunks <=31 days. Exceeding
-any bound is a fail-closed ValidationError with no effect/audit, not a truncated successful answer.
+Operational materialization budget: 1,000 interval/range candidates + one sentinel. There is NO
+Attendance duration, Leave span or revision-count admission ceiling. A budget/statement timeout
+returns explicit ResourceBudgetExceeded and rolls back, never a truncated success or "no overlap".
+Statement budgets bound execution resource/lifetime, not the input's elapsed/calendar duration.
 No generic indexing/maintenance framework, mutable interval projection or PostgreSQL exclusion extension.
 
 ### Effective interval overlap
 
 Under locked Company/Employee and selected alias, for proposed [s,e):
 
-1. Query Revision in that Company/Employee with `start_at >= s−24h AND start_at < e AND end_at > s`.
-   Include ALL candidate operations/effects and superseded rows, deterministic start_at,id order;
-   fetch at most 1,001 before latest/effect filtering. Clamp datetime underflow safely, never wrap.
-2. If >1,000, reject. Extract bounded distinct parent IDs. Resolve latest of ALL effects for each
-   through unique(attendance,number) index and scalar newest-row lookup, not loading its whole history.
-3. Validate parent/company/employee/timezone and latest same-row/date consistency. For number>1 fetch
-   the one indexed immediate predecessor, require expected_revision=number−1 and a legal
-   operation/effect transition, and for VOID exact copied interval/dates. Missing or contradictory
-   predecessor fails closed, never falls back or scans the chain. When correcting,
-   exclude only the authoritative locked parent identity from conflicts, never an unvalidated input FK.
-4. If any latest ACTIVE interval has start<e and end>s, reject. VOID does not occupy time. A latest
-   interval genuinely overlapping must have its own indexed start in the window by the 24h bound;
-   an older candidate moved elsewhere cannot falsely become current. Adjacent end=start is legal.
+1. Query Revision JOIN authoritative Attendance parent by parent ID, scoped on the PARENT's Company/
+   Employee, with `r.start_at < e AND r.end_at > s`. NO lower start/lookback predicate. Include ALL
+   effects and superseded rows, ordered start_at,id, LIMIT 1001 before current/effect filtering.
+   Duplicated revision scope keys are optimization hints, never the inclusion authority.
+2. If >1,000, resource error. Extract bounded distinct parent IDs; certify their COMPLETE chains
+   below, then resolve newest of ALL effects through parent/ordinal index. No Python history load.
+3. Validate locked parent identity and the certified latest facts. For correction exclude only the
+   persisted validated target parent, never a caller's mutable FK. Any earlier chain error rejects.
+4. If any certified latest ACTIVE interval has start<e and end>s, reject; VOID occupies no time.
+   Every genuinely overlapping latest row is itself an interval candidate, irrespective of how
+   long ago it began. An older row corrected elsewhere cannot become current. Adjacent end=start
+   remains legal; Branch/date differences never permit overlap.
 5. If parent locks are used, lock only this bounded parent set + target in UUID order; revisions are
    immutable and need no rewrite locks. Employee already serializes supported appends. Re-read latest
    after waits, revalidate references, then final authority. No whole-history FOR UPDATE.
 
-This is time-window and work bounded, not a promise that a database index visits exactly N physical
-pages. HR-1 must inspect PostgreSQL EXPLAIN with dense synthetic superseded history, confirm indexable
-predicates, bounded Python fetch/query counts and cap-before-latest behavior. No unbounded fallback.
+This is a complete database-side range predicate with bounded materialization, not a promise that
+an index visits only N physical pages. Use Attendance(company,employee,id), Revision(start_at,id),
+Revision(end_at,id) and parent/ordinal indexes; EXPLAIN long earlier sessions/dense superseded history.
+Operational timeout may fail closed, but no old lower-start bound or maximum duration can be restored.
 
-Approval applies the same effective-interval query to each <=31-day slice of the validated Leave UTC
-window, with one cumulative 1,000-row work budget across slices (deduplicate by revision ID); boundary
-overlaps are checked inclusively as intervals, not local-day totals. Attendance's reverse query finds
+Approval applies ONE complete interval query to the validated Leave UTC window; no per-date or
+fixed-day chunk loop. Conflicts are half-open instants, not daily totals. Attendance's reverse query finds
 APPROVED same-Employee Leave with cached validated UTC windows intersecting [s,e), max1,001; validate
 each candidate's frozen dates/zone/window before deciding. Never filter conflicts to actor-visible Branch.
 
@@ -301,7 +357,51 @@ adjacent raw date labels differ. DRAFT/REJECTED/CANCELLED do not block; historic
 Employee date/end validation uses indexed outside-range derived local-date candidates plus newest
 revision lookups, with the same sentinel/work cap, and indexed EXISTS/limited leave ranges. Verify
 derived facts against UTC/zone on candidates. No all-history Python scan; dense unsuitable history
-fails closed pending a separately reviewed query improvement. These caps are not daily/entitlement limits.
+returns ResourceBudgetExceeded pending a separately reviewed query improvement. No temporal/entitlement
+limit is inferred from materialization/statement budgets.
+
+### Complete selected-chain certification — HR0-AUD-4
+
+Every detail/current-effect read, record-key/revision retry, append, overlap/eligibility certification
+must verify the entire relevant persisted Attendance chain before reporting authority or auditing.
+Under held Company/Employee and bounded parent locks, return scalar database evidence per parent:
+
+```sql
+SELECT attendance_id, COUNT(*), COUNT(DISTINCT number), MIN(number), MAX(number)
+FROM hr_attendancerevision
+WHERE attendance_id IN (:bounded_validated_parent_ids)
+GROUP BY attendance_id;
+```
+
+Require revision1 exists, min=1, all ordinals in the portable positive range, and
+`count = count_distinct = max`. The DISTINCT proof also detects duplicate+gap corruption without
+assuming uniqueness was never bypassed. Parent/ordinal unique constraint remains required and
+duplicates must be rejected normally. `1,3,4` fails count=3/max=4 even though latest/predecessor match.
+
+Contiguity alone is insufficient. A selected-chain SQL NOT EXISTS bad-row check LEFT JOINs EVERY
+revision r to its same-parent predecessor p(number=r.number−1), plus authoritative Attendance and
+Employee. Null-safe violation predicates (`IS DISTINCT FROM`, never NULL-skipping equality) cover:
+
+- exact parent/Company/Employee identity, actor/request existence, allowed enums/ordinal ranges,
+  expected_revision=number−1, positive ordered aware UTC interval, validated cached dates/frozen zone;
+- revision1 RECORD/ACTIVE_INTERVAL, actor=recorded_by, request_key=record_request_key, expected=0;
+- every later predecessor exists; CORRECT ACTIVE→ACTIVE with changed interval/nonblank reason;
+  VOID ACTIVE→VOIDED with EXACT prior interval/dates; REINSTATE VOIDED→ACTIVE with explicit valid
+  interval/nonblank reason; no later RECORD, no VOID→VOID or ACTIVE→REINSTATE;
+- every earlier intrinsic date/interval/operation/reference fact, not only the latest. Zone geometry
+  and SQL offset conversion use section6's exact rule basis. No renewed activity requirement on
+  historical actors/Party/Branch; no wall-clock ordering checks.
+
+This scans indexed SELECTED chains inside the database, returns aggregate/boolean/newest scalars,
+and never materializes an Employee's full history. Query timeout produces an explicit resource
+failure, not a chain-length admission ceiling. HR-1 must inspect plans and query bounds. Supported
+SQLite uses equivalent correlated predecessor/aggregate expressions with null-safe comparisons;
+PostgreSQL supplies native SQL oracles/concurrency proof. No generic event-sourcing framework.
+
+Only a certified chain can supply newest-any-effect authority or accept the next revision. An
+existing-key historical retry first certifies the COMPLETE current chain, then finds the immutable
+matched prior event and labels current effect separately. Legitimate later corrections do not
+invalidate old receipt equality; corrupt earlier/later evidence never gets a success Audit receipt.
 
 ## 8. Transactions, lock order and final authority
 
@@ -317,15 +417,16 @@ active Company FOR UPDATE
 -> Branch rows UUID order
 -> Party rows UUID order
 -> LeaveType rows UUID order
--> referenced User union including actor, UUID order, FOR SHARE
 -> bounded Attendance parents UUID order + immutable newest revision reads
 -> bounded LeaveRequest rows UUID order
+-> nonwaiting authority-relation admission for EVERY final-Core path (below)
 -> final Core authority: actor / complete Roles / complete Permissions
 -> operation-specific persistence + Core Audit -> outer commit
 ```
 
 Create Employee has no Employee row yet: Company serialization and uniqueness reserve its identity;
-take Department/Branch/Party/User references before final authority. Setup-only operation locks its
+take Department/Branch/Party references before final authority; discover User IDs without row locks.
+Setup-only operation locks its
 Department/Type after Company, uses indexed membership EXISTS, never locks Employee after setup.
 Leave operations gather attendance candidates BEFORE locking Leave parent/candidates; correction
 locks its Attendance parent before any Leave row. Company/Employee already serialize same-scope
@@ -335,13 +436,97 @@ discoveries only until locked; persisted Company/parent IDs are authoritative an
 Department/Branch/Party/LeaveType use owner rows locked FOR UPDATE when eligibility matters.
 Party ordinary writers do not use Company-first locks but their SQL updates conflict with HR's
 Party row lock; re-read active PERSON after waiting. Branch supported saves start Company→Branch.
-No HR reference write or owner-private helper import. Global User references use HR-local selected-
-alias quoted `FOR SHARE`, sorted union of actor/linked/provenance inputs, never FOR UPDATE. SQLite
-retains value validation, not a row-lock claim. Compatible reader locks prevent swapped actors/linked
-Users across Companies from forming an exclusive-upgrade cycle; include this exact race test.
-Historical actor/provenance Users need identity preservation only, not renewed activity/grants:
-deactivated prior requesters/recorders do not make valid history corrupt. Current actor and new
-association alone need their current activity/access checks.
+No HR reference write or owner-private helper import. The original sorted multi-User FOR SHARE
+proposal was disproved and is withdrawn. Identity UserManager has no get_queryset/batch override;
+User.save normalizes email only. Inherited update/bulk_update([B,A],batch_size=1), save/delete and
+select_for_update paths impose no shared reader/writer order. Admin forms/save and Django last_login
+updates use those ordinary Identity paths; the demo command creates Users, not a new lock protocol.
+All relevant tracked production call sites and inherited paths were considered, not just explicit
+deactivation functions. Access target-user lookups are plain reads; Core final locks actor itself.
+
+Historical/unlinked User IDs and negative self-approval comparisons need no renewed activity/grants
+or extra row locking. EVERY mutation, successful no-op/retry and read invoking locking Core final
+authorization needs the admission below. Actor-only/actor-equals-new-User paths are not exceptions:
+a Role-first writer followed by User B→A can deadlock Core's actor-A→Role guard without a second HR
+User reference. Employee creation/relink and Leave submission also introduce FK locking points.
+Existing unchanged User columns must not be needlessly rewritten. Ordinary require_permission-only
+reads remain nonlocking and ungated; they cannot claim commit-stable final authority. Pre-gate
+FOR UPDATE queries must lock owner rows only, with explicit of=('self',) if joins exist; never
+implicitly lock a joined User/Role/Permission. H13 inspects executed SQL/FK effects, not helper names.
+
+### HR0-AUD-1 alternatives and proposed writer-compatible admission
+
+| Alternative | Evaluation |
+| --- | --- |
+| A: no additional User locks, or only KEY SHARE | Avoiding historical/unlinked locks is correct, but new distinct activity/reference is not protected by KEY SHARE against non-key is_active updates; FK/key locks can still interact with actor and key-changing/deleting batches. Not sufficient for stable new association |
+| B: User SHARE barrier alone | SHARE excludes UPDATE's ROW EXCLUSIVE but permits select_for_update ROW SHARE; User-only barriers also miss mixed Role/Permission→User transactions. Core-final-first/User-gate-second can deadlock before reaching the gate. Rejected |
+| B: complete authority relation gates before ALL final-Core paths, all NOWAIT | Proposed below; automatically conflicts with existing canonical writers regardless row order, no writer participation change. Global manual-v1 contention tradeoff; association-only gating was disproved by the actor-only mixed writer |
+| C: Identity-owner common writer/reader protocol | Possible later finer-grained owner extension covering batches, prelocks, actor/reference and mixed authority order; requires separate authorization/ADR/runtime audit. Not a prerequisite secretly assumed by this candidate |
+
+For EVERY HR final-Core path, including mutations/retries/no-ops and locking reads, after Company
+and ALL relevant non-User domain/reference anchors, BEFORE any explicit/implicit
+User/Role/Permission row lock, new User FK persistence or Core final call:
+
+```sql
+LOCK TABLE public.identity_user IN EXCLUSIVE MODE NOWAIT;
+LOCK TABLE public.access_role IN EXCLUSIVE MODE NOWAIT;
+LOCK TABLE public.access_permission IN EXCLUSIVE MODE NOWAIT;
+```
+
+Use verified installed owner table identity, selected-alias cursor and safe identifier quoting, not
+default cursor or a redirected unqualified relation. Runtime table names are the pinned public
+owner relations; unsupported identity/search-path mismatch fails closed. No source normalization.
+All three gates are NOWAIT in fixed order. Any SQLSTATE 55P03 escapes the COMPLETE outer HR operation
+and rolls it back, releasing earlier gates/Company/domain locks; translate outside that boundary to
+retryable AuthorityBusy with no success/no-op receipt/audit. No inner-savepoint-only recovery,
+partial success, fallback to row sorting/advisory locks or automatic unbounded retry.
+
+EXCLUSIVE conflicts with ROW SHARE as well as ROW EXCLUSIVE; SHARE does not. Once all gates succeed,
+no other transaction can acquire User/Role/Permission row-lock or DML relation intent, so unchanged
+Core final cannot wait on a mixed authority writer. If a writer holds Role/Permission first, its
+gate makes HR fail immediately instead of waiting while holding User. If HR wins, canonical writers
+wait at relation admission before taking conflicting rows. Ordinary SELECT/ACCESS SHARE continues.
+Lock semantics: [PostgreSQL 17 explicit locking](https://www.postgresql.org/docs/17/explicit-locking.html).
+
+After admission, run every unchanged Core compound final guard, plain-read/revalidate new User
+activity/Company eligibility, refresh locked domain facts without acquiring NEW blocking anchors,
+then repeat final guards immediately before effects/audit/return. Gate is NOT authorization; no
+new Core helper, privileged context, incomplete Role/Permission witness or duplicated RBAC policy.
+Old/inactive provenance remains valid. PostgreSQL fixtures exercised non-superuser actor, selected
+non-default alias and a NOSUPERUSER/NOBYPASSRLS execution role with ordinary DML grants. Lack of
+required relation-lock privileges fails closed; production privilege certification is not claimed.
+
+Entry/nesting is enforceable HR-local scope: public outer entry must begin without an unknown
+surrounding atomic transaction; reject unknown/prelocked outer transaction BEFORE any blocking
+Company/domain acquisition. Allow nested same-alias/Company/actor calls only inside an HR-owned
+admitted outer operation whose complete reference/authority anchor union is predeclared/prelocked.
+After gates, no new Company/domain/reference lock or Identity/authority write may be added by nested
+callbacks/cross-owner calls. Scope must be private, alias/connection/outer-transaction bound, cleaned
+on success/exception; not a generic coordinator or caller-supplied bypass flag. Same alias alone is
+insufficient. If a caller needs broader composition, reject and require a separately reviewed lock
+plan; do not silently impose an ordering restriction on existing Identity writers.
+
+Cost/why proposed for bounded v1: three gates serialize global authority DML/locking readers in this
+database, including unrelated login last_login, admin batches, Role/Permission maintenance and other
+modules' final guards. Ordinary Attendance, Leave decisions/cancel, setup, exact retries and locking
+reads ALL incur this cost; there is no false low-frequency association-only exemption. Concurrent
+gated HR operations, even across Companies, have one winner and a 55P03/AuthorityBusy loser; a later
+separate retry may succeed, but fairness/retry is not guaranteed. Ordinary SELECT/nonlocking reads
+continue. The proposal favors complete correctness without changing accepted writers for manual
+completed-session/admin v1, which excludes device/open-punch/self-service traffic. It is unsuitable
+as an unreviewed high-throughput HR policy: owner acceptance/re-audit must assess this disclosed
+tradeoff; no production-capacity claim. Finer-grained scaling is a separate owner extension.
+
+Finish long-chain/timezone/result preparation before admission; no network/UI/callback/owner-write
+work while gated. Proposed resource control: a 2s monotonic TOTAL admitted deadline starting before
+the first gate; check before/after bounded pure work and every SQL/effect/return/outer commit,
+set each SQL lock/statement timeout to its remaining budget, and bound idle-in-transaction separately.
+Expiry rolls back the whole outer operation with ResourceBudgetExceeded. Per-statement/lock/idle
+timeouts alone do NOT bound accumulated gate residence; a stalled application/process requires DB
+session watchdog/termination controls, not a claim of a proven hard 2s server guarantee. HR-1 must
+prove deadline, rollback-safe setting restoration and contention, including multiple short SQL calls.
+This is an execution budget, not a business duration/date cap. No such runtime is implemented here.
+SQLite has functional validation only, not these locking/concurrency guarantees.
 
 Immediately after Company wait, validate BusinessContext and all compound initial permissions.
 After ALL domain/reference waits, refresh their relevant activity/ownership facts, then invoke
@@ -391,7 +576,7 @@ The nullable beneficiary snapshot is valid even after submit if there was no lin
 included in event all-or-none checks. Reasons max2,000. Event result=from+1; each present event has
 all key/actor/time/from/result fields, except optional beneficiary snapshot. Decision field required
 with decision receipt, absent otherwise. DB CHECKs: allowed status, positive revisions, dates ordered,
-1..366 date length, window_start<window_end, supported decision, receipt all-or-none and from/result
+window_start<window_end, supported decision, receipt all-or-none and from/result
 relationships; decision_from_revision=submit_revision; cancel_from_revision equals retained decision
 revision if decided, else submit revision if submitted, else the current pre-cancel draft revision;
 current revision equals the latest retained event revision outside DRAFT. Require status-compatible
@@ -399,6 +584,8 @@ receipt presence (e.g. APPROVED requires submit+APPROVED decision;
 REJECTED requires submit+REJECTED decision; SUBMITTED requires submit/no decision/cancel; DRAFT none;
 CANCELLED requires cancel and may retain submit and approved decision but never rejected decision).
 No DB CHECK claims to enforce timezone conversion, actor eligibility or cross-row conflicts.
+NO maximum Leave span CHECK/service/UI rule; 365/366/367 and longer valid ranges are not special
+admission categories. Unsupported exclusive-boundary arithmetic is a distinct explicit error.
 
 DB unique(company,create_request_key); unique(company,submit_key), unique(company,decision_key),
 unique(company,cancel_key) when non-null. Scope of event keys is Company+event family; submit/decision/
@@ -597,9 +784,9 @@ no claim that an old response can be revoked from the user's memory.
 | --- | --- |
 | Employee list/choices | 50 rows/page; employee_number,id; search<=200, status/Branch preserved; one Party scalar projection per result, no contacts/addresses |
 | Department/LeaveType lists/choices | 50/page; code,id; activity/search query preserved; no unbounded choice dropdown |
-| Attendance current list | Default last31 local dates; explicit range<=366; convert bounded search window, candidate sentinel before latest; order effective start_at DESC, Attendance UUID; 50/page; VOID included only explicit filter |
+| Attendance current list | Default last31 local dates; explicit ordered date range has no span ceiling; complete interval predicate/candidate sentinel before chain/latest; order effective start_at DESC, Attendance UUID; 50/page; VOID included only explicit filter |
 | Attendance revisions | One scoped session, 50/page, number DESC,id; no full revision collection |
-| Leave list | Default date window today−31..today+31; explicit range<=366, status/Employee/Branch/search preserved; start_date DESC,id; 50/page; current effect + permitted receipt labels |
+| Leave list | Default date window today−31..today+31; explicit ordered range has no span ceiling; status/Employee/Branch/search preserved; start_date DESC,id; 50/page; current effect + permitted receipt labels |
 | Details/related sections | One validated aggregate; history is separate bounded page; Department name gated DV, Attendance/Leave sections gated AV/LV |
 
 Count/page SQL stays scoped, not full Python materialization. Attendance search bounds are widened
@@ -624,7 +811,7 @@ orders; SQLite explicitly skips lock-specific assertions. Each loser must have n
 | Race | Ordered locks / winner behavior | Retry/audit oracle |
 | --- | --- | --- |
 | Duplicate number; same Company/Party create | Company→complete references; first persists, second explicit unique conflict even different number/Party input | One Employee/created audit; no number reuse |
-| Same active User association/create | Company→Employee/ref User SHARE; first claims partial key, second conflict | One active association, losing revision/audit absent |
+| Same active User association/create | Company→Employee/non-User refs→three gates→Core; first claims partial key, second uniqueness/resource conflict | One active association, losing revision/audit absent |
 | Employee end vs record | Company→Employee→refs; end-first new record denies; record-first end rechecks frozen eligibility and succeeds only if interval fits proposed end | No deletion; one record audit and valid end or no end audit |
 | Branch transfer vs record/leave create | Company→Employee→Branch; transfer-first new snapshot uses new Branch; record-first old snapshot immutable | Stale branch context denies after wait; explicit retry uses original snapshot |
 | Overlap record/record incl cross-midnight/Branch | Company→Employee→bounded sessions; first interval persists, second overlap rejects; adjacent both succeed | One per key; multiple non-overlapping same-day sessions accepted |
@@ -637,7 +824,9 @@ orders; SQLite explicitly skips lock-specific assertions. Each loser must have n
 | Actor/Role/Permission retirement or supported batch rewrite at later reference waits | HR Company/domain wait then complete final Core authority; revocation-first deny; HR final locks-first writer waits until commit | No old authority reuse; cover all compound actions, SU namespace, inactive roles/permissions |
 | Company/Branch access revoke while waiting | Company-first Access writer; revocation-first current validation denies, HR-first valid commit then revoke | Retry reauthorizes; no resurrection via User association |
 | Party type/activity, Department/type/Branch retirement | Company/row lock matches supported owner; retirement-first new use denies; use-first valid commit, later history retained (Department retirement still rejects ACTIVE assignments) | No stale reference acceptance or implicit owner write |
-| User deactivate + swapped actor/reference Users across Companies | Compatible ordered User SHARE; deactivate-first new link denies, link-first identity writer waits; no exclusive upgrade cycle | No grant; no deadlock, correct final actor check |
+| Canonical B→A User batch vs A/B HR association, both winners | Company/non-User anchors then all three EXCLUSIVE NOWAIT gates before Core; writer-first HR resource abort, HR-first writer relation wait | No 40P01, no partial effect; current new-User/actor checks after contention |
+| Single deactivation, old User unlink/relink, actor==target or distinct | All final-Core paths gated; no unnecessary old/historical row locks; actor-equal also admitted before Core actor lock | Deactivation-first new link denied, link-first history retained; unlink can be busy but does not demand old activity |
+| Mixed Role/Permission prelock→User batch and nested calls | Three gates exclude preexisting ROW SHARE/ROW EXCLUSIVE on any authority table; unknown outer rejected before blocking; admitted nested reuses fixed anchors | Whole outer rollback on partial gate failure; no default access, writer-order assumption or silent nested expansion |
 | Employment date correction vs approved leave/attendance | Company→Employee then bounded facts; prior valid effect cannot be moved outside eligibility by stale edit | No silent cancellation/void; date edit audit only if valid |
 
 Add read-path revocation before materialization/after Company or reference wait; delayed selector
@@ -676,12 +865,12 @@ test paths/results and browser/run records, not a checklist self-approval.
 | H05 | Exact twelve registered active codes; all section10 compound services/GET/POST/results/retries with non-superuser happy path and each missing code; SU missing/retired code deny; requester/current/snapshot beneficiary self-approve/reject deny |
 | H06 | Disabled/missing HR navigation/URL 404; enabled route works; installed Python record/setup works with registry absent but RBAC required; registration preserves enablement/retired permission and frozen migration strings |
 | H07 | Non-default selected alias, poisoned default cursor for all services/pages/raw locks/audit/registration/bootstrap; nested same-alias rollback, unknown/switch reject; no cached cross-alias object |
-| H08 | Two+ same-day sessions, cross-midnight/Branch/date conflict and adjacent intervals; record response-loss retry after transfer/zone change, former-A scoped recovery and new-B denial of A history; different payload/key conflicts; 24h limits/cap/indexed query evidence; no date unique/current balance |
-| H09 | Aware UTC/microseconds/DST both folds/gaps, trusted unchanged inputs and changed-minute behavior; exact-midnight end, leap/cross-midnight/zone change, 366-date/civil boundary admission, employment limits and wall-clock rollback |
-| H10 | Append sequence/CORRECT/VOID/REINSTATE states, stale ordinal/exhaustion, same-key prior-effect retry after later revision, intrinsic corrupt latest reject; wrong in-memory parent/delete/public/bulk/upsert/manager attacks leave historical rows intact |
-| H11 | Exact Leave schema/receipt null groups, DRAFT-only edits, full inclusive dates/no hours, active type/Employee rules vs historical retry, precise legal transitions and separate cancellation permissions; no entitlement/workflow |
-| H12 | All section14 overlap/approval/reject/cancel/record/correction races both winners with pg lock evidence; raw-date+UTC-window cross-zone overlap; no current approved-leave/attendance conflict, loser no partial receipt/audit |
-| H13 | Exact section8 lock set including global shared Users; Company wait and every later reference wait: actor/Role/Permission/Company+Branch access revoke, multi-role/compound/batch/SU cases; materialized-read late revoke and two-Company order tests |
+| H08 | Multiple same-day, valid 25h/>48h/longer intervals, cross-midnight/Branch and adjacency; long earlier session found, long correction/create and create/create both winners, VOID excluded/reinstate rechecked; exact retry after transfer/zone change with historical A/new B scope; candidate overflow ResourceBudgetExceeded, no temporal ceiling/lookback/current balance |
+| H09 | Aware UTC/precision/both DST folds/gaps and trusted minute preservation; New York 25h fall-back day, exact midnight, long intervals/leap/frozen-zone changes/extreme dates; NO duration or Leave-span maximum in DB/service/UI; TZif explicit/footer/ZoneInfo/SQL-offset equivalence and unsupported midnight geometry; clock rollback not causal corruption |
+| H10 | Valid chains 1;1,2;1,2,3;1,2,3,4 and VOID/reinstate; invalid 3;1,3;1,3,4;1,2,4;2,3,4, duplicate+gap, missing initial/wrong parent/malformed earlier/invalid latest reject; every-row transition/date checks, attempted append after corruption denied/no Audit, stale ordinal, historical retry after valid later correction; all direct/bulk attacks |
+| H11 | Full-day Leave for 1/365/366/367 and longer valid ranges, leap/DST/zone changes/inclusive overlap/employment/extreme exclusive-boundary arithmetic; no 366 CHECK/service/widget/filter limit; exact receipts/DRAFT edits/lifecycle/active type vs historical recovery/self-approval, no entitlement/workflow |
+| H12 | All section14 overlap/approval/cancel/record/correction winners; canonical User.bulk_update([B,A],is_active,batch_size=1) vs HR both orders, select_for_update prelocks, mixed Role/Permission→User batches, unlink/relink/deactivation, actor equal/distinct, concurrent readers and admitted nested/unknown-outer cases; no new 40P01 or partial effect/audit |
+| H13 | Complete non-User anchors then User/Role/Permission EXCLUSIVE NOWAIT gates on EVERY final-Core path BEFORE explicit/implicit authority row locks/FK effects; inspect joined FOR UPDATE SQL; unchanged Core compound guard; partial-gate failure rolls back WHOLE outer transaction; actor/access/Role/Permission revoke after waits, SU namespace, non-default trap, two Companies, total deadline/settings cleanup and global contention; no unnecessary historical User locks |
 | H14 | Every section12 meaningful field/snapshot/association/transition audit, one action per change; no-op/key retry none; injected failure at each append/receipt/audit rolls back entire selected-alias outer transaction |
 | H15 | Exact action form GET/POST admission, CSRF and POST-only, CompanyBoundForm all actions, hostile text, trusted original from server, search/filter/page query preservation and 50-row stable UUID ordering; no-JS/deep links/HTMX security |
 | H16 | Actual real-browser 390/768/1280 Employee/setup/Attendance/revision/Leave/errors with maximum fields, local table scroll/no page overflow, focus/Tab/Enter/labels/validation, safe GET Back/Forward/refresh; approved global shell unchanged |
@@ -706,8 +895,10 @@ no mutable daily summary or leave balance; Core Access current permission; Core 
 
 ## Local HR-0 verification
 
-Actual results will be recorded here before the one local proposal commit. This section is local
-documentation-gate evidence only, not independent HR-0 approval or future H01–H18 execution.
+### Preserved original proposal checks — 2026-10-14
+
+The following checks describe original `5be60f19...`, not independent approval or future H01–H18
+execution. Its internal no-conflict conclusion did not close the four later independent findings.
 
 Starting integrity: clean main/HEAD/origin-main/live main at exact `6453c8f...`; live HR-0 branch absent;
 ADR0018 unused; new local branch created exactly from canonical base. Existing branch/tag targets
@@ -734,6 +925,116 @@ DB, generated assets, migrations or source file changed. No full PostgreSQL/SQLi
 runtime test, browser QA or hosted HR-0 CI is claimed or required for this documentation-only gate.
 Future H01–H18 still require full implementation evidence; these checks cannot substitute for it.
 
-Final gate: **HR-0 TECHNICAL CONTRACT PROPOSAL READY FOR INDEPENDENT AUDIT** only after those checks
-and the one local docs-only commit. ADR0018/HR-0 remain PROPOSED — NOT ACCEPTED. HR-1 NOT AUTHORIZED.
-ECOM-0 not started by this task. Phase 3 NOT COMPLETE. PUSH NONE; PR NONE; no tag/main update. STOP.
+At that original checkpoint the local proposal was ready for independent audit, not accepted. The
+subsequent supplied REVISE/B/4-P2 result and current proposed corrections are recorded above.
+
+### Corrective investigation and proof record — 2026-10-15 Asia/Dhaka
+
+Pre-edit: clean phase3a-hr-contract/HEAD `5be60f19e3bf654786abcd06b61149bc4a962ea9`, parent/local main/
+origin-main/live main exact canonical base; remote HR branch absent. Only ADR0018/this plan may change.
+
+Disposable infrastructure: existing postgres:17-alpine image, actual PostgreSQL **17.11**, isolated
+task container `hr0-corrective-proof-pg-20261014-5be60f`, `--network none`, no ports, tmpfs PGDATA,
+new synthetic `hr0_proof` database. Existing QA image ran ephemeral `--rm -i` Python **3.13.16** /
+Django **5.2.17** via stdin, source bind mounted read-only/PYTHONDONTWRITEBYTECODE=1 and
+`--network container:hr0-corrective-proof-pg-20261014-5be60f`. No test/probe script committed or
+runtime edited. Existing source migrations bootstrapped this new DB unchanged. Fake Users/Company/
+roles plus harmless hr0_effect/hr0_domain/chain-proof tables are not HR implementation/schema.
+
+Exact canonical writer executed: `User.objects.bulk_update([user_b,user_a], ["is_active"],
+batch_size=1)` under business_atomic_context. execute_wrapper observed first UPDATE of UUID B and
+paused AFTER it executed; threading Events/Barriers and pg_stat_activity/pg_blocking_pids established
+real blocking, no timing sleeps. Each worker closed its database connection in finally. Safety
+timeouts were 8s statement/6s lock; no corrected probe hit a timeout or 40P01.
+
+Original multi-row protocol: User B batch UPDATE held B; reader `SELECT ... A FOR SHARE`, then
+`SELECT ... B FOR SHARE`; writer continued A. PostgreSQL **40P01 deadlock detected**, reader chosen
+victim, writer completed. Reproduced twice. Sorting HR alone was conclusively insufficient.
+
+| Corrective lock proof | Observed outcome (contract harness, NOT HR implementation) |
+| --- | --- |
+| P01 canonical B→A writer first | Three-gate reader failed 55P03 on User relation; whole operation rolled back; writer completed |
+| P02 gate first / opposite order | pg_locks showed ExclusiveLock on all three relations; writer visibly waited at relation before first User row update; both completed after release |
+| P03 single deactivation committed first | New linked B inactive -> actual PermissionDenied, no dummy linkage |
+| P04 linkage first | B deactivation waited, then completed; valid association history retained after inactivity |
+| P05 relink from inactive old B | New active C accepted; no renewed activity requirement on old B |
+| P06 unlink vs old-B deactivation | All-path gate returned 55P03 while deactivation held the relation; separate unlink retry succeeded after release without old-User activity requirement |
+| P07 actor deactivation during later domain wait | Initial permission passed; real domain lock wait; A deactivated; unchanged final Core denied after wait |
+| P08 actor equals linked User | All-path gate preceded Core actor FOR SHARE; deactivation waited until valid effect committed |
+| P09 actor distinct from linked User | Non-superuser A, active Company grant/Role and both hr.employee.manage/view checks succeeded through actual Core guards |
+| P10 concurrent authorized locking readers | Different Companies: one admitted, one 55P03, separate post-release retry succeeded; no claim both locking reads are admitted concurrently |
+| P11 declared fixed-anchor nested call | Same-alias nested savepoint/Core recheck completed, with complete anchors acquired before gates |
+| P12 mixed canonical Role→User writer first | RoleQuerySet.update then User batch is an existing callable composition; reader's second gate failed 55P03 on Role, releasing earlier User gate; writer completed |
+| P13 gate first / mixed writer opposite order | Role→User writer waited at relation; reader's unchanged Core final completed, then writer completed |
+| P14 inherited User.select_for_update before UPDATE | ROW SHARE prelock caused EXCLUSIVE NOWAIT refusal (55P03), not a SHARE-mode upgrade cycle |
+| P15 KEY SHARE rejected alternative | B.is_active update completed while KEY SHARE held; reader saw false—KEY SHARE does not stabilize activity |
+| P16 unknown prelocked outer transaction | Before-blocking admission check rejected without issuing Company SQL while another worker actually held Company; no wait cycle |
+| P17 failed gate inside nested savepoint | Propagated 55P03 rolled back WHOLE outer transaction, including dummy marker; remaining marker count0 |
+| P18 execution-role/alias proof | NOSUPERUSER/NOBYPASSRLS hr0_app with ordinary DML grants, hr0_nondefault alias and default-cursor trap: three gates/actual Core guards/FK effect completed, no default query |
+| P19 actor-only mixed writer first | Canonical Role.update then User B→A batch; all-path reader failed 55P03 on Role, writer completed, zero dummy effects |
+| P20 actor-only gate first | Canonical mixed writer visibly waited before Role row acquisition; actual Core completed and writer then completed |
+| P21 concurrent locking-reader retry | Different Companies: first gate winner; second 55P03/no authority receipt; separate post-release retry succeeded |
+| P22 ordinary authorized nonlocking read | Actual require_permission read in another Company succeeded while first reader held all gates; ordinary SELECT stays available |
+
+Further alternatives tested: User-only EXCLUSIVE after Core worked for pure batch/row-prelock fixtures,
+but mixed Role/Permission prelocks can deadlock BEFORE that gate. A first association-only triple-gate
+draft was also rejected: actual actor-only Core actor-A FOR SHARE→Role wait versus canonical
+Role.update→User.bulk_update([B,A],batch_size=1) reproduced another **40P01** with real wait detection.
+Therefore no actor-only/equal/no-op exemption survives. P01–P15 were rerun under all-path gating:
+unlink and concurrent locking-reader resource outcomes above replace the narrower exploratory
+success claims. P19–P22 prove the residual cycle's correction and disclosed contention. Initial
+ungated compatible-reader success remains exploratory history, not the final protocol's oracle.
+Two extra mixed-order exploratory runs passed; do not inflate any probes into independent audit.
+No Identity/Core runtime extension is required by this proposed bounded protocol. No universal
+arbitrary-outer-transaction, fairness, production load or future HR implementation proof is claimed.
+
+Transient harness failures preserved: first exploratory run had an unsynchronized worker-PID lookup
+KeyError after the old deadlock/direct-writer proofs; fixed Event-before-read coordination and reran
+successfully. First P18 attempt created a synthetic NOLOGIN role and failed connection; enabled LOGIN
+on that task-created role only, then the alias/trap proof passed. Neither changed source or justified
+ignoring a failing candidate test.
+
+Other actual focused contract probes:
+
+- PostgreSQL scalar chain aggregate/every-row predecessor query accepted `1`, `1,2`, `1,2,3`,
+  `1,2,3,4`; rejected `3`, `1,3`, `1,3,4`, `1,2,4`, `2,3,4`, wrong earlier scope, malformed earlier
+  VOID and invalid latest interval. Valid RECORD→VOID→REINSTATE certified. Unique ordinal rejected
+  duplicate with 23505; deliberately weakened synthetic uniqueness still rejected duplicate+gap
+  `1,2,2,4` via COUNT(DISTINCT). All fixture schema/corruption is confined to the disposable DB.
+- SQL interval `[0,61h)` versus `[60h,62h)` was included by the complete predicate and omitted by
+  the old lower-start lookback; adjacent `[61h,62h)` did not overlap. No duration admission ceiling.
+- In-memory same-file TZif explicit-record/ZoneInfo probes: one UTC day; New York 365,366,367,1461
+  inclusive dates; and 2026-11-01 New York one calendar day occupying **25 UTC hours**, all valid.
+  Transition scan examined 236 rule records, not every requested date. Interior Apia skipped-date
+  boundary rejected, date.max exclusive-end arithmetic failed explicitly, both New York fold
+  instants retained UTC/fold identity. General POSIX-tail/parser/SQL-offset/extreme-year certification
+  is **NOT PROVEN here** and remains an explicit HR-1 acceptance obligation; no guessed coverage.
+
+Corrective documentation/quality checks on this two-file working candidate:
+
+| Exact check / environment | Actual result |
+| --- | --- |
+| `python manage.py check` | PASS, zero issues |
+| `python manage.py makemigrations --check --dry-run` | PASS, no changes detected |
+| `ruff check . --no-cache` | PASS, no source writes |
+| `pytest tests/test_database_architecture.py tests/test_modules.py tests/test_database_foundation.py -q -p no:cacheprovider` | **248 passed in 15.11s**; existing architecture/registry/alias/bootstrap guards, NOT HR runtime tests |
+| Read-only PowerShell documentation validator | PASS: 49 relative file links, one heading anchor, balanced fences/final newlines/no trailing whitespace; H01–H18 exactly once in the matrix |
+| `git diff --check` / authorized path comparison | PASS; exactly ADR0018/this plan; no protected runtime/schema/migration/ADR0017 change |
+| Live `git ls-remote origin refs/heads/main refs/heads/phase3a-hr-contract` | main exact `6453c8f3202335aabe8a872046fea2e607dac858`; HR branch absent |
+| Local heads/tags comparison with captured pre-proposal refs | All 47 existing refs unchanged; only the local HR proposal branch added |
+
+Checks used existing `ui-gate1-qa-web:latest`, ephemeral `docker run --rm -i --network none`,
+read-only source bind, PYTHONDONTWRITEBYTECODE=1, config.settings.test/in-memory SQLite and all
+three existing financial-integration install flags. No full application suite/browser/hosted HR CI
+was required or claimed. Contract probes and internal consistency review are implementation-task
+evidence, not fresh independent re-audit or production load certification.
+
+Cleanup verified the exact task container ID
+`ef3b079e79bef40a37cc46a889333085b6fd1e1599f70ad8fe725552042e45b9`, network none, no published
+ports/persistent mounts, tmpfs PGDATA and zero remaining worker DB sessions. Removed ONLY
+`hr0-corrective-proof-pg-20261014-5be60f` with docker rm -f; subsequent filtered inventory was empty.
+Its disposable synthetic database/roles/fixtures disappeared with tmpfs and are not recoverable.
+All preexisting containers, demos/source databases and source files were left untouched.
+
+All H01–H18 remain future implementation obligations. Original findings are independently unresolved
+until re-audit; current status is corrective candidate, not accepted/closed or HR-1 authority.
