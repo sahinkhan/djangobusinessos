@@ -3064,3 +3064,304 @@ reported externally to avoid a self-referential commit hash. Canonical local/rem
 ADR 0010 are not normalized. **PHASE 2 NOT COMPLETE; PHASE 2 FINAL CLOSURE NOT AUTHORIZED;
 PHASE 3 NOT AUTHORIZED.** No push, PR, merge, tag, main update or earlier-commit amendment; STOP
 after the single local commit for a fresh independent re-audit.
+
+## PH2-AUTH2-AUD-1 third corrective implementation — 2026-10-14
+
+Starting clean branch `phase2-final-authorization-remediation` is at second corrective
+`368dc70aa7bdcefd3191661b4569ccfad29f4069`, with unchanged parents
+`2fbd4a2ae02eda31c6273456a2599b0a2f90339a` and
+`669936df432ec1bb12792ed8d31741fbb1b1287a`. Local main, origin/main and read-only live remote
+main verification match that canonical parent. Supplied independent second-candidate audit:
+**REVISE / Readiness B**. PH2-FINAL-AUD-1 and ACCINT1-AUD-1 are independently resolved; original
+batch cases pass, but PH2-AUTH-CORR-1 cannot close while PH2-AUTH2-AUD-1 remains. The prior local
+results above are preserved as historical evidence, not sufficient evidence for this correction.
+
+### Installed Django analysis and bounded protocol
+
+Inspection of installed Django **5.2.17** `QuerySet.update_or_create` confirms: set `_for_write`,
+enter `atomic(using=self.db)`, call `select_for_update().get_or_create`, resolve update defaults,
+then `obj.save(using=self.db, update_fields=...)`. On an existing row, FOR UPDATE precedes UPDATE's
+ROW EXCLUSIVE relation lock. Against the superuser Permission SHARE namespace lock this can form
+the reported relation/row cycle. A save-level fix would be too late.
+
+The Permission-only override sets the write-routing flag, resolves `self.db`, enters
+`business_atomic_context(using=alias)`, obtains PostgreSQL Permission ROW EXCLUSIVE, and delegates
+unchanged defaults/create_defaults/lookup arguments to Django. That relation lock lasts through
+the enclosing transaction. No row is selected first. SQLite retains Django behavior within the
+alias-aware transaction without PostgreSQL LOCK syntax. No exception is swallowed. Superuser
+namespace stabilization, ordinary complete authority sets, Role ordering and financial code stay
+unchanged. No migration, new authorization rule or framework is introduced.
+
+### Complete inspected Permission writer surface
+
+| API / owner | Relation intent before Permission row? | Correction / alias evidence |
+|---|---|---|
+| `create`, instance `save` (also inherited `acreate`/`asave`) | Ordinary INSERT/UPDATE obtains ROW EXCLUSIVE before modifying rows; `full_clean` does not take row locks | No change; normal validated save and existing execution/explicit alias rules |
+| queryset `update` / `aupdate` | Existing ordered writer obtains ROW EXCLUSIVE before fixed UUID prelocks | Retained; queryset.db |
+| `bulk_update` / `abulk_update` | Existing whole-call prelock obtains relation intent before all batches | Retained; queryset.db; identity-code rewrite rejected |
+| queryset `delete` / `adelete`, instance `delete` / `adelete` | Existing guarded deletion routes through relation-first ordered targets | Retained; queryset/instance-selected alias, PROTECT retained |
+| `get_or_create` / `aget_or_create` | Existing-row path only reads; absent path INSERT obtains write intent before rows | No override needed; inherited method does not modify a found row |
+| `update_or_create` | Inherited existing-row FOR UPDATE previously preceded relation write intent | Corrected at method entry before inherited row selection; queryset.db write routing |
+| `aupdate_or_create` | Installed Django uses `sync_to_async(self.update_or_create)` | Inherits corrected override; no redundant async implementation |
+| Core permission registration | get-or-create fixed declarations, one ordered label bulk update | Existing second correction retained; explicit retirement preserved |
+| Module registration | get-or-create missing declarations, preserve existing records | No change; selected execution alias |
+| Bulk create/conflict upsert | Explicitly rejected by existing model contract | Still rejected; no mutation |
+| Admin / Access application services | Access admin inspection-only; services read Permission and write Company-first grant/link/Role facts, not Permission activity | No hidden Permission row-lock-then-save production path found |
+| Explicit `select_for_update` chaining | A read alone, including existing-row chained get-or-create, does not subsequently request write intent | No production/documented Permission row-lock-then-save sequence found; arbitrary caller-built transactions are not newly certified. Any future such writer must obtain relation intent before its first row lock |
+
+Search covered Core Access, registry, production module code and documentation, including aliases
+and model-variable `select_for_update` uses. Existing integration test `test_extra_concurrency`
+locks Invoice/Payment/JournalEntry before retiring Permission, not a Permission row. No supported
+repository writer is excluded to avoid this finding. The override preserves `create_defaults`,
+callables, returned `(object, created)`, validation, identity immutability and transaction errors.
+
+### Verification scope
+
+New tests use real PostgreSQL wait edges, Permission relation modes, and an assertion that the
+winning backend has no reverse blocking edge. Business-first upsert must not even reach the
+Permission FOR UPDATE statement while namespace SHARE is held. Writer-first business must wait
+on namespace SHARE after upsert owns write intent. Both historical potential detector/victim
+configurations use swapped 100ms/5s deadlock detector settings; assertions prove the acyclic graph,
+not just absence of a randomly selected victim. Ordinary role actors, public invoice 41.37 and
+allocation 17.25 composition, retirement denial, authorized/revoked retries, async delegation,
+same-code insertion races, savepoints and fresh alias/default-cursor traps are included.
+
+Only disposable synthetic PostgreSQL databases and read-only source-mounted QA runners are used.
+The task PostgreSQL 17 container disables autovacuum to avoid unrelated synthetic DDL-policy versus
+autovacuum races already recorded for canonical CI #130; application relation/row locks and both
+deadlock detectors remain real. This is test-harness configuration, not source settings or runtime
+deployment change. Final results and cleanup are recorded below after execution.
+
+PH2-FINAL-DOC-1 remains OPEN — P3 NONBLOCKING; BASELINE, DEPENDENCY_MAP and ADR 0010 untouched.
+Independent third-candidate re-audit is still required. No Phase 2 closure or Phase 3 authorization.
+
+Verification history: the first new-suite run produced **2 passed / 43 failed in 316.78s**.
+The disposable Debian cluster used `en_US.utf8`, whose constraint text ordering disagrees with the
+fixed Accounting evidence profile. Diagnostic catalog comparison established that mismatch; the
+new task cluster is initialized with `--locale=C --encoding=UTF8`, matching the pinned profile.
+Two new-test fixture issues were also corrected: fresh alias role assignment needs Company access
+even for a superuser, and duplicate-primary-key model creation is rejected by existing full_clean
+before a database IntegrityError. A separate injected persistence IntegrityError proves propagation
+and clean rollback. No accepted profile or model validation was weakened. An accidental restart of
+the failed runner for diagnostics was stopped; that partial rerun is not pass evidence. The failed
+cluster and its task-owned volume were removed before the C-locale runs. The runtime override also
+preserves Django's `alters_data` marker. Final verification uses the finalized tests, including
+explicit once-only owner/integration success-audit assertions.
+
+### Finalized focused developer evidence
+
+```text
+python -m pytest tests/test_final_authorization.py tests/test_authority_batches.py
+  tests/test_permission_upserts.py -q --ds=qa_settings --junitxml=/tmp/focused-final.xml
+```
+
+**227 passed / 0 failed / 0 skipped in 943.94 seconds (15m 43.94s)**, including the original
+122, second-corrective 60 and third-corrective 45. The separate new-suite prototype on the
+corrected C-locale setup passed 45 in 288.03s before final audit-count assertions; the combined
+227 run uses those finalized assertions. A focused SQLite check of the finalized new file passed
+**2 / 0 failed / 43 skipped in 36.84s**. These are implementation-run results, not independent audit.
+
+| Third-corrective group | PostgreSQL result / objective evidence |
+|---|---|
+| Upsert versus public invoice/allocation | 32 passed: both winners, both activity outcomes, superuser/ordinary actor, both detector orders; relation mode and directed wait graph verified |
+| Defaults and transactions | 1 passed: create_defaults/update defaults/callables, inactive-to-active, labels, autocommit/nested transaction, immutable code, validation and propagated persistence error; no leaked failed transaction |
+| Async delegation | 1 passed: real inherited async create/update reaches the synchronous override; connection cleanup; Django alters_data retained |
+| Same absent code race | 1 passed: both validations precede real concurrent INSERTs, one unique-key collision is recovered by Django, one identity, created True/False, no duplicate or swallowed unexpected error |
+| Other namespace writers | 4 passed: create, save, get-or-create insertion and upsert insertion wait for ROW EXCLUSIVE before any Permission row-lock query |
+| Savepoints | 2 passed: first acquisition rollback permits business progress; outer-held intent survives inner rollback and business waits until outer commit |
+| Fresh selected alias | 4 passed: zero-state migrations, both winner orders for both effects, same actor/company/Permission UUIDs and codes in independent databases, default connection traps, unchanged default authority |
+
+Exact authorized effects: Dr AR / Cr Revenue **41.37** and Dr Cash / Cr AR **17.25**; matching
+invoice-posting AR prerequisite and immutable Payment.payment_date verified. Exactly one owner
+posting audit and integration creation audit; authorized retry returns the same result with identical
+stored effects/audit. Revoked retry denies; writer-first retirement commits no financial effect or
+success audit. Real worker connections close in finally blocks. All prior Permission/Role batch
+planner variants, both winners, original nine denials, 18 opposite winners, 41 final placements,
+registration-preserves-retirement and rollback/retry cases freshly pass in the same invocation.
+
+The first full supported SQLite invocation completed with **1,584 passed / 1 failed / 1,397
+skipped in 1,376.20s**. Failure:
+`businessos/modules/accounting/integrations/tests/test_http.py::test_complete_action_rbac[get-allocation-accounting.entry.post]`.
+The fixture's invoice posting failed before revocation/HTTP assertions, at unchanged
+`evidence.validate_posting`'s `posted_at <= binding.created_at <= binding.updated_at` check.
+The three actual timestamp values were not captured in that first traceback. The exact isolated
+test passed unchanged on a fresh SQLite database (**1 passed in 18.94s**). A separate direct Docker
+wall-clock probe observed **45,169,027 samples / zero backward observations over 20s**; that does
+not prove the earlier run's clock state. No Accounting validation, tests or timestamp policy was
+changed or bypassed. Root cause is not yet proven; the full unchanged SQLite suite is rerun with
+`--showlocals`. This failure remains visible as a verification concern, not silently discarded.
+
+The full unchanged SQLite rerun completed with **1,585 passed / 0 failed / 1,397 skipped in
+918.79s** using `python -m pytest -q --ds=config.settings.test --showlocals
+--junitxml=/tmp/full-sqlite.xml`. All skips are explicitly PostgreSQL-specific: 642 real-lock
+cases, 725 catalog/DDL/RLS cases, 8 exact-numeric cases and 22 fresh-alias/bootstrap cases.
+The third correction adds 39 lock cases and four fresh-alias cases to those categories; its
+two portable tests pass. A successful rerun does not explain or erase the original timestamp
+failure. Candidate freeze remains blocked pending its disposition; no financial code/test
+remediation or timestamp-policy change is authorized in this task.
+
+Final quality commands: `ruff check . --no-cache` passes; explicit `ruff format --check` for
+all 12 Python paths changed across the canonical-to-second-corrective history plus the new
+third-corrective test file passes, including explicitly supplied paths rather than relying on
+discovery. Both working-tree `git diff --check` and canonical-to-HEAD whitespace checks pass.
+Fresh C-locale PostgreSQL full-topology `migrate --noinput`, Django `check` and
+`makemigrations --check --dry-run` pass (zero issues / no changes). No migration was added or
+modified. A temporary frontend copy passes `npm ci`, `node --check static/js/app-navigation.js`,
+`node --test tests/js/test_app_navigation.cjs` (**21 passed**) and `npm run build:css`; regenerated
+CSS is byte-identical. npm reports **eight inherited advisories (two moderate, six high)** and
+the existing Browserslist age notice remains; neither dependencies nor frontend files changed.
+
+### Full PostgreSQL result, integrity and stop condition
+
+`python -m pytest -q --ds=qa_settings --junitxml=/tmp/full-postgres.xml` completed with
+**2,982 passed / 0 failed / 0 skipped in 3,427.33s (57m 07.33s)** on Python **3.13.16**,
+Django **5.2.17**, PostgreSQL **17.11**, Linux Docker, C-locale UTF-8. The finalized code/test
+fingerprints below are unchanged across the focused and full runs.
+
+| Complete group within the full run | Passed |
+|---|---:|
+| Core/foundation/database | 408 |
+| Sales | 98 |
+| Procurement | 115 |
+| Inventory | 80 |
+| Billing | 104 |
+| Payments | 136 |
+| Accounting | 304 |
+| PAY-INT | 300 |
+| ACC-INT | 1,142 |
+| Original corrective | 122 |
+| Second corrective | 60 |
+| Third corrective | 45 |
+| Other repository tests | 68 |
+| **Total** | **2,982** |
+
+Fresh topology/bootstrap, dependency/architecture guards, company/module isolation, independent
+execution-alias cases, original deadlock/collision/RLS/provenance coverage and all corrective
+tests pass in that run. Post-run PostgreSQL inspection found only task base databases `auth3`
+and `auth3_full` plus PostgreSQL defaults; only the synthetic owner beyond builtin roles; no
+other client sessions. No `deadlock detected` or test-database-in-use warnings appeared in the
+task-cluster logs. All task-prefixed runners, the private network and verified task PostgreSQL
+volume were removed after evidence collection. Existing demos and other task resources were
+not removed. Inert XML test evidence remains outside the repository in the task QA directory.
+
+| Working-tree file | SHA-256 of verified content |
+|---|---|
+| `businessos/core/access/models.py` | `9efb18b5703195ba62808713f24b24ff9f7f018a63ef7ec49b6eb75211f18aca` |
+| `tests/test_permission_upserts.py` | `840a66964e041e5f69f6424f5facde6e4d0d6674be6ff40ecdd0c5df2088b63e` |
+
+**BLOCKED — third corrective candidate freeze withheld.** The requested upsert correction and
+its focused/full PostgreSQL verification are implemented, but the first SQLite timestamp failure
+remains unexplained despite the unchanged isolated/full reruns passing. The owner's requirement
+that unexplained failures block freeze is retained. No third corrective commit was created;
+`PHASE2_AUTH_CORRECTIVE_3_SHA` is not assigned. Exactly three pending files remain: Access models,
+the new upsert test file, and this plan. No financial/timestamp remediation was attempted.
+
+HEAD remains `368dc70aa7bdcefd3191661b4569ccfad29f4069`; its first-corrective and canonical parents
+remain unchanged. Local main, origin/main and live remote main remain
+`669936df432ec1bb12792ed8d31741fbb1b1287a`. No staging, push, PR, merge, tag, amendment, rebase or
+main update. The independent findings/history are preserved; these developer results do not
+self-approve this pending implementation or supply independent closure. Further timestamp
+investigation/disposition needs a separately bounded decision before candidate freeze.
+PH2-FINAL-DOC-1 stays OPEN / P3 NONBLOCKING. Phase 2 is NOT COMPLETE; final closure and Phase 3
+remain NOT AUTHORIZED.
+
+### Subsequent bounded investigations and owner-authorized local freeze — 2026-10-14
+
+The blocked checkpoint immediately above remains historical evidence. The owner subsequently
+authorized finalizing only the existing third authorization correction after the following
+bounded investigations and governance disposition. This is not independent third-candidate
+approval, publication, canonical adoption or Phase 2 closure. The original SQLite failure and
+all earlier failed attempts remain recorded; neither successful reruns nor synthetic injection
+establish the cause of that historical failure.
+
+Read-only SQLite investigation, with unchanged runtime/test fingerprints: 100 fresh-process
+executions of the exact case passed on each of the dirty third-corrective candidate, canonical
+`669936df432ec1bb12792ed8d31741fbb1b1287a`, and second corrective
+`368dc70aa7bdcefd3191661b4569ccfad29f4069`. Repeated current RBAC matrices passed 190 cases;
+current/canonical HTTP modules passed 174/116 cases. Predecessor, upsert, Accounting and
+timestamp-manipulation order probes did not reproduce the original failure. Two additional
+full unchanged current SQLite runs each passed **1,585 / 0 failed / 1,397 skipped**, in
+1,747.03s and 1,749.99s; the canonical control passed **1,525 / 0 failed / 1,230 skipped** in
+1,576.66s. These are diagnostic execution results, not independent acceptance. Initial external
+telemetry assumed a model rather than a possible DTO; affected runners were stopped and excluded,
+the external logger was corrected, and affected groups were rerun. No repository code changed.
+
+A separate native Docker clock probe observed backward wall-clock movements of 2,841 and
+3,540 microseconds while monotonic time advanced. No failed posting was captured crossing those
+events. Therefore the original historical SQLite failure remains **CAUSE NOT PROVEN / NOT PROVEN
+CLOCK-CAUSED**; those observations alone did not establish its attribution.
+
+#### PH2-CLOCK-1 — inherited Accounting wall-clock causal-order sensitivity
+
+**DEMONSTRATED ON CANONICAL; SEPARATE REMEDIATION REQUIRED; NOT CAUSED BY THIRD AUTHORIZATION
+CORRECTION.** A further owner-authorized external canonical-source experiment used unchanged
+`669936df432ec1bb12792ed8d31741fbb1b1287a` and disposable SQLite/PostgreSQL **17.11** databases.
+The original exact test passed normally on each backend. Context-scoped clock instrumentation
+then supplied `posted_at = T`, binding `created_at = T - 1ms`, and
+`updated_at = T - 1ms + 1us`. The first tested step, **1ms**, reproduced the same
+`evidence.validate_posting` timestamp-order failure on both backends; no larger step was needed.
+This is the smallest tested reproducing step, not a measured absolute minimum or a reconstruction
+of the original host clock adjustment.
+
+Both direct Invoice and Allocation compositions reproduced the invariant failure. A second
+sequence, `created_at = T + 1ms` followed by `updated_at = T`, also failed the same validator.
+The error was `ValidationError("Accounting posting evidence is intrinsically incompatible.")`,
+with no explicit error code, at `evidence.py:179-180` via `_bad()`. Normal controls preserved
+Dr AR / Cr Revenue **41.37** and Dr Cash / Cr AR **17.25**. The final direct matrix passed
+**6 diagnostic tests per backend**, including expected injected exceptions, rollback of
+entry/line/binding/audit state, restoration of each clock patch, and ordinary unpatched
+same-source posting after each failure. The original exact case also passed unpatched after
+injection on both backends. Allocation's separately imported validator reference was explicitly
+instrumented in the final matrix to capture its timestamp triple and traceback.
+
+Classification: **INHERITED PRODUCT DEFECT / CLOCK-SENSITIVITY DEMONSTRATED**, an
+application-wall-clock ordering sensitivity rather than a SQLite-only conversion issue.
+Canonical code predates and does not contain the pending Permission upsert correction, so this
+demonstration does not causally implicate that correction. The sensitivity is proven; attribution
+of the original historical failure remains **NOT PROVEN**. Observed failure behavior is rejection
+and atomic rollback, not demonstrated financial corruption. No tolerance, retry, timestamp policy,
+Accounting model/service/evidence/history code, migration or ADR technical semantics was changed.
+Task-created diagnostic containers/databases/networks were removed; inert external evidence remains
+in the `sqlite_timestamp_investigation` and `clock_sensitivity` diagnostic directories.
+
+#### Third authorization candidate finalization boundary
+
+The owner explicitly dispositions the prior blocker separately as PH2-CLOCK-1 and authorizes
+exactly one local third-corrective commit, `fix: serialize Permission upserts`, retaining the
+verified Access runtime and upsert-test fingerprints above. The commit contains only
+`businessos/core/access/models.py`, `tests/test_permission_upserts.py`, and this plan. Its parent
+must be `368dc70aa7bdcefd3191661b4569ccfad29f4069`, preceded by
+`2fbd4a2ae02eda31c6273456a2599b0a2f90339a` and canonical
+`669936df432ec1bb12792ed8d31741fbb1b1287a`. The new
+`PHASE2_AUTH_CORRECTIVE_3_SHA` is reported externally after commit, avoiding a self-referential hash.
+Final narrow checks passed on Python **3.13.16** / Ruff **0.16.7** in a disposable Docker runner
+with the source mounted read-only, all three optional integrations enabled, and
+`DJANGO_SETTINGS_MODULE=config.settings.test` (disposable in-memory SQLite, no existing database):
+
+- `ruff check businessos/core/access/models.py tests/test_permission_upserts.py --no-cache`:
+  all checks passed.
+- `ruff format --check --no-cache businessos/core/access/models.py tests/test_permission_upserts.py`:
+  two files already formatted; no formatting writes.
+- `python manage.py check`: zero issues.
+- `python manage.py makemigrations --check --dry-run`: no changes detected.
+- `git diff --check`: passed; runtime/test SHA-256 fingerprints remain exactly as recorded above.
+
+Broad suites are not rerun for this unchanged implementation. Existing focused **227**, full PostgreSQL
+**2,982**, PAY-INT **300**, ACC-INT **1,142**, and quality/bootstrap/frontend results above remain
+developer verification evidence, not a new independent audit or newly executed full suite.
+
+| Current item | Disposition at local candidate freeze |
+|---|---|
+| PH2-FINAL-AUD-1 | REMAINS REMEDIATED LOCALLY |
+| PH2-AUTH-CORR-1 | ORIGINAL BATCH CYCLES REMAIN REMEDIATED LOCALLY |
+| PH2-AUTH2-AUD-1 | REMEDIATED LOCALLY — INDEPENDENT VERIFICATION PENDING |
+| PH2-CLOCK-1 | INHERITED PRODUCT DEFECT — CANONICAL CLOCK SENSITIVITY DEMONSTRATED; separate remediation required |
+| Original SQLite failure attribution | NOT PROVEN |
+| PH2-FINAL-DOC-1 | OPEN — P3 NONBLOCKING; no normalization in this task |
+| Phase 2 | NOT COMPLETE |
+| Phase 3 | NOT AUTHORIZED |
+
+STOP after the single local candidate commit. No push, PR, merge, tag, main update, earlier-commit
+amendment or additional authorization audit. The next task requires separately scoped inherited
+Accounting clock-sensitivity remediation, followed by one combined independent Phase 2 corrective
+audit. This local freeze does not repair PH2-CLOCK-1 or approve deployment.

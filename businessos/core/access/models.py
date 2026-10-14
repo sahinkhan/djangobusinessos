@@ -54,6 +54,23 @@ def _delete_authority_instance(instance, using, keep_parents):
 
 
 class PermissionQuerySet(models.QuerySet):
+    def update_or_create(self, defaults=None, create_defaults=None, **kwargs):
+        # Django locks the existing row before save(). Take write intent first,
+        # so a superuser namespace reader cannot form a relation/row cycle.
+        self._for_write = True
+        alias = self.db
+        with business_atomic_context(using=alias):
+            connection = connections[alias]
+            if connection.vendor == "postgresql":
+                with connection.cursor() as cursor:
+                    table = connection.ops.quote_name(self.model._meta.db_table)
+                    cursor.execute(f"LOCK TABLE {table} IN ROW EXCLUSIVE MODE")
+            return super().update_or_create(
+                defaults=defaults, create_defaults=create_defaults, **kwargs
+            )
+
+    update_or_create.alters_data = True
+
     def bulk_create(self, *args, **kwargs):
         raise ValidationError("Permission bulk creation/upsert requires validated model saves.")
 
