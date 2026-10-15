@@ -1,0 +1,23 @@
+{% extends "components/form_page.html" %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with parent_label="Human Resources" parent_url="/hr/" current=heading %}{% endblock %}
+{% block form_eyebrow %}Human Resources{% endblock %}
+{% block content %}
+{% if has_choices %}
+<details id="hr-choice-search" class="record-sheet record-form w-full min-w-0 max-w-full"{% if has_choice_search %} open{% endif %}>
+  <summary>Find related choices</summary>
+  <form method="get" role="search">
+    <p class="form-help">Up to 50 choices per field, plus retained current selections. Each search can be independent; User lookup uses an exact UUID, never email. Search before editing: applying filters reloads this form.</p>
+    <div class="form-grid">{% for field in choice_search_fields %}{% include "components/form_field.html" %}{% endfor %}</div>
+    <button type="submit" class="btn-secondary">Find choices</button>
+  </form>
+</details>
+{% endif %}
+{% if choice_filter.errors %}<div class="alert alert-error" role="alert">{{ choice_filter.errors }}</div>{% endif %}
+{{ block.super }}
+{% endblock %}
+{% block form_description %}Changes are checked against your current Company and Branch scope. Review all dates and the current revision before submitting.{% endblock %}
+{% block form_fields %}{% include "components/form_fields.html" with wide_fields="reason" %}{% endblock %}
+{% block form_note %}{% if kind == "attendance" or kind == "leave" %}<p class="record-note">Business timezone: <strong>{{ business_timezone }}</strong>. Leave dates cover complete inclusive calendar days; attendance endpoints identify exact instants.</p>{% endif %}<p class="record-note">Identity associations do not grant access or permissions. Historical attendance and submitted leave are retained; actions never delete their history.</p>{% endblock %}
+{% block save_label %}Continue{% endblock %}
+{% block footer_save_label %}Continue{% endblock %}
+{% block cancel_action %}<a class="btn-secondary" href="{% url 'hr:employee_list' %}" data-app-nav>Back to HR</a>{% endblock %}

@@ -1,0 +1,3 @@
+<a href="{% url 'hr:employee_list' %}" data-app-nav class="bos-menu-link{% if '/hr/attendance/' not in request.path and '/hr/leave/' not in request.path %} is-active{% endif %}">Employees</a>
+<a href="{% url 'hr:attendance_list' %}" data-app-nav class="bos-menu-link{% if '/hr/attendance/' in request.path %} is-active{% endif %}">Attendance</a>
+<a href="{% url 'hr:leave_list' %}" data-app-nav class="bos-menu-link{% if '/hr/leave/' in request.path %} is-active{% endif %}">Leave</a>

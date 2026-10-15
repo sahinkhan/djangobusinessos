@@ -1,0 +1,4 @@
+{% extends "base.html" %}
+{% block title %}HR request could not complete · BusinessOS{% endblock %}
+{% block page_header %}{% include "components/page_heading.html" with heading="HR request could not complete" %}{% endblock %}
+{% block content %}<section class="record-sheet min-w-0 max-w-full"><div class="alert alert-error" role="alert" style="overflow-wrap:anywhere">{{ error }}</div><p class="record-note">No successful operation is implied. Reload the current record and try again, or narrow the requested filters.</p><a class="btn-secondary" href="{% url 'hr:employee_list' %}" data-app-nav>Back to HR</a></section>{% endblock %}

@@ -290,7 +290,7 @@ def test_selected_alias_historical_bootstrap_and_business_flows(django_db_blocke
             executor.migrate(executor.loader.graph.leaf_nodes())
             from django.apps import apps
 
-            assert BusinessModule.objects.count() == 8 + sum(
+            assert BusinessModule.objects.count() == 9 + sum(
                 apps.is_installed(name)
                 for name in (
                     "businessos.modules.payments.integrations.billing",

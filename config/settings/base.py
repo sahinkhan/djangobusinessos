@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     "businessos.modules.billing",
     "businessos.modules.payments",
     "businessos.modules.accounting",
+    "businessos.modules.hr",
 ]
 
 # Explicit opt-in deployment composition; base Billing/Payments stay independent.

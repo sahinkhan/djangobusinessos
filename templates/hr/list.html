@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}{{ heading }} · BusinessOS{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with parent_label="Human Resources" parent_url="/hr/" current=heading %}{% endblock %}
+{% block page_header %}<div class="record-heading">{% include "components/page_heading.html" with heading=heading description="Company-scoped people and employment facts." %}<div class="record-actions">{% if can_create %}<a class="btn-primary" href="{{ create_url }}" data-app-nav>New {{ singular_label }}</a>{% endif %}</div></div>{% include "hr/navigation.html" %}{% endblock %}
+{% block control_tools %}
+<form method="get" class="bos-searchbar" role="search" data-list-filter aria-controls="list-results">
+  <input name="q" value="{{ filter_form.q.value|default:'' }}" maxlength="200" placeholder="Search {{ heading|lower }}…" aria-label="Search {{ heading|lower }}">
+  {% if kind == "employee" or kind == "leave" %}<input name="status" value="{{ filter_form.status.value|default:'' }}" placeholder="Status" aria-label="Status">{% endif %}
+  {% if kind == "attendance" or kind == "leave" %}<label>From {{ filter_form.start_date }}</label><label>To {{ filter_form.end_date }}</label>{% endif %}
+  {% if kind == "department" or kind == "leave_type" %}{{ filter_form.active }}{% endif %}
+  {% if filter_form.branch_id.value %}<input type="hidden" name="branch_id" value="{{ filter_form.branch_id.value }}">{% endif %}
+  {% if filter_form.employee_id.value %}<input type="hidden" name="employee_id" value="{{ filter_form.employee_id.value }}">{% endif %}
+  <button type="submit">Filter</button>
+</form>
+{% if filter_form.errors %}<div class="alert alert-error" role="alert">{{ filter_form.errors }}</div>{% endif %}
+{% endblock %}
+{% block content %}
+<div class="list-results-shell min-w-0 max-w-full" data-list-results-shell>
+  {% include "components/list_results_status.html" %}
+  <div id="list-results" data-list-results aria-live="polite" aria-busy="false" tabindex="-1">
+    <section class="record-sheet min-w-0 max-w-full"><div class="table-scroll overflow-x-auto"><table class="data-table">
+      <thead><tr><th>Record</th><th>Details</th><th class="whitespace-nowrap">State</th><th class="whitespace-nowrap">Revision</th></tr></thead>
+      <tbody>{% for item in records %}<tr>
+        <td style="overflow-wrap:anywhere">{% with detail_url="hr:"|add:kind|add:"_detail" %}<a href="{% url detail_url item.id %}" data-app-nav>{% if kind == "employee" %}{{ item.employee_number }}{% elif item.code %}{{ item.code }}{% elif kind == "attendance" %}{{ item.current.start_at }}{% else %}{{ item.start_date }}{% endif %}</a>{% endwith %}</td>
+        <td style="overflow-wrap:anywhere">{% if item.party %}{{ item.party.display_name }}{% elif item.name %}{{ item.name }}{% elif kind == "attendance" %}{{ item.current.end_at }}{% else %}{{ item.end_date }}{% endif %}</td>
+        <td class="whitespace-nowrap">{% if kind == "attendance" %}{{ item.current.effect }}{% elif item.status %}{{ item.status }}{% elif item.is_active %}Active{% else %}Inactive{% endif %}</td>
+        <td class="whitespace-nowrap">{% if kind == "attendance" %}{{ item.current.number }}{% else %}{{ item.revision }}{% endif %}</td>
+      </tr>{% empty %}<tr><td colspan="4"><div class="section-empty">No matching records in your current Company and Branch scope.</div></td></tr>{% endfor %}</tbody>
+    </table></div></section>
+    {% include "components/pagination.html" %}
+  </div>
+</div>
+{% endblock %}

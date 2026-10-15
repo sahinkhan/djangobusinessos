@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load tz %}
+{% block title %}{{ heading }} · BusinessOS{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with parent_label="Human Resources" parent_url="/hr/" current=heading %}{% endblock %}
+{% block page_header %}{% include "components/page_heading.html" with heading=heading %}{% include "hr/navigation.html" %}{% endblock %}
+{% block content %}
+<article class="record-sheet document-sheet min-w-0 max-w-full">
+  <header class="document-actionbar"><div class="record-actions">
+    {% if can_edit %}{% with edit_url="hr:"|add:kind|add:"_edit" %}<a class="btn-secondary" href="{% url edit_url record.id %}" data-app-nav>Edit</a>{% endwith %}{% endif %}
+    {% if kind == "employee" %}{% if can_end %}<a class="btn-secondary" href="{% url 'hr:employee_end' record.id %}" data-app-nav>End employment</a>{% endif %}{% if can_transfer %}<a class="btn-secondary" href="{% url 'hr:employee_transfer' record.id %}" data-app-nav>Transfer branch</a>{% endif %}{% endif %}
+    {% if kind == "attendance" %}{% if can_correct %}<a class="btn-secondary" href="{% url 'hr:attendance_correct' record.id %}" data-app-nav>Correct</a><a class="btn-secondary" href="{% url 'hr:attendance_void' record.id %}" data-app-nav>Void</a><a class="btn-secondary" href="{% url 'hr:attendance_reinstate' record.id %}" data-app-nav>Reinstate</a>{% endif %}<a class="btn-secondary" href="{% url 'hr:attendance_revisions' record.id %}" data-app-nav>Revision history</a>{% endif %}
+    {% if kind == "leave" %}{% if can_submit %}<a class="btn-secondary" href="{% url 'hr:leave_submit' record.id %}" data-app-nav>Submit</a>{% endif %}{% if can_decide %}<a class="btn-secondary" href="{% url 'hr:leave_approve' record.id %}" data-app-nav>Approve</a><a class="btn-secondary" href="{% url 'hr:leave_reject' record.id %}" data-app-nav>Reject</a>{% endif %}{% if can_cancel %}<a class="btn-secondary" href="{% url 'hr:leave_cancel' record.id %}" data-app-nav>Cancel leave</a>{% endif %}{% endif %}
+  </div><span class="document-status">{% if kind == "attendance" %}{{ record.current.effect }}{% elif record.status %}{{ record.status }}{% elif record.is_active %}Active{% else %}Inactive{% endif %}</span></header>
+  <div class="document-body min-w-0 max-w-full">
+    <header class="record-sheet-heading"><span class="record-eyebrow">Human Resources</span><h2 style="overflow-wrap:anywhere">{% if record.employee_number %}{{ record.employee_number }}{% elif record.code %}{{ record.code }}{% else %}{{ record.id }}{% endif %}</h2>{% if record.party %}<p style="overflow-wrap:anywhere">{{ record.party.display_name }}</p>{% elif record.name %}<p style="overflow-wrap:anywhere">{{ record.name }}</p>{% endif %}</header>
+    <dl class="record-metadata">
+      <div><dt>Identity</dt><dd style="overflow-wrap:anywhere">{{ record.id }}</dd></div>
+      <div><dt>Revision</dt><dd>{% if kind == "attendance" %}{{ record.current.number }}{% else %}{{ record.revision }}{% endif %}</dd></div>
+      {% if record.party %}<div><dt>Current Party type</dt><dd>{{ record.party.party_type }}</dd></div><div><dt>Current Party activity</dt><dd>{% if record.party.is_active %}Active{% else %}Inactive{% endif %}</dd></div>{% endif %}
+      {% if kind == "employee" %}<div><dt>Joining date</dt><dd>{{ record.joining_date }}</dd></div><div><dt>Leaving date</dt><dd>{{ record.leaving_date|default:"—" }}</dd></div><div><dt>Current branch</dt><dd style="overflow-wrap:anywhere">{{ record.branch_id|default:"Unassigned" }}</dd></div>{% if record.department %}<div><dt>Department</dt><dd style="overflow-wrap:anywhere">{{ record.department.name }}</dd></div>{% endif %}{% endif %}
+      {% if kind == "attendance" or kind == "leave" %}<div><dt>Frozen timezone</dt><dd style="overflow-wrap:anywhere">{{ record.timezone }}</dd></div><div><dt>Frozen branch</dt><dd style="overflow-wrap:anywhere">{{ record.branch_id|default:"Unassigned" }}</dd></div>{% endif %}
+      {% if kind == "attendance" %}{% timezone record.timezone %}<div><dt>Start</dt><dd>{{ record.current.start_at|date:"Y-m-d H:i:s.u T" }}</dd></div><div><dt>End (exclusive)</dt><dd>{{ record.current.end_at|date:"Y-m-d H:i:s.u T" }}</dd></div>{% endtimezone %}{% endif %}
+      {% if kind == "leave" %}<div><dt>Leave type</dt><dd style="overflow-wrap:anywhere">{{ record.leave_type.name }}</dd></div><div><dt>From</dt><dd>{{ record.start_date }}</dd></div><div><dt>Through (inclusive)</dt><dd>{{ record.end_date }}</dd></div><div><dt>Submission revision</dt><dd>{{ record.submit_revision|default:"—" }}</dd></div><div><dt>Decision</dt><dd>{{ record.decision|default:"—" }}</dd></div><div><dt>Cancellation revision</dt><dd>{{ record.cancel_revision|default:"—" }}</dd></div>{% endif %}
+    </dl>
+    {% if record.reason %}<section class="record-section"><h3>Reason</h3><p class="record-notes" style="overflow-wrap:anywhere">{{ record.reason }}</p></section>{% endif %}
+    {% if record.current.reason %}<section class="record-section"><h3>Current revision reason</h3><p class="record-notes" style="overflow-wrap:anywhere">{{ record.current.reason }}</p></section>{% endif %}
+    {% if record.decision_reason %}<section class="record-section"><h3>Decision reason</h3><p class="record-notes" style="overflow-wrap:anywhere">{{ record.decision_reason }}</p></section>{% endif %}
+    {% if record.cancel_reason %}<section class="record-section"><h3>Cancellation reason</h3><p class="record-notes" style="overflow-wrap:anywhere">{{ record.cancel_reason }}</p></section>{% endif %}
+    <p class="record-note">Historical records are retained. Actions revalidate current permissions and scope; a prior receipt does not grant present authority.</p>
+  </div>
+</article>
+{% endblock %}

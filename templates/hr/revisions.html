@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% load tz %}
+{% block title %}Attendance revisions · BusinessOS{% endblock %}
+{% block breadcrumbs %}{% include "components/breadcrumbs.html" with parent_label="Attendance" parent_url="/hr/attendance/" current="Revision history" %}{% endblock %}
+{% block page_header %}{% include "components/page_heading.html" with heading="Attendance revision history" description="Append-only history; highest certified revision supplies current effect." %}{% endblock %}
+{% block content %}
+<div class="list-results-shell min-w-0 max-w-full" data-list-results-shell>{% include "components/list_results_status.html" %}<div id="list-results" data-list-results aria-live="polite" aria-busy="false" tabindex="-1"><section class="record-sheet min-w-0 max-w-full"><div class="table-scroll overflow-x-auto"><table class="data-table"><thead><tr><th>Revision</th><th>Operation</th><th>Effect</th><th>Interval ({{ record.timezone }})</th><th>Reason</th></tr></thead><tbody>{% for item in records %}<tr><td>{{ item.number }}</td><td>{{ item.operation }}</td><td>{{ item.effect }}</td><td>{% timezone record.timezone %}{{ item.start_at|date:"Y-m-d H:i:s.u T" }} → {{ item.end_at|date:"Y-m-d H:i:s.u T" }}{% endtimezone %}</td><td style="overflow-wrap:anywhere">{{ item.reason|default:"—" }}</td></tr>{% empty %}<tr><td colspan="5">No history available.</td></tr>{% endfor %}</tbody></table></div></section>{% include "components/pagination.html" %}</div></div>
+{% endblock %}

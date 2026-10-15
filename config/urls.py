@@ -56,6 +56,7 @@ urlpatterns = [
     path("billing/", include(billing_urlconf)),
     path("payments/", include(payments_urlconf)),
     path("accounting/", include("businessos.modules.accounting.urls")),
+    path("hr/", include("businessos.modules.hr.urls")),
     path("", home, name="home"),
 ]
 if apps.is_installed("businessos.modules.payments.integrations.billing"):
