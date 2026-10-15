@@ -1,10 +1,10 @@
 # Phase 3A — HR Foundation
 
-Status: **CORRECTIVE CANDIDATE — RE-AUDIT PENDING**.
-ADR 0018: **PROPOSED — NOT ACCEPTED**. HR-1 NOT AUTHORIZED.
-HR0-REAUD-1: **CORRECTION PROPOSED — INDEPENDENT AUDIT PENDING**.
+Status: **FORMAL HR-0 CONTRACT ACCEPTANCE COMPLETE; CANONICAL ADOPTION PENDING**.
+ADR 0018: **ACCEPTED FOR CANONICAL ADOPTION**. HR-1 NOT AUTHORIZED.
+Independent final contract audit: **PASS — Readiness A**; all five findings RESOLVED.
 
-Date: 2026-10-14. Local branch: `phase3a-hr-contract`.
+Date: 2026-10-14. Formal acceptance: 2026-10-15 Asia/Dhaka. Branch: `phase3a-hr-contract`.
 Canonical base: `6453c8f3202335aabe8a872046fea2e607dac858`.
 Technical ADR: [ADR 0018](../../decisions/0018-hr-foundation-technical-contract.md).
 Accepted umbrella: [ADR 0017](../../decisions/0017-phase3-people-digital-commerce-boundaries.md)
@@ -15,18 +15,21 @@ and [Phase 3 plan](PHASE_3_PEOPLE_DIGITAL_COMMERCE.md).
 The umbrella completion rule is fulfilled at the canonical base: acceptance CI #134 / run
 `38570976500` and main CI #135 / run `38576825532` SUCCESS, 3,015 PostgreSQL tests each.
 Those inherited results do not execute HR. OD-1–OD-12 remain resolved/frozen; only OD-1–OD-6's
-remaining HR technical details are proposed here. The original internal review's no-conflict
+remaining HR technical details are now accepted here. The original internal review's no-conflict
 conclusion was subsequently corrected by the supplied independent Readiness B audit below.
 Internal review was not independent approval.
 
 Original proposal `5be60f19e3bf654786abcd06b61149bc4a962ea9` is preserved above that canonical parent.
 First corrective commit `3ab7aaea019833b9a0f5123f51018f4d516db366` remains preserved.
-Current authorization permits exactly one further local docs-only finer-grained correction above
-that commit, not an amendment or acceptance. The owner rejects its global EXCLUSIVE authority
-gates and authorizes the supplied Result A HR-only protocol, not Core/Identity/Access changes.
-No runtime exists for these six models/services/permissions. No push, PR, merge, tag, main update,
-HR-1, ECOM-0/1, Phase 4 or production deployment. Future implementation requires independent
-contract review, explicit acceptance/publication/adoption and separate HR-1 authorization.
+Finer-grained correction `c99ea988ff7e1a74fed3ed4cb1232cd7db37957a` records owner Option B's
+rejection of global EXCLUSIVE authority gates and supplied Result A HR-only protocol. Its final
+independent audit now passed with Readiness A, zero P0–P3 and all five findings resolved.
+Current authorization permits exactly one docs-only formal acceptance commit above that correction,
+normal branch publication/exact-head CI, then direct normal fast-forward main adoption only after
+success/unchanged-main checks, separate main CI and only then local main synchronization.
+No runtime exists for these six models/services/permissions. No Core/Identity/Access changes,
+PR, tag, force-push, rebase, squash, merge commit, amendment, HR-1, ECOM-0/1, Phase 4 or deployment.
+Future HR-1 requires completed canonical adoption and separate implementation authorization.
 The umbrella's earlier NOT STARTED/pending wording records its acceptance checkpoint; this plan
 records HR-0's separately authorized start, without editing/backdating that historical evidence.
 
@@ -77,7 +80,7 @@ Verdict: **REVISE — HR-0 TECHNICAL CONTRACT REQUIRES CORRECTION**; **Readiness
 P0 0 / P1 0 / P2 4 / P3 0. These historical findings are not erased; the subsequent supplied
 independent re-audit reports all four RESOLVED at technical-contract level after the first correction:
 
-| Finding | Original defect | Current proposed correction / review boundary |
+| Finding | Original defect | Resolution / review boundary |
 | --- | --- | --- |
 | HR0-AUD-1 — P2 | HR shared User locks deadlock inherited B→A batch writers; Core actor guard also matters | Original defect independently reported RESOLVED; preserve writer-compatible complete prelock direction, not HR-only blocking row ordering |
 | HR0-AUD-2 — P2 | Unsupported 24-hour Attendance ceiling and dependent lookback | RESOLVED: no duration ceiling; complete interval predicate; long-interval/resource-error oracles unchanged |
@@ -86,8 +89,9 @@ independent re-audit reports all four RESOLVED at technical-contract level after
 
 The same re-audit raised NEW **HR0-REAUD-1 — P2**, placing formal acceptance on HOLD because the
 EXCLUSIVE replacement gates imposed new database-wide operational contention without owner approval.
-Owner Option B rejects that tradeoff; this task proposes its finer-grained correction, not resolution.
-No HR implementation test or formal contract acceptance PASS is claimed.
+Owner Option B rejected that tradeoff. The supplied final independent review of `c99ea988...`
+subsequently resolved HR0-REAUD-1; the original HOLD is retained as history, not current status.
+Formal contract acceptance is now complete; no HR implementation acceptance PASS is claimed.
 
 ### Chronology and present authority
 
@@ -100,8 +104,14 @@ No HR implementation test or formal contract acceptance PASS is claimed.
 | 5. New global-contention finding | HR0-REAUD-1 — P2; formal acceptance HOLD; unrelated Company work/login/writers could contend |
 | 6. Owner Option B | Explicitly REJECT global EXCLUSIVE authority contention; no owner runtime change authorized |
 | 7. Read-only feasibility investigation | Supplied Result **A — HR-ONLY FINER-GRAINED LOCKING FEASIBLE; Core/Identity change NO**; complete row NOWAIT plus relation NOWAIT, unchanged Core; synthetic evidence only |
-| 8. Present corrective candidate | One further local docs-only commit; section8 replaces current global gates, section14 preserves exact T01–T26 future oracles |
-| 9. Next gate | Fresh independent HR-0 corrective technical-contract audit PENDING; ADR0018 remains PROPOSED, HR-1 NOT AUTHORIZED |
+| 8. Finer-grained corrective candidate | `c99ea988ff7e1a74fed3ed4cb1232cd7db37957a`; section8 replaces global gates, section14 preserves exact T01–T26 future oracles |
+| 9. Corrective-stage next gate, historical | Fresh independent audit was PENDING; ADR0018 was PROPOSED and HR-1 unauthorized at that checkpoint |
+| 10. Final independent re-audit | Owner-supplied FINAL PASS / Readiness A / zero P0–P3; HR0-REAUD-1 RESOLVED and original four resolutions retained |
+| 11. Present formal acceptance | One docs-only acceptance commit; exact reviewed contract frozen; canonical adoption PENDING under the completion rule below; HR-1 NOT AUTHORIZED |
+
+Sections 2–17 retain the reviewed technical requirements verbatim. Their retained drafting labels
+such as "proposed" identify the future implementation design, not unresolved choices after this
+formal contract acceptance. H01–H18 and T01–T26 still require actual HR-1 evidence.
 
 ## 2. Common schema and domain rules
 
@@ -1223,8 +1233,8 @@ All preexisting containers, demos/source databases and source files were left un
 
 At that first-correction checkpoint all H01–H18 were future implementation obligations and original
 findings awaited independent re-audit. The later supplied re-audit resolved those four at contract
-level and raised HR0-REAUD-1. Current status is finer-grained corrective candidate, not accepted/
-closed or HR-1 authority; only the new finding's proposed correction awaits fresh re-audit.
+level and raised HR0-REAUD-1. At the subsequent finer-grained corrective checkpoint, status was
+corrective candidate, not accepted/closed or HR-1 authority; the new correction awaited re-audit.
 
 ### Finer-grained correction evidence — 2026-10-15 Asia/Dhaka
 
@@ -1335,7 +1345,90 @@ hr0-fine-contract-qa:20261015-3ab7aae (verified image ID
 confirmed both absent. Tmpfs synthetic DB/fixtures were removed and are not recoverable. Downloaded
 Python/PostgreSQL base images were retained; no broad Docker cleanup or preexisting resource deletion.
 
-All original domain/history corrections remain intact. Current HR0-REAUD-1 status is **CORRECTION
-PROPOSED — INDEPENDENT AUDIT PENDING**. ADR0018 remains PROPOSED — NOT ACCEPTED; HR-1/ECOM-0,
-push/PR/merge/tag/main update are unauthorized. STOP after the one local corrective commit for a
+All original domain/history corrections remain intact. At that finer-grained corrective checkpoint,
+HR0-REAUD-1 status was **CORRECTION
+PROPOSED — INDEPENDENT AUDIT PENDING**. ADR0018 was PROPOSED — NOT ACCEPTED; HR-1/ECOM-0,
+push/PR/merge/tag/main update were unauthorized. The then-current STOP was after one local correction for a
 fresh independent technical-contract re-audit, not formal acceptance or runtime implementation.
+That historical pending boundary is superseded by the supplied final audit and authorization below.
+
+### Final independent re-audit and formal acceptance — 2026-10-15 Asia/Dhaka
+
+Exact reviewed candidate: `c99ea988ff7e1a74fed3ed4cb1232cd7db37957a`.
+The owner supplied **FINAL PASS — HR-0 FINER-GRAINED TECHNICAL CONTRACT APPROVED FOR FORMAL
+ACCEPTANCE**, **Readiness A**, **P0: 0 / P1: 0 / P2: 0 / P3: 0**. HR0-AUD-1–4 and HR0-REAUD-1
+are all **RESOLVED at technical-contract level**. This task records the supplied independent review,
+not a new self-issued audit. Original REVISE results, first-correction HOLD, rejected global gates,
+Option B/Result A, interruptions and all previous verification evidence remain historical above.
+
+Supplied independent evidence includes PostgreSQL T01–T26, original 40P01 reproduction and no
+corrected deadlock in tested supported probes, complete authority sets, cross-company simultaneous
+progress, current authorization/revocation, selected alias, atomic rollback, historical retry and
+retained temporal/history corrections. It also reports 248 existing architecture tests passed.
+The earlier 248-test and twelve fresh-probe execution records remain separately attributed; none
+certifies implemented HR. H01–H18 and T01–T26 remain future HR-1 implementation obligations.
+
+**INDEPENDENT FINAL CONTRACT AUDIT: PASS / READINESS A. FORMAL ACCEPTANCE: COMPLETE.**
+**CANONICAL ADOPTION: PENDING AT THIS ACCEPTANCE CHECKPOINT. ADR 0018: ACCEPTED FOR CANONICAL
+ADOPTION. HR-1: NOT AUTHORIZED. ECOM-0: NOT STARTED. PHASE 3: NOT COMPLETE.**
+
+No policy/technical requirement changed: verified qualified relation admission, complete actor/new-FK
+User union and inactive-inclusive Role/Permission NOWAIT sets, existing SU namespace, unchanged
+final Core guards, fixed alias/nesting, whole rollback/AuthorityBusy and historical receipts are
+frozen. The domain schema, twelve codes, Company/Branch, optional non-authorizing User, multiple
+sessions, complete append-only chains, no duration/span caps, full-day Leave, HTTP-only enablement
+and atomic Audit are retained. No runtime, migration, test, settings, manifest or frontend changes.
+
+#### Formal-acceptance local verification
+
+The following checks were actually rerun for this docs-only acceptance, separately from supplied
+independent review and earlier corrective execution evidence. A disposable --rm Python3.13 container
+mounted source read-only, installed unchanged requirements/development.lock, set
+PYTHONDONTWRITEBYTECODE=1 and config.settings.test, and enabled the three existing financial
+integration install flags. Python3.13.16, Django5.2.17 and Ruff0.16.7 were observed. Database state
+was in-memory SQLite only; no customer/demo database or existing container was used. Network was
+used for the base-image/locked-package downloads, not customer data. No full application suite or
+new PostgreSQL contract probes were required/claimed by this acceptance task.
+
+| Exact check | Actual acceptance-stage local result |
+| --- | --- |
+| python manage.py check | PASS, zero issues |
+| python manage.py makemigrations --check --dry-run | PASS, no changes detected |
+| ruff check . --no-cache | PASS |
+| pytest tests/test_database_architecture.py tests/test_modules.py tests/test_database_foundation.py -q -p no:cacheprovider | **248 passed in 36.44s**, existing guards, not HR-1 tests |
+| Markdown and scope checks | PASS: 49 relative links, one heading anchor, balanced fences, H01–H18/T01–T26 exact; only two authorized Markdown paths |
+| Reviewed contract preservation | PASS: technical sections 2–17 verbatim unchanged from c99ea988; ADR acceptance/status prose only, no policy change |
+| git diff --check | PASS |
+
+Documentation/whitespace/scope/ancestry are rechecked before this single acceptance commit. Hosted
+branch CI, main CI, run identifiers and test counts remain unclaimed until actually observed.
+
+#### Acceptance publication and canonical completion rule
+
+Required chain, exactly four commits above canonical umbrella:
+
+```text
+6453c8f3202335aabe8a872046fea2e607dac858
+-> 5be60f19e3bf654786abcd06b61149bc4a962ea9
+-> 3ab7aaea019833b9a0f5123f51018f4d516db366
+-> c99ea988ff7e1a74fed3ed4cb1232cd7db37957a
+-> this ONE formal acceptance commit
+```
+
+Publish `phase3a-hr-contract` normally only after unchanged live main/absent remote branch checks.
+Require `Phase 0 checks`, event push, exact branch and acceptance SHA, SUCCESS with actual mandatory
+PostgreSQL/bootstrap/lint/Django/drift/npm/Tailwind/CSS evidence. Then reverify live main still
+`6453c8f3202335aabe8a872046fea2e607dac858` and the exact fast-forward chain. Normally push the
+same exact acceptance SHA directly to main (no PR), require a SEPARATE successful main push CI at
+that SHA, then and only then switch local main and pull --ff-only. Preserve the HR branch.
+
+Only after that complete chain does this acceptance SHA become the **CANONICAL HR-0 CONTRACT
+FREEZE**, with HR-0/ADR0018 CANONICALLY ACCEPTED. The pending statement is acceptance-stage history
+superseded by verified completion; no second commit or future CI result is assumed. Report actual
+run numbers/IDs/attempts/counts after observation, not before. Any failure/rejected push/unexpected
+state stops without automatic remediation, amendment, revert or another commit.
+
+After success HR-1 is ELIGIBLE FOR SEPARATE AUTHORIZATION, NOT STARTED; ECOM-0 remains separately
+eligible and NOT STARTED BY THIS TASK. HR-1/ECOM-1, Phase 4 and production deployment remain
+unauthorized. Phase 3 is NOT COMPLETE; production readiness is NOT CLAIMED. No PR, tag, force-push,
+rebase, squash, merge commit, branch deletion, runtime change or automatic next milestone.

@@ -1,14 +1,14 @@
 # ADR 0018 — HR Foundation Technical Contract
 
-Status: **PROPOSED — HR-0**. Not Accepted. HR-1 NOT AUTHORIZED.
+Status: **Accepted — HR-0 Technical Contract**. HR-1 NOT AUTHORIZED.
 
-HR-0: **CORRECTIVE CANDIDATE — RE-AUDIT PENDING**.
-HR0-REAUD-1: **CORRECTION PROPOSED — INDEPENDENT AUDIT PENDING**.
+Independent final contract audit: **PASS — Readiness A**. All five HR-0 findings RESOLVED.
+Formal acceptance COMPLETE; canonical adoption PENDING at this acceptance checkpoint.
 
-Date: 2026-10-14.
+Date: 2026-10-14. Formal acceptance: 2026-10-15 Asia/Dhaka.
 
 Canonical umbrella base: `6453c8f3202335aabe8a872046fea2e607dac858`.
-Local proposal branch: `phase3a-hr-contract`; no publication authorized.
+Acceptance/publication branch: `phase3a-hr-contract`; no PR or tag.
 
 ## Authority and evidence
 
@@ -28,14 +28,18 @@ subsequently supplied independent re-audit: all four RESOLVED at technical-contr
 The owner rejected database-wide EXCLUSIVE authority gates (Option B). The supplied read-only
 investigation conclusion is **A — HR-ONLY FINER-GRAINED LOCKING FEASIBLE; Core/Identity change: NO**.
 Its synthetic execution evidence is not HR-1 acceptance or this task's independent audit.
-The current authorization permits one further local docs-only commit above that first correction,
-recording the finer-grained protocol. It does not amend history, accept this ADR or authorize runtime.
-The Attendance/Leave/history corrections remain resolved and unchanged; only HR0-REAUD-1 awaits
-fresh independent re-audit of the present proposed correction.
+The finer-grained correction was recorded at `c99ea988ff7e1a74fed3ed4cb1232cd7db37957a` without
+amending history or accepting the ADR at that checkpoint. The owner subsequently supplied
+**FINAL PASS — HR-0 FINER-GRAINED TECHNICAL CONTRACT APPROVED FOR FORMAL ACCEPTANCE**,
+**Readiness A**, **P0: 0 / P1: 0 / P2: 0 / P3: 0**, resolving HR0-REAUD-1 as well as retaining
+the four earlier resolutions. The original HOLD and then-pending correction remain historical.
+The present owner authorization accepts this exact technical contract through one docs-only commit,
+normal branch publication, exact-head branch CI, direct non-force fast-forward main adoption only
+on success/unchanged main, separate exact-head main CI and then local main synchronization.
 
 This ADR and the [detailed HR plan](../exec-plans/active/PHASE_3A_HR_FOUNDATION.md)
-jointly specify a proposed implementation contract. Neither is accepted by this task. All
-H01–H18 evidence is required in a future separately authorized HR-1, not executed here.
+jointly specify the accepted technical contract, not an implemented HR runtime. All H01–H18 and
+T01–T26 implementation evidence is required in a future separately authorized HR-1, not executed here.
 No runtime, schema, manifest, permission, test, frontend or existing owner implementation changes.
 
 Required engineering reading: [operating contract](../../AGENTS.md),
@@ -65,7 +69,7 @@ Existing accepted ADRs [0001](0001-foundation-security-contracts.md),
 Paths above are under `businessos/core/` or `businessos/modules/`; the plan links exact files.
 No public HR API is claimed to exist. No owner is redesigned to serve this proposal.
 
-## Proposed decisions within frozen OD-1–OD-6
+## Accepted decisions within frozen OD-1–OD-6
 
 ### 1. Six HR-owned entities, no competing identity or balance
 
@@ -198,7 +202,7 @@ conflict only; existing history persists.
 
 ### 4. Authorization, scope, persistence and audit
 
-Exactly twelve proposed manifest permissions:
+Exactly twelve contract manifest permissions (not registered by this acceptance):
 
 ```text
 hr.employee.view       hr.employee.manage
@@ -271,12 +275,55 @@ Preliminary SQL may wait under bounded resource controls; row NOWAIT alone does 
 relation acquisition NOWAIT. Complete sets/deadlines fail closed, with no truncation or hard two-second
 wall-clock guarantee. HR-1 must prove T01–T26, whole rollback, actual FK/ORM lock coverage and compatible
 cross-company progress. Fairness, starvation freedom, throughput and arbitrary-transaction deadlock
-freedom are not claimed. No request/network/UI work under authority locks. Acceptance remains pending.
+freedom are not claimed. No request/network/UI work under authority locks. Canonical adoption remains
+pending under the completion rule below; formal contract acceptance is complete.
 One identity and one attendance authority remain; history lives in HR, not Audit.
 
 ## Review and next gate
 
 The [plan's local verification record](../exec-plans/active/PHASE_3A_HR_FOUNDATION.md#local-hr-0-verification)
 separates actual documentation checks from future implementation requirements.
-Next: fresh independent HR-0 corrective technical-contract re-audit, then separately authorized acceptance and
-publication/adoption. HR-1 remains NOT AUTHORIZED. No policy reopening or self-acceptance.
+The supplied final independent audit and owner-authorized formal acceptance are complete. Next is
+the currently authorized publication/CI/canonical-adoption sequence below, not further remediation.
+HR-1 remains NOT AUTHORIZED; no policy or runtime change is introduced by acceptance.
+
+## Final independent audit and formal acceptance — 2026-10-15
+
+Reviewed finer-grained candidate: `c99ea988ff7e1a74fed3ed4cb1232cd7db37957a`, directly above
+`3ab7aaea019833b9a0f5123f51018f4d516db366`, original proposal
+`5be60f19e3bf654786abcd06b61149bc4a962ea9` and canonical umbrella base above.
+The owner supplied final independent **PASS / Readiness A**, with zero P0–P3 findings and
+**HR0-AUD-1, HR0-AUD-2, HR0-AUD-3, HR0-AUD-4 and HR0-REAUD-1: RESOLVED** at technical-contract
+level. This acceptance task records that supplied review; it does not manufacture another audit.
+
+Supplied evidence includes the PostgreSQL T01–T26 corrective matrix, original 40P01 reproduction,
+no corrected deadlock in tested supported paths, complete authority coverage, simultaneous
+cross-company progress, final authorization/revocation, selected alias, rollback, historical retry
+and retained Attendance/Leave/history corrections; 248 existing architecture tests passed.
+Those are contract-review/synthetic/existing-runtime evidence, not implemented HR-1 acceptance.
+
+Acceptance freezes the finer-grained protocol and domain rules above unchanged: verified relation
+identities, ROW SHARE NOWAIT admission, complete inactive-inclusive FOR SHARE NOWAIT authority sets,
+existing superuser namespace, unchanged Core final guards, fixed nesting/alias, whole rollback and
+historical receipts. Rejected EXCLUSIVE gates remain rejected. H01–H18 and T01–T26 remain mandatory
+future HR-1 implementation gates. No HR models, services, permissions or migrations are installed.
+
+### Canonical completion rule
+
+This one acceptance commit becomes the **CANONICAL HR-0 CONTRACT FREEZE** only after:
+
+1. normal publication of `phase3a-hr-contract` and successful `Phase 0 checks` for event `push`,
+   branch `phase3a-hr-contract`, testing this exact acceptance SHA;
+2. remote main still `6453c8f3202335aabe8a872046fea2e607dac858`, proven fast-forward ancestry and
+   exactly four commits above it: proposal, first correction, finer-grained correction, acceptance;
+3. direct normal non-force fast-forward push of that same verified SHA to `refs/heads/main`;
+4. a separate successful `Phase 0 checks` push run on `main` at that same SHA, followed only then
+   by `git switch main` and `git pull --ff-only origin main` with a clean working tree.
+
+Only then are HR-0 and ADR 0018 CANONICALLY ACCEPTED. Adoption-pending wording records this
+acceptance checkpoint and is superseded by verified completion, without another commit or invented
+future CI evidence. Failure, rejected push or unexpected state stops without automatic correction.
+No PR, tag, force-push, rebase, squash, merge commit, amendment or runtime work is authorized.
+HR-1 then becomes eligible for separate authorization but is NOT STARTED. ECOM-0 is not started
+by this task; ECOM-1, Phase 4 and deployment remain unauthorized. Phase 3 is NOT COMPLETE;
+production readiness is NOT CLAIMED.
