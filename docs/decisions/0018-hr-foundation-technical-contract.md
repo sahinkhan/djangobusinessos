@@ -3,6 +3,7 @@
 Status: **PROPOSED — HR-0**. Not Accepted. HR-1 NOT AUTHORIZED.
 
 HR-0: **CORRECTIVE CANDIDATE — RE-AUDIT PENDING**.
+HR0-REAUD-1: **CORRECTION PROPOSED — INDEPENDENT AUDIT PENDING**.
 
 Date: 2026-10-14.
 
@@ -21,8 +22,16 @@ Original proposal `5be60f19e3bf654786abcd06b61149bc4a962ea9` received the suppli
 **REVISE — HR-0 TECHNICAL CONTRACT REQUIRES CORRECTION / Readiness B**, P0 0 / P1 0 / P2 4 / P3 0.
 HR0-AUD-1 (User lock cycle), HR0-AUD-2 (unapproved 24-hour attendance ceiling), HR0-AUD-3
 (unapproved 366-date leave ceiling) and HR0-AUD-4 (incomplete revision-chain validation) remain
-historical findings. This owner-authorized correction proposes their remedies, not independent
-resolution. One local docs-only corrective commit is permitted; the original is not amended.
+historical findings. First correction `3ab7aaea019833b9a0f5123f51018f4d516db366` received the
+subsequently supplied independent re-audit: all four RESOLVED at technical-contract level, but
+**HR0-REAUD-1 — P2** placed formal acceptance on HOLD for unacceptable new global table contention.
+The owner rejected database-wide EXCLUSIVE authority gates (Option B). The supplied read-only
+investigation conclusion is **A — HR-ONLY FINER-GRAINED LOCKING FEASIBLE; Core/Identity change: NO**.
+Its synthetic execution evidence is not HR-1 acceptance or this task's independent audit.
+The current authorization permits one further local docs-only commit above that first correction,
+recording the finer-grained protocol. It does not amend history, accept this ADR or authorize runtime.
+The Attendance/Leave/history corrections remain resolved and unchanged; only HR0-REAUD-1 awaits
+fresh independent re-audit of the present proposed correction.
 
 This ADR and the [detailed HR plan](../exec-plans/active/PHASE_3A_HR_FOUNDATION.md)
 jointly specify a proposed implementation contract. Neither is accepted by this task. All
@@ -88,19 +97,23 @@ HR-bounded selector over accepted Party fields, not `party_detail()` or a new Pa
 New/relinked User must be active and have Company access (or valid superuser grant bypass), with
 partial unique Company+User for ACTIVE Employees. Unlink/relink is explicit, versioned and audited;
 later User inactivity/revocation does not erase history. No matching by email/phone, identity creation,
-Company/Branch/role grants or self-service. The original multi-User FOR SHARE rule is withdrawn:
-Identity's inherited B→A batches cannot be made A→B by an HR-only sorting rule.
-Every HR mutation, successful retry/no-op and read using the locking Core final guard uses the
-plan's nonwaiting admission: after all Company/domain locks, acquire EXCLUSIVE NOWAIT relation
-locks on User, Role and Permission before any authority row lock, then run unchanged full Core
-guards and validate any new reference. Actor-only/equal-User paths are NOT exempt: an inherited
-mixed Role-to-User batch can deadlock even the single-actor Core guard. Historical/unlinked Users
-need no extra row locks. Ordinary nonlocking permission-checked reads need no gate. Conflict
-aborts the complete outer transaction, never falls back or waits while accumulating global locks.
-Unknown prelocked outer transactions are rejected before blocking acquisitions; admitted nested
-calls reuse the complete declared anchor set. Existing Identity/Access writers are not modified
-or ordered by HR. This deliberately coarse all-final-guard contention proposal is explicit in
-the plan; it is not an accepted scaling/production policy or a claim of concurrent gated success.
+Company/Branch/role grants or self-service. Identity's inherited B→A batches cannot be made A→B
+by an HR-only sorting rule: blocking ordered multi-User locks are superseded, not revived.
+The first correction's EXCLUSIVE authority-table gates are owner-rejected history, never a fallback.
+Every public HR mutation, successful retry/no-op and locking selector follows the plan's sequence:
+Company/all non-User anchors, then verified User/Role/Permission relations in ROW SHARE NOWAIT,
+then the complete operation-specific User union FOR SHARE NOWAIT (always actor). Re-read stabilized
+actor activity/superuser state; for non-superusers prelock ALL assigned same-company Roles and ALL
+reachable Permissions, including inactive rows, FOR SHARE NOWAIT. For superusers first obtain Core's
+existing Permission namespace SHARE NOWAIT, then every Permission row FOR SHARE NOWAIT.
+Only then invoke every unchanged compound Core final guard immediately before effects/Audit/return.
+Exact row coverage is mandatory; no later guard/nested call may introduce an uncovered anchor.
+New beneficiary snapshot FKs require existence protection, not invented activity/grant eligibility;
+unchanged historical/removed links and negative self-comparison IDs need no extra User locks.
+Any admission conflict aborts the WHOLE outer operation; AuthorityBusy is mapped after rollback,
+with no effect, success Audit, partial receipt or successful retry. Unknown outer transactions are
+rejected before blocking SQL; admitted nesting reuses one alias/connection/outer transaction,
+Company/actor and predeclared complete anchors. No Core/Identity/Access runtime change is required.
 
 Employee branch transfer is a separate company-context operation, with expected revision and
 `hr.employee.branch_changed` audit. It changes only current assignment, not physical-work history.
@@ -197,7 +210,8 @@ hr.leave_type.manage
 
 The plan specifies compound permissions for every public service, selector, related choice and
 HTTP GET/POST. Company access alone does not authorize HR. Django permissions are not business RBAC.
-After Company wait, recheck context/actions; take domain/reference locks; invoke existing
+After Company wait, recheck context/actions; take domain/reference locks and the complete
+fail-fast authority prelocks in the plan; invoke existing
 `require_final_permission` for the complete compound set immediately before effects/audit and
 successful retry/no-op. Its actor/all assigned Roles/all reachable Permissions protocol, including
 inactive rows and superuser namespace stabilization, remains Core-owned. No HR authority cache.
@@ -248,14 +262,16 @@ new infrastructure, target custom-runtime work, SaaS activation or production de
 
 Candidate/statement budgets may refuse dense evidence with an explicit resource error; they do not
 limit interval duration, leave span or revision count. Unsupported civil boundaries fail explicitly,
-never approximate. The three nonwaiting authority-relation gates temporarily block global authority
-DML/locking readers, including unrelated login last_login writes and final guards; ordinary SELECT
-remains available. Gates apply to all mutations/retries/no-ops and locking-Core reads, including
-Attendance/Leave/setup and actor-only cases, but not ordinary nonlocking reads. Even different
-Companies can have one admission winner and one explicit AuthorityBusy loser. This is a proposed
-manual-v1 correctness/contention tradeoff, not a production throughput/fairness claim or an accepted
-Identity extension. HR-1 must verify contention/outer rollback and short transaction
-lifetime; no request/network/UI work while holding gates. Owner/independent acceptance remains pending.
+never approximate. ROW SHARE relation admission is compatible with ordinary ROW EXCLUSIVE DML;
+compatible FOR SHARE readers can coexist, including shared authority rows across Companies. No new
+whole-table EXCLUSIVE serialization or replacement writer gate is permitted. Hot User/Role/Permission
+writers, the existing Company mutex, maintenance and Core's existing superuser Permission SHARE
+namespace lock still contend; NOWAIT refusal is explicit and observable, not permission denial.
+Preliminary SQL may wait under bounded resource controls; row NOWAIT alone does not make implicit
+relation acquisition NOWAIT. Complete sets/deadlines fail closed, with no truncation or hard two-second
+wall-clock guarantee. HR-1 must prove T01–T26, whole rollback, actual FK/ORM lock coverage and compatible
+cross-company progress. Fairness, starvation freedom, throughput and arbitrary-transaction deadlock
+freedom are not claimed. No request/network/UI work under authority locks. Acceptance remains pending.
 One identity and one attendance authority remain; history lives in HR, not Audit.
 
 ## Review and next gate

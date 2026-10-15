@@ -2,6 +2,7 @@
 
 Status: **CORRECTIVE CANDIDATE — RE-AUDIT PENDING**.
 ADR 0018: **PROPOSED — NOT ACCEPTED**. HR-1 NOT AUTHORIZED.
+HR0-REAUD-1: **CORRECTION PROPOSED — INDEPENDENT AUDIT PENDING**.
 
 Date: 2026-10-14. Local branch: `phase3a-hr-contract`.
 Canonical base: `6453c8f3202335aabe8a872046fea2e607dac858`.
@@ -19,8 +20,10 @@ conclusion was subsequently corrected by the supplied independent Readiness B au
 Internal review was not independent approval.
 
 Original proposal `5be60f19e3bf654786abcd06b61149bc4a962ea9` is preserved above that canonical parent.
-Current authorization permits exactly one local docs-only corrective commit above the proposal,
-only after coherent corrections and credible User-lock proof. No amendment or acceptance.
+First corrective commit `3ab7aaea019833b9a0f5123f51018f4d516db366` remains preserved.
+Current authorization permits exactly one further local docs-only finer-grained correction above
+that commit, not an amendment or acceptance. The owner rejects its global EXCLUSIVE authority
+gates and authorizes the supplied Result A HR-only protocol, not Core/Identity/Access changes.
 No runtime exists for these six models/services/permissions. No push, PR, merge, tag, main update,
 HR-1, ECOM-0/1, Phase 4 or production deployment. Future implementation requires independent
 contract review, explicit acceptance/publication/adoption and separate HR-1 authorization.
@@ -71,16 +74,34 @@ HR consumes owners; none imports HR. No Party/Core public API change is needed b
 ### Supplied independent audit — original proposal
 
 Verdict: **REVISE — HR-0 TECHNICAL CONTRACT REQUIRES CORRECTION**; **Readiness B**;
-P0 0 / P1 0 / P2 4 / P3 0. These supplied findings are not erased or self-declared resolved:
+P0 0 / P1 0 / P2 4 / P3 0. These historical findings are not erased; the subsequent supplied
+independent re-audit reports all four RESOLVED at technical-contract level after the first correction:
 
 | Finding | Original defect | Current proposed correction / review boundary |
 | --- | --- | --- |
-| HR0-AUD-1 — P2 | HR shared User locks deadlock inherited B→A batch writers; Core actor guard also matters | Section 8 three-relation nonwaiting admission, no unnecessary User locks, nested entry rejection; disposable proofs below; independent resolution pending |
-| HR0-AUD-2 — P2 | Unsupported 24-hour Attendance ceiling and dependent lookback | No duration ceiling; complete interval predicate; long-interval/resource-error oracles |
-| HR0-AUD-3 — P2 | Unsupported 366-date Leave ceiling/per-date validation | No span ceiling; exact transition-driven civil-boundary certification and long-range oracles |
-| HR0-AUD-4 — P2 | Latest/immediate predecessor misses older gaps/corruption | Complete selected-chain aggregate and every-row transition checks before authority/retry; corrupt-chain oracles |
+| HR0-AUD-1 — P2 | HR shared User locks deadlock inherited B→A batch writers; Core actor guard also matters | Original defect independently reported RESOLVED; preserve writer-compatible complete prelock direction, not HR-only blocking row ordering |
+| HR0-AUD-2 — P2 | Unsupported 24-hour Attendance ceiling and dependent lookback | RESOLVED: no duration ceiling; complete interval predicate; long-interval/resource-error oracles unchanged |
+| HR0-AUD-3 — P2 | Unsupported 366-date Leave ceiling/per-date validation | RESOLVED: no span ceiling; exact transition-driven civil-boundary certification and long-range oracles unchanged |
+| HR0-AUD-4 — P2 | Latest/immediate predecessor misses older gaps/corruption | RESOLVED: complete selected-chain aggregate and every-row checks before authority/retry unchanged |
 
-All remedies require fresh independent re-audit. No HR implementation test or acceptance PASS.
+The same re-audit raised NEW **HR0-REAUD-1 — P2**, placing formal acceptance on HOLD because the
+EXCLUSIVE replacement gates imposed new database-wide operational contention without owner approval.
+Owner Option B rejects that tradeoff; this task proposes its finer-grained correction, not resolution.
+No HR implementation test or formal contract acceptance PASS is claimed.
+
+### Chronology and present authority
+
+| Checkpoint | Exact evidence / disposition |
+| --- | --- |
+| 1. Original HR-0 proposal | `5be60f19e3bf654786abcd06b61149bc4a962ea9`, above canonical umbrella `6453c8f...` |
+| 2. Initial independent audit | REVISE / Readiness B / four P2 HR0-AUD-1–4 |
+| 3. First corrective candidate | `3ab7aaea019833b9a0f5123f51018f4d516db366`; complete history/no temporal caps, but new global EXCLUSIVE authority gates |
+| 4. Independent re-audit | Supplied result: original four RESOLVED at technical-contract level; not implementation acceptance |
+| 5. New global-contention finding | HR0-REAUD-1 — P2; formal acceptance HOLD; unrelated Company work/login/writers could contend |
+| 6. Owner Option B | Explicitly REJECT global EXCLUSIVE authority contention; no owner runtime change authorized |
+| 7. Read-only feasibility investigation | Supplied Result **A — HR-ONLY FINER-GRAINED LOCKING FEASIBLE; Core/Identity change NO**; complete row NOWAIT plus relation NOWAIT, unchanged Core; synthetic evidence only |
+| 8. Present corrective candidate | One further local docs-only commit; section8 replaces current global gates, section14 preserves exact T01–T26 future oracles |
+| 9. Next gate | Fresh independent HR-0 corrective technical-contract audit PENDING; ADR0018 remains PROPOSED, HR-1 NOT AUTHORIZED |
 
 ## 2. Common schema and domain rules
 
@@ -201,7 +222,7 @@ unassigns, otherwise new Branch must be active/same-company. Increment revision 
 branch_changed audit includes old/new IDs. Snapshot facts stay unchanged. Context Branch is actor
 scope, not permission to transfer into another Branch. A new association during a race re-reads
 activity after all reference waits. Use section 8 admission on every final-Core path;
-no ordered multi-User shared-row protocol is retained.
+no blocking UUID-sorted reader/writer ordering assumption is retained.
 
 ## 5. Attendance identity and revisions
 
@@ -405,150 +426,263 @@ invalidate old receipt equality; corrupt earlier/later evidence never gets a suc
 
 ## 8. Transactions, lock order and final authority
 
-Every mutation uses `@business_atomic` or `business_atomic_context()` on the call/enter-time alias.
-PostgreSQL READ COMMITTED is the supported concurrency mode. No arbitrary isolation override.
+### Entry, alias and non-User anchors
 
-Global HR order (omit irrelevant classes, never reverse them):
+Resolve current_database_alias at entry and use unchanged business_atomic_context (or an admitted
+nested same-alias business transaction). PostgreSQL READ COMMITTED is the locking-proof basis;
+verify it, do not silently override isolation. SQLite has functional validation only, not this proof.
+
+An HR-local entry adapter checks the selected connection's outer-transaction state BEFORE entering
+its own atomic block or issuing blocking domain SQL. A check inside an already-entered
+@business_atomic body cannot distinguish the caller's unknown transaction. Reject unknown/prelocked
+outer transactions; do not change Core transaction helpers. Admitted nested work must have the same
+alias, connection, outer transaction, Company, actor and predeclared complete domain/authority union.
+Private HR admission state is transaction-bound and cleared on success/exception, never a
+caller-supplied bypass flag or a new shared coordination/authorization framework.
+
+Order (omit irrelevant classes, never reverse):
 
 ```text
-active Company FOR UPDATE
--> Employee (existing target; multiple IDs sorted if ever necessary)
+entry/nesting admission -> selected-alias business transaction, READ COMMITTED
+-> active Company FOR UPDATE -> initial BusinessContext + compound permission recheck
+-> Employee (existing target; complete multiple-ID set sorted if needed)
 -> Department rows UUID order
--> Branch rows UUID order
+-> Branch rows UUID order (context/current/new/frozen anchors where relevant)
 -> Party rows UUID order
 -> LeaveType rows UUID order
--> bounded Attendance parents UUID order + immutable newest revision reads
+-> bounded Attendance parents UUID order + immutable revision evidence
 -> bounded LeaveRequest rows UUID order
--> nonwaiting authority-relation admission for EVERY final-Core path (below)
--> final Core authority: actor / complete Roles / complete Permissions
--> operation-specific persistence + Core Audit -> outer commit
+-> authoritative state/retry discovery + complete operation-specific User IDs
+-> User / Role / Permission ROW SHARE NOWAIT relation admission
+-> complete User union FOR SHARE NOWAIT -> stabilized actor/activity/superuser re-read
+-> non-SU: ALL assigned same-company Roles FOR SHARE NOWAIT
+   -> ALL reachable Permissions FOR SHARE NOWAIT
+   SU: existing Permission namespace SHARE NOWAIT -> ALL Permissions FOR SHARE NOWAIT
+-> stabilized domain/scope/reference revalidation, no new blocking anchors
+-> unchanged complete compound Core final guards
+-> precise persistence + Core Audit OR successful historical retry/no-op return
+-> outer commit
 ```
 
-Create Employee has no Employee row yet: Company serialization and uniqueness reserve its identity;
-take Department/Branch/Party references before final authority; discover User IDs without row locks.
-Setup-only operation locks its
-Department/Type after Company, uses indexed membership EXISTS, never locks Employee after setup.
-Leave operations gather attendance candidates BEFORE locking Leave parent/candidates; correction
-locks its Attendance parent before any Leave row. Company/Employee already serialize same-scope
-writers; this fixed order also prevents future nested order inversion. References are ID/scalar
-discoveries only until locked; persisted Company/parent IDs are authoritative and revalidated.
+Create Employee reserves identity under Company serialization/uniqueness; Department/Branch/Party
+are the non-User references, User discovery is plain UUID projection. Setup locks its Department/
+Type after Company and checks membership EXISTS without locking Employee afterward. Leave gathers
+Attendance candidates before Leave parent/candidates; Attendance correction locks its parent before
+Leave rows. Complete parent/reference unions must be discovered/prelocked before authority admission.
+Do not issue pre-admission writes that acquire User FK locks.
 
-Department/Branch/Party/LeaveType use owner rows locked FOR UPDATE when eligibility matters.
-Party ordinary writers do not use Company-first locks but their SQL updates conflict with HR's
-Party row lock; re-read active PERSON after waiting. Branch supported saves start Company→Branch.
-No HR reference write or owner-private helper import. The original sorted multi-User FOR SHARE
-proposal was disproved and is withdrawn. Identity UserManager has no get_queryset/batch override;
-User.save normalizes email only. Inherited update/bulk_update([B,A],batch_size=1), save/delete and
-select_for_update paths impose no shared reader/writer order. Admin forms/save and Django last_login
-updates use those ordinary Identity paths; the demo command creates Users, not a new lock protocol.
-All relevant tracked production call sites and inherited paths were considered, not just explicit
-deactivation functions. Access target-user lookups are plain reads; Core final locks actor itself.
+Party ordinary writers need not be Company-first: HR's Party row lock stabilizes current PERSON/
+activity and is re-read after a wait. Branch supported saves lock Company then Branch. Lock only
+explicit owner rows in joined domain queries: use select_for_update(of=("self", ...)) or separate
+queries/plain projections. select_related(User) plus unrestricted FOR UPDATE is forbidden before
+authority admission. Inspect actual ORM SQL/FK lock behavior, not just helper ordering.
 
-Historical/unlinked User IDs and negative self-approval comparisons need no renewed activity/grants
-or extra row locking. EVERY mutation, successful no-op/retry and read invoking locking Core final
-authorization needs the admission below. Actor-only/actor-equals-new-User paths are not exceptions:
-a Role-first writer followed by User B→A can deadlock Core's actor-A→Role guard without a second HR
-User reference. Employee creation/relink and Leave submission also introduce FK locking points.
-Existing unchanged User columns must not be needlessly rewritten. Ordinary require_permission-only
-reads remain nonlocking and ungated; they cannot claim commit-stable final authority. Pre-gate
-FOR UPDATE queries must lock owner rows only, with explicit of=('self',) if joins exist; never
-implicitly lock a joined User/Role/Permission. H13 inspects executed SQL/FK effects, not helper names.
+### Why complete fail-fast prelocking, not a writer-order assumption
 
-### HR0-AUD-1 alternatives and proposed writer-compatible admission
+Identity UserManager inherits unordered update/bulk_update/save/delete/select_for_update paths;
+User.save normalizes email only. Canonical bulk_update([B,A],["is_active"],batch_size=1), admin
+saves and Django last_login updates remain unchanged. Role/Permission writers also retain their
+own supported order; Permission update/upsert acquires ROW EXCLUSIVE write intent. Native Core final
+locks actor, ALL assigned same-company Roles and ALL reachable Permissions (including inactive),
+or the existing superuser Permission namespace plus all rows. Actor-only operations need the same
+complete prelock: User-only NOWAIT followed by blocking Core Role acquisition can still deadlock
+a mixed Role-to-User writer.
 
-| Alternative | Evaluation |
+| Considered approach | Current disposition |
 | --- | --- |
-| A: no additional User locks, or only KEY SHARE | Avoiding historical/unlinked locks is correct, but new distinct activity/reference is not protected by KEY SHARE against non-key is_active updates; FK/key locks can still interact with actor and key-changing/deleting batches. Not sufficient for stable new association |
-| B: User SHARE barrier alone | SHARE excludes UPDATE's ROW EXCLUSIVE but permits select_for_update ROW SHARE; User-only barriers also miss mixed Role/Permission→User transactions. Core-final-first/User-gate-second can deadlock before reaching the gate. Rejected |
-| B: complete authority relation gates before ALL final-Core paths, all NOWAIT | Proposed below; automatically conflicts with existing canonical writers regardless row order, no writer participation change. Global manual-v1 contention tradeoff; association-only gating was disproved by the actor-only mixed writer |
-| C: Identity-owner common writer/reader protocol | Possible later finer-grained owner extension covering batches, prelocks, actor/reference and mixed authority order; requires separate authorization/ADR/runtime audit. Not a prerequisite secretly assumed by this candidate |
+| Blocking UUID-sorted HR multi-User rows | Superseded: cannot order unchanged Identity batches; original 40P01 retained |
+| No locks / KEY SHARE / optimistic initial activity | Insufficient: non-key is_active can change; KEY SHARE does not stabilize activity |
+| User-only row NOWAIT followed by uncovered Core authority | Insufficient: mixed Role/Permission-to-User cycles; later Core locks are not all covered |
+| First correction's whole-table EXCLUSIVE gates | Owner REJECTED for HR0-REAUD-1 global contention; historical proof only, NEVER fallback |
+| Complete ROW SHARE relation NOWAIT + complete FOR SHARE row NOWAIT | Present HR-only proposed correction, supported by supplied Result A investigation; no owner runtime change |
+| Shared Identity/Core writer protocol | Not implemented/assumed/required here; any future owner extension requires separate authorization |
 
-For EVERY HR final-Core path, including mutations/retries/no-ops and locking reads, after Company
-and ALL relevant non-User domain/reference anchors, BEFORE any explicit/implicit
-User/Role/Permission row lock, new User FK persistence or Core final call:
+No SKIP LOCKED, partial witness, weaker activity semantics, advisory lock used only by HR,
+deadlock-retry-only solution, global writer gate under another name or disabled final guard.
+
+### Verified relation admission before authority row prelocks
+
+On the canonical public-schema deployment, use the selected-alias cursor:
 
 ```sql
-LOCK TABLE public.identity_user IN EXCLUSIVE MODE NOWAIT;
-LOCK TABLE public.access_role IN EXCLUSIVE MODE NOWAIT;
-LOCK TABLE public.access_permission IN EXCLUSIVE MODE NOWAIT;
+LOCK TABLE public.identity_user IN ROW SHARE MODE NOWAIT;
+LOCK TABLE public.access_role IN ROW SHARE MODE NOWAIT;
+LOCK TABLE public.access_permission IN ROW SHARE MODE NOWAIT;
 ```
 
-Use verified installed owner table identity, selected-alias cursor and safe identifier quoting, not
-default cursor or a redirected unqualified relation. Runtime table names are the pinned public
-owner relations; unsupported identity/search-path mismatch fails closed. No source normalization.
-All three gates are NOWAIT in fixed order. Any SQLSTATE 55P03 escapes the COMPLETE outer HR operation
-and rolls it back, releasing earlier gates/Company/domain locks; translate outside that boundary to
-retryable AuthorityBusy with no success/no-op receipt/audit. No inner-savepoint-only recovery,
-partial success, fallback to row sorting/advisory locks or automatic unbounded retry.
+Fixed order is User, Role, Permission. Resolve installed owner metadata, verify schema-qualified
+identity/OID and ordinary relation kind against the pinned canonical relations, safely quote schema
+and relation SEPARATELY, and parameterize UUIDs. Never trust submitted identifiers or quote
+"public.identity_user" as one identifier. Missing/unexpected relation or effective search-path
+resolution to a different OID fails closed. After admission, reverify the same identities/resolution;
+held relation locks protect against incompatible replacement DDL. Native Core/ORM uses unqualified
+names, so it must resolve to the same protected relations. No search-path/source normalization.
 
-EXCLUSIVE conflicts with ROW SHARE as well as ROW EXCLUSIVE; SHARE does not. Once all gates succeed,
-no other transaction can acquire User/Role/Permission row-lock or DML relation intent, so unchanged
-Core final cannot wait on a mixed authority writer. If a writer holds Role/Permission first, its
-gate makes HR fail immediately instead of waiting while holding User. If HR wins, canonical writers
-wait at relation admission before taking conflicting rows. Ordinary SELECT/ACCESS SHARE continues.
-Lock semantics: [PostgreSQL 17 explicit locking](https://www.postgresql.org/docs/17/explicit-locking.html).
+Pinned expectations are schema/name/kind, not numeric OIDs copied across databases. Resolve and
+cross-check each selected alias's own catalog OIDs; never derive approved names/kinds from drift.
 
-After admission, run every unchanged Core compound final guard, plain-read/revalidate new User
-activity/Company eligibility, refresh locked domain facts without acquiring NEW blocking anchors,
-then repeat final guards immediately before effects/audit/return. Gate is NOT authorization; no
-new Core helper, privileged context, incomplete Role/Permission witness or duplicated RBAC policy.
-Old/inactive provenance remains valid. PostgreSQL fixtures exercised non-superuser actor, selected
-non-default alias and a NOSUPERUSER/NOBYPASSRLS execution role with ordinary DML grants. Lack of
-required relation-lock privileges fails closed; production privilege certification is not claimed.
+Row NOWAIT does NOT make the SELECT's implicit relation lock nonwaiting. PostgreSQL FOR SHARE
+NOWAIT and ORM select_for_update(nowait=True) can wait for ROW SHARE against maintenance EXCLUSIVE/
+ACCESS EXCLUSIVE. Explicit relation NOWAIT closes that acquisition gap. ROW SHARE is compatible
+with ordinary ROW EXCLUSIVE DML and other ROW SHARE readers; it is NOT table-wide exclusive writer
+serialization. Preliminary metadata/permission/domain SELECTs before admission can still wait on
+implicit ACCESS SHARE against maintenance ACCESS EXCLUSIVE: apply bounded lock/statement resource
+controls from entry and fail closed. Do not claim the whole operation is nonblocking.
+Reference: [PostgreSQL 17 explicit locking](https://www.postgresql.org/docs/17/explicit-locking.html).
 
-Entry/nesting is enforceable HR-local scope: public outer entry must begin without an unknown
-surrounding atomic transaction; reject unknown/prelocked outer transaction BEFORE any blocking
-Company/domain acquisition. Allow nested same-alias/Company/actor calls only inside an HR-owned
-admitted outer operation whose complete reference/authority anchor union is predeclared/prelocked.
-After gates, no new Company/domain/reference lock or Identity/authority write may be added by nested
-callbacks/cross-owner calls. Scope must be private, alias/connection/outer-transaction bound, cleaned
-on success/exception; not a generic coordinator or caller-supplied bypass flag. Same alias alone is
-insufficient. If a caller needs broader composition, reject and require a separately reviewed lock
-plan; do not silently impose an ordering restriction on existing Identity writers.
+### Complete User, Role and Permission sets
 
-Cost/why proposed for bounded v1: three gates serialize global authority DML/locking readers in this
-database, including unrelated login last_login, admin batches, Role/Permission maintenance and other
-modules' final guards. Ordinary Attendance, Leave decisions/cancel, setup, exact retries and locking
-reads ALL incur this cost; there is no false low-frequency association-only exemption. Concurrent
-gated HR operations, even across Companies, have one winner and a 55P03/AuthorityBusy loser; a later
-separate retry may succeed, but fairness/retry is not guaranteed. Ordinary SELECT/nonlocking reads
-continue. The proposal favors complete correctness without changing accepted writers for manual
-completed-session/admin v1, which excludes device/open-punch/self-service traffic. It is unsuitable
-as an unreviewed high-throughput HR policy: owner acceptance/re-audit must assess this disclosed
-tradeoff; no production-capacity claim. Finer-grained scaling is a separate owner extension.
+1. From locked authoritative domain/retry facts derive distinct validated User UUIDs. ALWAYS include
+   context.actor_id, plus actual new/relinked association targets, genuinely required stable-current
+   User facts, new persisted User FK targets and declared nested work. Table below is exhaustive.
+2. Lock that complete set with parameterized selected-alias SQL, before native final guards:
 
-Finish long-chain/timezone/result preparation before admission; no network/UI/callback/owner-write
-work while gated. Proposed resource control: a 2s monotonic TOTAL admitted deadline starting before
-the first gate; check before/after bounded pure work and every SQL/effect/return/outer commit,
-set each SQL lock/statement timeout to its remaining budget, and bound idle-in-transaction separately.
-Expiry rolls back the whole outer operation with ResourceBudgetExceeded. Per-statement/lock/idle
-timeouts alone do NOT bound accumulated gate residence; a stalled application/process requires DB
-session watchdog/termination controls, not a claim of a proven hard 2s server guarantee. HR-1 must
-prove deadline, rollback-safe setting restoration and contention, including multiple short SQL calls.
-This is an execution budget, not a business duration/date cap. No such runtime is implemented here.
-SQLite has functional validation only, not these locking/concurrency guarantees.
+```sql
+SELECT id
+FROM public.identity_user
+WHERE id IN (:validated_distinct_user_ids)
+ORDER BY id
+FOR SHARE NOWAIT;
+```
 
-Immediately after Company wait, validate BusinessContext and all compound initial permissions.
-After ALL domain/reference waits, refresh their relevant activity/ownership facts, then invoke
-`require_final_permission` for each required code in deterministic code order. Core's first call
-locks actor, ALL assigned same-company Roles and ALL reachable Permissions (including inactive rows),
-UUID ordered; later compound calls reuse the complete set, not add an earlier authority anchor.
-Superuser namespace stabilization remains Core-owned. Do not lock a partial permission witness,
-copy Core private locking helpers, cache authority or preauthorize before reference waits.
+   Require exact ID coverage, not merely a nonempty result/count of available rows. Missing actor/
+   reference fails explicitly, never successful partial prelocking. Re-read current actor activity
+   and is_superuser UNDER protection before choosing authority coverage. Validate active/current
+   Company eligibility only for a genuinely new Employee association/current-eligibility projection.
+   A new historical beneficiary snapshot protects existence/identity even when inactive; it does
+   not introduce a current activity/grant requirement.
+3. Non-superuser: enumerate ALL current UserRoleAssignment.role_id where BOTH assignment Company
+   and Role Company equal context.company_id, with NO active filter. UUID-sort/deduplicate and lock
+   EVERY Role FOR SHARE NOWAIT; require exact coverage. Then enumerate ALL Permissions reachable
+   through those Roles, including inactive rows; lock the complete set FOR SHARE NOWAIT and require
+   exact coverage. Do not use only requested codes, active rows or a successful grant witness.
+   No Roles/Permissions are inferred from linked/beneficiary Users.
+4. The held active Company mutex stabilizes supported Company-first Access grant/assignment/
+   RolePermission membership writers (ADR0009). Role/Permission activity/deletion is protected by
+   the complete row prelocks. Re-read complete membership/sets under locks and require equality
+   before final guards; an uncovered/missing anchor is an evidence/admission failure, NOT a reason
+   to append another lock set. This is not a guarantee for raw SQL or unsupported direct grant
+   mutations bypassing accepted Access services.
+5. Superuser: after protected actor state, BEFORE namespace enumeration/native final, acquire:
 
-Final guard is immediately before first authoritative effect and before a successful exact retry/
-no-op return. No later new domain/reference lock after final authority. All result materialization
-stays within transaction/authority lifetime. Revoked actor/Company/Branch access/Role/Permission
-fails closed even if the form or earlier check succeeded. No special HR bypass for superuser domain
-invariants or self-approval. Expected revision/status always re-read after waits.
+```sql
+LOCK TABLE public.access_permission IN SHARE MODE NOWAIT;
+```
 
-Persistence collision: supported Company/Employee locks prevent ordinary same-source races. DB
-uniqueness remains backstop. Catch only positively identified HR unique constraints inside a nested
-same-alias savepoint; after rollback re-read immutable keyed evidence and compare full input before
-authorized recovery. Identity duplicates/conflicting requests return explicit ValidationError;
-unclassified IntegrityError propagates/rolls back, never generic success. Outer audit failure,
-validation failure or process crash before commit leaves no effect; response loss after commit
-recovers only as the specific retry/lookup rules allow. No independent inner commits.
+   Then enumerate EVERY current Permission, inactive included, and prelock ALL FOR SHARE NOWAIT.
+   Exact coverage is mandatory. This preserves Core's EXISTING namespace protection, not a new
+   HR-only EXCLUSIVE gate. Core's later ordinary SHARE request is already covered. Superuser still
+   requires active registered codes/current Company and obeys domain/self-approval rules.
+6. Revalidate protected scope/activity/domain facts, then invoke unchanged require_final_permission
+   for EVERY declared compound code in deterministic code order immediately before effects/Audit/
+   successful return. Native Core's actor/Role/Permission rows and any superuser namespace request
+   must be a compatible SUBSET of held locks. HR-1 SQL-capture tests must prove this, including
+   inactive authority rows, repeated compound guards and nested calls. No Core private helper import,
+   copied grant policy, actor substitution, cache or new shared final-authorization API.
+
+### Public-operation authority coverage
+
+All rows below use the SAME complete non-SU/SU authority procedure above; compound codes are section10
+verbatim. A = current actor, including every new Audit actor. N = actual new non-null Employee User
+link. B = locked Employee.user captured by a NEW submit. No other User's Roles grant HR authority.
+
+| Public operation / declared compound codes | User union and exact FK/current-fact treatment |
+| --- | --- |
+| department_page/detail — DV | A only |
+| create/update_department — DM+DV | A only; new Audit.actor=A |
+| leave_type_page/detail/choices — LV | A only |
+| create/update_leave_type — LM+LV | A only |
+| employee_page/detail; PERSON choices — EV | A only; existing association UUID is not a current-activity certification |
+| User association choices — EM+EV | A plus EVERY bounded returned User whose current activity/Company eligibility is certified; include before materialization/return |
+| create_employee — EM+EV; DV if Department used | A plus N if non-null; new Employee.user=N; require active/Company-eligible N |
+| update_employee — EM+EV; DV if Department read/assigned | A plus N only for actual new/relinked non-null User; omitted/unchanged same UUID/clearing old link adds none |
+| transfer_employee_branch / end_employee — EM+EV | A only; do not rewrite unchanged Employee.user |
+| attendance_page/detail/revision_page — AV+EV | A only; historical recorder/actors remain intrinsic provenance, not reactivated |
+| record_attendance — AR+AV+EV | A only; new Attendance.recorded_by and Revision.actor=A; existing-key retry adds no historical actors |
+| revise_attendance — AC+AV+EV | A only; new Revision.actor=A; earlier actors unchanged |
+| leave_page/detail — LV+EV | A only |
+| create_leave — LR+LV+EV | A only; requester=A |
+| update_leave — LR+LV+EV | A only; requester/snapshots unchanged |
+| submit_leave, NEW effect — LR+LV+EV | A plus non-null B for new beneficiary_user_at_submission FK; existence/identity, NOT new B activity/grant eligibility |
+| submit_leave, matching historical retry — LR+LV+EV | A only; stored B is not newly persisted or replaced by current Employee.user |
+| decide_leave — LA+LV+EV | A only; new decided_by=A; requester/current/frozen beneficiary are negative self-comparison IDs only |
+| cancel_leave — LC+LV+EV, also LA if originally APPROVED | A only; new cancelled_by=A; exact retry preserves original compound requirement after cancellation |
+
+The actor is not assumed equal to a link. Removed old links, unchanged historical provenance and IDs
+used only for negative self-approval comparisons are not extra activity anchors. If another actual
+operation-specific current fact or new FK genuinely requires a User, declare it BEFORE admission
+and protect it; do not silently expand the table or add a new eligibility rule. Use precise validated
+update_fields/private column sets so immutable historical FKs are not needlessly rewritten and do
+not create uncovered key-lock acquisition later. Successful no-ops/retries still prelock current A.
+
+EVERY listed public selector materializes under this complete final-Core protocol, including action
+form choices; there is no actor-only/public-read exemption. Nonlocking initial checks/internal scalar
+discovery helpers do not return an externally certified DTO or replace public final authorization.
+Optional related sections/codes and all Users genuinely required by declared nested work belong to
+the predeclared union, not dynamic post-admission discovery.
+
+### Failure, nesting, historical receipts and resource controls
+
+Any relation/row/namespace NOWAIT SQLSTATE55P03 propagates through COMPLETE outer-operation rollback.
+Release Company/domain/partial-authority locks; no partial authoritative effect, success Audit,
+idempotency receipt or successful retry/no-op return. Subsequent SQL in an aborted PostgreSQL
+transaction can fail25P02; do not continue. An inner savepoint can mechanically clear a database
+error, but HR MUST NOT swallow it and commit outer work. Translate outside the rolled-back boundary
+to explicit retryable AuthorityBusy. A fresh request independently revalidates all state/permissions;
+no automatic unbounded retry. Missing/corrupt evidence, authorization denial and resource exhaustion
+are distinct fail-closed errors, not all AuthorityBusy. Observability records error category,
+operation/alias and non-sensitive counts; never creates a false success Audit/receipt or logs PII.
+
+Admitted nested calls reuse the already declared/prelocked complete set on the exact same alias,
+connection, outer transaction, Company and actor. Reject expansion/unknown scope BEFORE new SQL;
+no earlier domain lock, new authority anchor, Identity/Access write, callback or cross-owner operation
+may be added after admission. Do not change global helpers or impose a writer-order rule on owners.
+
+For matching historical retries first discover/validate canonical retained receipt under proper
+Company/domain locks, then prelock CURRENT actor authority and run the original required compound
+Core guards. Return original effect/receipt separately from current validated owner state; never
+reapply, duplicate Audit, replace snapshots from new configuration or certify old receipt as current.
+A revoked actor cannot recover a receipt. Existing historical FK identity/intrinsic validity remains
+required, but previous actor/beneficiary activity is not renewed.
+
+Proposed execution resources, not product/admission policy: at most 1,000 distinct Users, 1,000 Roles
+and 1,000 Permissions per admitted operation (including nested union), aggregate maximum3,000.
+Use SQL DISTINCT BEFORE LIMIT1001 for Role/Permission ID discovery, and deduplicate the complete
+validated operation User union before its sentinel check. Discover each set with one overflow
+sentinel before materializing/locking; never deduplicate a truncated prefix and call it complete. No truncated
+set may authorize; overflow returns ResourceBudgetExceeded with whole rollback, not denial or a
+maximum Attendance duration/Leave span. Query/parameter exhaustion also fails closed, no fallback.
+
+Retain a proposed 2s monotonic admitted-work budget from before first relation admission, checked
+before/after every discovery/lock/SQL/bounded pure phase/effect/return/outer commit; each SQL timeout
+uses remaining budget, with separately bounded pre-admission waits and idle transactions. Complete
+SQL iteration of many small steps cannot silently reset this total budget. Scope/restore settings
+safely on success/rollback. This is cooperative execution control, NOT a hard two-second server or
+end-to-end wall-clock guarantee; stalled process/session termination is an operational concern.
+No network/UI/long-calendar/chain preparation under authority locks. No production latency claim.
+
+### Remaining contention and bounded guarantee
+
+ROW SHARE admits ordinary DML table intents, and FOR SHARE readers are compatible even on shared
+User/Role/Permission rows. Disjoint Companies/Users must progress concurrently; shared read-only
+Permission identities are not a reason for AuthorityBusy. HR-first blocks an actual conflicting
+same-row writer until commit; writer-first causes safe NOWAIT refusal/rollback. Remaining contention:
+same User writers (including that User's last_login), shared Role/Permission modifications, the
+existing Company mutex, maintenance and existing Core superuser Permission namespace SHARE.
+There is NO new table-wide EXCLUSIVE serialization or globally conflicting ordinary-DML gate.
+Role SHARE/SHARE compatibility is a lock-primitive property, not a claim that same-Company public
+operations bypass their Company mutex; a Company-owned Role is not cross-Company authority.
+
+Fairness/starvation freedom, production throughput and universal deadlock freedom for arbitrary
+transactions are NOT PROVEN. The claim is limited to the tested supported writer/admitted-nesting
+surface with complete anchors and no new blocking locks after final authorization. T01–T26 are
+mandatory future HR-1 implementation oracles, not inherited synthetic PASS.
+
+Supported unique-collision recovery remains unchanged: positively identify an HR unique constraint
+inside a same-alias savepoint, roll it back, re-read locked canonical evidence and equality, then
+reauthorize before recovery. Unclassified IntegrityError propagates/rolls back. Audit/validation/crash
+before commit leaves no effect; response loss after commit recovers only the specific receipt/lookup.
+No independent inner commit or generic collision-to-success conversion.
 
 ## 9. LeaveRequest exact schema and lifecycle
 
@@ -776,7 +910,9 @@ scope, not only a client hidden company. Inputs never select actor or trusted or
 
 Selectors are materialized bounded Page/DTO calls inside selected-alias business transactions:
 lock Company using established convention, validate current scope/view permissions, evaluate bounded
-rows/related projections, final current guard immediately before return after any wait. No lazy
+rows/related projections, section8 relation/complete authority prelocks, then unchanged final current
+guard immediately before return after any wait. User-choice certified UUIDs belong to the predeclared
+User union; historical IDs alone do not create new activity requirements. No lazy
 QuerySet or deferred relationship access bypasses late authorization. Repeated requests reauthorize;
 no claim that an old response can be revoked from the user's memory.
 
@@ -811,7 +947,7 @@ orders; SQLite explicitly skips lock-specific assertions. Each loser must have n
 | Race | Ordered locks / winner behavior | Retry/audit oracle |
 | --- | --- | --- |
 | Duplicate number; same Company/Party create | Company→complete references; first persists, second explicit unique conflict even different number/Party input | One Employee/created audit; no number reuse |
-| Same active User association/create | Company→Employee/non-User refs→three gates→Core; first claims partial key, second uniqueness/resource conflict | One active association, losing revision/audit absent |
+| Same active User association/create | Company→Employee/non-User refs→ROW SHARE relation admission→complete row prelocks→Core; first claims partial key, second uniqueness/resource conflict | One active association, losing revision/audit absent |
 | Employee end vs record | Company→Employee→refs; end-first new record denies; record-first end rechecks frozen eligibility and succeeds only if interval fits proposed end | No deletion; one record audit and valid end or no end audit |
 | Branch transfer vs record/leave create | Company→Employee→Branch; transfer-first new snapshot uses new Branch; record-first old snapshot immutable | Stale branch context denies after wait; explicit retry uses original snapshot |
 | Overlap record/record incl cross-midnight/Branch | Company→Employee→bounded sessions; first interval persists, second overlap rejects; adjacent both succeed | One per key; multiple non-overlapping same-day sessions accepted |
@@ -824,15 +960,58 @@ orders; SQLite explicitly skips lock-specific assertions. Each loser must have n
 | Actor/Role/Permission retirement or supported batch rewrite at later reference waits | HR Company/domain wait then complete final Core authority; revocation-first deny; HR final locks-first writer waits until commit | No old authority reuse; cover all compound actions, SU namespace, inactive roles/permissions |
 | Company/Branch access revoke while waiting | Company-first Access writer; revocation-first current validation denies, HR-first valid commit then revoke | Retry reauthorizes; no resurrection via User association |
 | Party type/activity, Department/type/Branch retirement | Company/row lock matches supported owner; retirement-first new use denies; use-first valid commit, later history retained (Department retirement still rejects ACTIVE assignments) | No stale reference acceptance or implicit owner write |
-| Canonical B→A User batch vs A/B HR association, both winners | Company/non-User anchors then all three EXCLUSIVE NOWAIT gates before Core; writer-first HR resource abort, HR-first writer relation wait | No 40P01, no partial effect; current new-User/actor checks after contention |
-| Single deactivation, old User unlink/relink, actor==target or distinct | All final-Core paths gated; no unnecessary old/historical row locks; actor-equal also admitted before Core actor lock | Deactivation-first new link denied, link-first history retained; unlink can be busy but does not demand old activity |
-| Mixed Role/Permission prelock→User batch and nested calls | Three gates exclude preexisting ROW SHARE/ROW EXCLUSIVE on any authority table; unknown outer rejected before blocking; admitted nested reuses fixed anchors | Whole outer rollback on partial gate failure; no default access, writer-order assumption or silent nested expansion |
+| Canonical B→A User batch vs A/B HR association, both winners | Company/non-User anchors→ROW SHARE NOWAIT relation admission→complete User/Role/Permission FOR SHARE NOWAIT; writer-first HR row-busy rollback, HR-first conflicting writer ROW wait | No new 40P01, no partial effect; no table-wide writer barrier |
+| Single deactivation, old User unlink/relink, actor==target or distinct | Actor always prelocked; actual new User/FK union complete; no removed-old/historical activity lock or joined implicit lock | Deactivation-first new link denied, link-first history retained; unrelated old-link writer does not force table-busy unlink |
+| Mixed Role/Permission prelock→User batch and nested calls | Relation admission compatible with ordinary DML; ANY relevant authority row conflict refuses NOWAIT before native Core; unknown outer rejected, admitted nested set fixed | Whole outer rollback on partial row/namespace failure; no partial witness/default access or owner-order assumption |
+| Two Companies / disjoint or shared read-only authority | Compatible relation/row SHARE readers coexist, including shared User/Permission rows; disjoint DML need not wait | Both progress without new whole-table EXCLUSIVE admission; same-row writers and existing SU namespace contention remain |
 | Employment date correction vs approved leave/attendance | Company→Employee then bounded facts; prior valid effect cannot be moved outside eligibility by stale edit | No silent cancellation/void; date edit audit only if valid |
 
 Add read-path revocation before materialization/after Company or reference wait; delayed selector
 results must not escape current view guards. Test Company/Branch switch HTTP matrix for all mutation
 families, not just create. Two Companies sharing actor/Permission/User must preserve global authority
 order and nested audit rollback. No mutable timestamp as race winner evidence.
+
+### T01–T26 — exact investigation IDs, future HR-1 PostgreSQL requirements
+
+ALL rows are **REQUIRED — NOT EXECUTED AS HR-1**. The supplied investigation's synthetic successes
+are not inherited HR runtime PASS. Use real wait detection/Events/Barriers, bounded safety timeouts,
+fresh synthetic data and finally-closed worker connections; SQLite explicitly skips lock assertions.
+For every row record actual locks, blockers, SQLSTATE, outer rollback, absence of stale effects/
+Audit/partial receipts and unrelated-Company progress. Test both winner orders where applicable.
+
+| ID | Frozen investigation case | Required future implementation oracle |
+| --- | --- | --- |
+| T01 | Original B→A writer / A→B reader | Isolated negative control reproduces old blocking 40P01; current HR never uses that protocol |
+| T02 | Corrected HR-first winner | Complete compatible prelocks; relevant User writer visibly waits at ROW lock, not a new table writer gate; HR commits then writer completes |
+| T03 | Corrected writer-first winner | Actual User.bulk_update([B,A],is_active,batch_size=1) causes55P03 at relevant row; whole HR rollback; fresh retry rechecks activity |
+| T04 | Actor equals Employee link | Deduplicated actor/link once, exact coverage, current guard and FK effects safe |
+| T05 | Actor differs from link | Complete A+new-link/FK union; both activity/reference rules, no authority from beneficiary |
+| T06 | Relink versus deactivation | New target protected; inactive removed old User does not block unlink/relink by eligibility; new inactive link denies, later history retained |
+| T07 | Mixed Role→User writer | Negative User-only control may deadlock; complete Role-inclusive NOWAIT refuses safely; reverse order writer waits on held relevant row |
+| T08 | Permission mutation | Include Permission.update/update_or_create→User batch, retirement and both orders; relevant conflict fail-fast, unrelated writes compatible |
+| T09 | Company-access revocation | Company mutex determines winner; revocation-first denies after wait, HR-first valid effect then revoke; no receipt recovery on stale authority |
+| T10 | Role revocation | Supported assignment/RolePermission revoke and Role activity change; complete current membership after Company wait, inactive rows covered |
+| T11 | Actor deactivation after domain wait | Initial check may pass, but protected current actor recheck/native Core deny after real later wait; zero effects/Audit |
+| T12 | Independent Companies / disjoint Users | Different Companies/actors/links/Roles, shared read-only Permissions allowed; simultaneous compatible locks and BOTH progress, not historical EXCLUSIVE busy |
+| T13 | Two HR operations share one User | Compatible FOR SHARE readers coexist; a relevant writer still waits or causes explicit busy |
+| T14 | Concurrent HR with disjoint Users | No new global writer/reader gate; verify pg_locks and actual simultaneous progress |
+| T15 | Superuser final authority | Stabilized SU flag→existing Permission namespace SHARE NOWAIT→ALL rows incl inactive; conflict55P03/full rollback; native namespace subset, no domain/self-approval bypass |
+| T16 | Nested transactions | Same alias/connection/outer transaction/Company/actor/fixed union works; unknown outer and anchor expansion reject before blocking/new SQL |
+| T17 | Non-default selected alias | Company/domain/admission/prelocks/Core/persistence/Audit/recovery all use selected alias; poison default cursor; nested switch rejects |
+| T18 | Authority conflict after domain locks | Partial User/Role/Permission acquisition fails55P03; after whole rollback another worker can acquire released Company/domain/authority locks |
+| T19 | Business effect and Audit rollback | Inject NOWAIT/validation/Audit failures, including nested savepoint; no authoritative row, revision, receipt or success Audit survives |
+| T20 | Historical idempotent retry/current RBAC | Exact retained input/identity recovered separately from current native state; no reapplication/duplicate Audit; current revocation denies; old inactive provenance not reactivated |
+| T21 | Repeated contention/explicit failure | Repeated hot-row refusals are bounded observable AuthorityBusy, no busy loop or starvation-free claim; later independent request revalidates |
+| T22 | Reader/read concurrency | Same/disjoint global Users and shared Permissions permit cross-Company SHARE progress; Role SHARE/SHARE primitive compatibility does not bypass the same-Company mutex; no unnecessary FOR UPDATE/NO KEY UPDATE |
+| T23 | Reversed User batch order | Canonical A→B as well as B→A, batch_size1, save/update/email/last_login/prelock/delete cases; no owner writer-order assumption |
+| T24 | Reversed Permission/Role update order | Complete inactive-inclusive sets; adversarial ordering/mixed writes safely refuse, never later Core uncovered wait |
+| T25 | Existing module final guard | Actual Sales public service and HR operation both winner orders across Companies; complete shared authority reads coexist, no new table-wide stall |
+| T26 | Implicit ORM relation locks | Negative raw FOR SHARE NOWAIT / ORM select_for_update(nowait=True) can wait on implicit ROW SHARE; explicit three-relation ROW SHARE NOWAIT refuses before row locks; disjoint ROW EXCLUSIVE DML remains compatible |
+
+Also require executed native Core SQL lock-target subset evidence, missing-row refusal, per-class
+LIMIT1001 overflow/no truncated success, precise FK update fields, per-alias relation identity/search-
+path mismatch rejection and monotonic/SQL-budget cleanup. These refine H07/H12/H13/H14; all original
+H01–H18 requirements remain future implementation gates, not replaced by this lock-only matrix.
 
 ## 15. Database guarantees and SQLite policy
 
@@ -869,8 +1048,8 @@ test paths/results and browser/run records, not a checklist self-approval.
 | H09 | Aware UTC/precision/both DST folds/gaps and trusted minute preservation; New York 25h fall-back day, exact midnight, long intervals/leap/frozen-zone changes/extreme dates; NO duration or Leave-span maximum in DB/service/UI; TZif explicit/footer/ZoneInfo/SQL-offset equivalence and unsupported midnight geometry; clock rollback not causal corruption |
 | H10 | Valid chains 1;1,2;1,2,3;1,2,3,4 and VOID/reinstate; invalid 3;1,3;1,3,4;1,2,4;2,3,4, duplicate+gap, missing initial/wrong parent/malformed earlier/invalid latest reject; every-row transition/date checks, attempted append after corruption denied/no Audit, stale ordinal, historical retry after valid later correction; all direct/bulk attacks |
 | H11 | Full-day Leave for 1/365/366/367 and longer valid ranges, leap/DST/zone changes/inclusive overlap/employment/extreme exclusive-boundary arithmetic; no 366 CHECK/service/widget/filter limit; exact receipts/DRAFT edits/lifecycle/active type vs historical recovery/self-approval, no entitlement/workflow |
-| H12 | All section14 overlap/approval/cancel/record/correction winners; canonical User.bulk_update([B,A],is_active,batch_size=1) vs HR both orders, select_for_update prelocks, mixed Role/Permission→User batches, unlink/relink/deactivation, actor equal/distinct, concurrent readers and admitted nested/unknown-outer cases; no new 40P01 or partial effect/audit |
-| H13 | Complete non-User anchors then User/Role/Permission EXCLUSIVE NOWAIT gates on EVERY final-Core path BEFORE explicit/implicit authority row locks/FK effects; inspect joined FOR UPDATE SQL; unchanged Core compound guard; partial-gate failure rolls back WHOLE outer transaction; actor/access/Role/Permission revoke after waits, SU namespace, non-default trap, two Companies, total deadline/settings cleanup and global contention; no unnecessary historical User locks |
+| H12 | All section14 domain race winners plus exact T01–T26 future PostgreSQL matrix: canonical B→A/A→B batch, mixed Role/Permission-upsert→User, actor/link variants, revocations, fixed nesting, retry and alias; compatible cross-Company/shared-reader progress and actual Sales guard; no unexpected 40P01, stale authority or partial effect/Audit |
+| H13 | Complete non-User anchors→verified ROW SHARE NOWAIT relation admission→complete operation User union/ALL inactive-inclusive actor Roles/reachable Permissions FOR SHARE NOWAIT; existing SU namespace SHARE NOWAIT + all Permissions; native guard SQL subset proof, implicit relation negative control, full rollback/budgets/cleanup; NO whole-table EXCLUSIVE fallback or unnecessary historical activity checks |
 | H14 | Every section12 meaningful field/snapshot/association/transition audit, one action per change; no-op/key retry none; injected failure at each append/receipt/audit rolls back entire selected-alias outer transaction |
 | H15 | Exact action form GET/POST admission, CSRF and POST-only, CompanyBoundForm all actions, hostile text, trusted original from server, search/filter/page query preservation and 50-row stable UUID ordering; no-JS/deep links/HTMX security |
 | H16 | Actual real-browser 390/768/1280 Employee/setup/Attendance/revision/Leave/errors with maximum fields, local table scroll/no page overflow, focus/Tab/Enter/labels/validation, safe GET Back/Forward/refresh; approved global shell unchanged |
@@ -928,7 +1107,13 @@ Future H01–H18 still require full implementation evidence; these checks cannot
 At that original checkpoint the local proposal was ready for independent audit, not accepted. The
 subsequent supplied REVISE/B/4-P2 result and current proposed corrections are recorded above.
 
-### Corrective investigation and proof record — 2026-10-15 Asia/Dhaka
+### Historical first-correction investigation and proof record — 2026-10-15 Asia/Dhaka
+
+This section records superseded `3ab7aaea...` EXCLUSIVE-gate design/probes only. Its P01–P22
+winner/busy outcomes are NOT current finer-grained acceptance oracles. The later independent
+re-audit resolved the original four defects but held formal acceptance for HR0-REAUD-1; the owner
+then rejected global contention. Current authority acquisition is section8; it has no EXCLUSIVE
+gate fallback. Preserve these historical results rather than reword them as new-protocol evidence.
 
 Pre-edit: clean phase3a-hr-contract/HEAD `5be60f19e3bf654786abcd06b61149bc4a962ea9`, parent/local main/
 origin-main/live main exact canonical base; remote HR branch absent. Only ADR0018/this plan may change.
@@ -1036,5 +1221,121 @@ ports/persistent mounts, tmpfs PGDATA and zero remaining worker DB sessions. Rem
 Its disposable synthetic database/roles/fixtures disappeared with tmpfs and are not recoverable.
 All preexisting containers, demos/source databases and source files were left untouched.
 
-All H01–H18 remain future implementation obligations. Original findings are independently unresolved
-until re-audit; current status is corrective candidate, not accepted/closed or HR-1 authority.
+At that first-correction checkpoint all H01–H18 were future implementation obligations and original
+findings awaited independent re-audit. The later supplied re-audit resolved those four at contract
+level and raised HR0-REAUD-1. Current status is finer-grained corrective candidate, not accepted/
+closed or HR-1 authority; only the new finding's proposed correction awaits fresh re-audit.
+
+### Finer-grained correction evidence — 2026-10-15 Asia/Dhaka
+
+Resume integrity: phase3a-hr-contract at exact first correction `3ab7aaea...`, then parent
+`5be60f19...` and canonical umbrella `6453c8f...`; main/origin-main/live main unchanged, remote HR
+branch absent. The only pending changes were the two authorized documentation paths, preserved
+across the owner-requested wait for Docker. No extra candidate commit had been created.
+
+The owner's instruction supplies Result **A — HR-ONLY FINER-GRAINED LOCKING FEASIBLE; Core/Identity
+change NO**. The retrieved read-only investigation trace contains completed synthetic PART1–PART6
+probe outputs, but no final-verdict message in that retrieved turn; attribute Result A to the supplied
+owner record, not a newly manufactured independent acceptance. Its recorded evidence includes old
+40P01 controls, full-set55P03 rollback, concurrent compatible readers, actual Sales guard interaction,
+inactive provenance, selected alias and ordinary NOSUPERUSER/NOBYPASSRLS execution-role checks.
+Row-lock NOWAIT alone still waited on an implicit relation lock; explicit ROW SHARE NOWAIT refused.
+These observations support this proposed contract; none is HR-1 implementation acceptance.
+
+Canonical-source inspection reconfirmed unchanged UserManager/save, Access policies/models/services,
+Company-first supported assignment/link writers, Audit and selected-alias transaction helpers. No
+Identity/Access/Core owner contract or runtime extension is secretly assumed. Internal consistency
+review is not the separately required independent re-audit. Exact T01–T26 names remain section14.
+
+#### Fresh focused PostgreSQL contract probes
+
+New isolated container `hr0-fine-contract-proof-20261015-3ab7aae`, exact ID
+`f5c659e8b291a3a4742a113db361bad0022b698a925daef31e04a7ac3caa6e45`, used PostgreSQL **17.11**,
+network none, no ports/persistent mounts, tmpfs PGDATA and new synthetic hr0_fine_proof DB. Source
+was mounted read-only; temporary Python stdin harnesses were not written/committed to the repository.
+Existing migrations bootstrapped unchanged. Fake Users/Companies/Roles/Permissions/Party and the
+harmless hr_fine_effect SQL table are not an HR implementation. The only Sales document was a
+synthetic fixture in this disposable DB, created by its actual existing public service.
+
+The fresh runner was Python **3.13.16**, Django **5.2.18**, psycopg **3.3.6**; these satisfy the
+repository's existing dependency ranges. The earlier investigation used Django5.2.17. No source
+dependency/settings change was made. Fresh DB execution used postgres; non-superuser below means
+BusinessContext actor, not a new least-privilege database-role certification. Prior investigation's
+ordinary DB-reader evidence remains separately attributed.
+
+All fresh workers used hr_fine selected alias with a poisoned default cursor, finally-closed
+connections, explicit Events and pg_stat_activity/pg_blocking_pids wait detection, 9s statement/7s
+lock SAFETY timeouts. No arbitrary race sleeps. Fixed public table identities/kinds and per-alias
+resolved OIDs were checked before/after ROW SHARE admission. No unexpected40P01 or safety timeout.
+
+| Fresh probe | Actual observation, NOT future HR-1 PASS |
+| --- | --- |
+| F01 canonical B→A writer first | Real User.bulk_update(batch_size1) held B; reader55P03 at User ROW, writer committed, zero dummy effects |
+| F02 HR-first | Writer visibly blocked by HR at conflicting User row; native complete Core guards succeeded, then both committed |
+| F03 mixed Role→User | RoleQuerySet.update held Role before User batch; complete prelock refused55P03 at Role, whole reader rollback, writer committed |
+| F04 Permission-upsert→User | Actual Permission.update_or_create held existing Permission; reader55P03 at that Permission, writer committed, zero effects |
+| F05 disjoint Companies/Users | First reader held locks while second reader with shared global Permissions committed; both committed, two effects |
+| F06 shared User across Companies | Same global actor/shared Permissions, distinct Company-owned Roles; second reader committed before first released; both committed |
+| F07 full effect/Audit rollback | Injected failure after synthetic effect and ACTUAL record_audit_entry; whole outer rollback, zero dummy effect and no added matching Audit |
+| F08 implicit relation negative control | Raw FOR SHARE NOWAIT visibly WAITED at relation admission against maintenance EXCLUSIVE; completed after release |
+| F09 explicit relation admission | Same maintenance holder; explicit ROW SHARE NOWAIT failed55P03 before rows, no effect |
+| F10 unrelated canonical DML | User.update + Role.update + Permission.update on disjoint rows all committed while HR locks remained held; HR then committed |
+| F11 superuser | Existing Permission namespace SHARE NOWAIT + all38 current Permissions protected; native Core requests were subsets; committed |
+| F12 actual Sales service | create_sales_order in another Company committed while HR-like transaction remained open; HR then committed, no new table-wide stall |
+
+Captured real Core compound guards requested only prelocked targets: ordinary actor1 / assigned
+Roles2 (including inactive) / Permissions3 (including inactive), twice; the other Company used its
+own Role and shared Permissions. Superuser requested actor1/all38 Permissions twice. This is a
+subset/equality coverage proof for these fixtures, not universal safety for unsupported transactions.
+The retrieved investigation covered additional cases/both Sales winner orders; those are not
+misreported as freshly rerun here. General HR-1 models/services, all T01–T26 and H01–H18 remain future.
+
+#### Quality, interruptions and cleanup
+
+| Check / exact command | Actual result |
+| --- | --- |
+| python manage.py check | PASS, zero issues |
+| python manage.py makemigrations --check --dry-run | PASS, no changes detected |
+| ruff check . --no-cache | PASS, Ruff0.17.0; no source formatting/writes |
+| pytest tests/test_database_architecture.py tests/test_modules.py tests/test_database_foundation.py -q -p no:cacheprovider | **248 passed in13.25s**, existing architecture/registry/alias/bootstrap guards only |
+| Fresh unchanged migration bootstrap | PASS on new PostgreSQL17.11 DB, hr_fine alias; not a customer/demo database |
+
+Quality commands ran in a task-only Python3.13 Docker image built from the declared dependency
+ranges via stdin, ephemeral --rm runner, network none, read-only source, PYTHONDONTWRITEBYTECODE=1,
+config.settings.test/in-memory SQLite and all three existing financial-integration install flags.
+No full PostgreSQL application suite/browser/hosted HR CI was required or claimed for these docs.
+
+| Final pre-commit documentation / integrity check | Actual result |
+| --- | --- |
+| Markdown relative links and heading anchors | PASS: 49 file links and one heading anchor resolve |
+| Fences, final newlines, trailing whitespace and git diff --check | PASS |
+| Acceptance enumeration | H01–H18 and T01–T26 each present exactly once in their matrices; future HR-1 tests are not marked PASS |
+| Current locking requirements | Three ROW SHARE NOWAIT admissions; existing superuser Permission SHARE NOWAIT retained; no current EXCLUSIVE gate/fallback |
+| Protected contract comparison with first correction | Sections 2–3, 5–7 and 9–12 unchanged; no Attendance/Leave cap, lifecycle, permissions or Audit change |
+| Candidate scope | Exactly the two authorized Markdown files; empty index and no untracked candidate files before staging |
+| Local refs / ancestry | All 48 recorded local branch/tag refs unchanged before commit; HEAD 3ab7aaea → 5be60f19 → 6453c8f |
+| Main / publication | Local main, origin/main and live remote main remain 6453c8f3202335aabe8a872046fea2e607dac858; live remote HR branch absent |
+
+The ref comparator covers the recorded local heads/tags, not additional remote-tracking refs;
+live publication identities were checked separately with git ls-remote. No fetch/ref update was
+needed. The subsequent single local correction commit may move only phase3a-hr-contract.
+
+Interruption history retained: the first optional Docker startup failed with engine/WSL errors and
+returned no container ID; the owner requested a wait, then authorized continuation after opening
+Docker. An attempted local fallback was Python3.12.14, outside baseline: check/drift/lint passed,
+guard run emitted errors and was interrupted. It was not diagnosed as a source defect, counted as
+passing evidence or used to certify this candidate. Docker's previous QA images were unavailable
+after restart; a disposable Python3.13 runner was built instead. The complete canonical-version
+quality run above passed. No unrelated environment/runtime remediation was attempted.
+
+After proof completion verified exact task container identity, network/tmpfs/no mounts/ports and
+zero remaining worker DB sessions. Removed ONLY that container and task QA image
+hr0-fine-contract-qa:20261015-3ab7aae (verified image ID
+`sha256:d083c34021137c4d90547751b94cd4690bcba822bb99a9ddaf178ffe65a496b4`); filtered inventories
+confirmed both absent. Tmpfs synthetic DB/fixtures were removed and are not recoverable. Downloaded
+Python/PostgreSQL base images were retained; no broad Docker cleanup or preexisting resource deletion.
+
+All original domain/history corrections remain intact. Current HR0-REAUD-1 status is **CORRECTION
+PROPOSED — INDEPENDENT AUDIT PENDING**. ADR0018 remains PROPOSED — NOT ACCEPTED; HR-1/ECOM-0,
+push/PR/merge/tag/main update are unauthorized. STOP after the one local corrective commit for a
+fresh independent technical-contract re-audit, not formal acceptance or runtime implementation.
