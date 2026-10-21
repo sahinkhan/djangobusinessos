@@ -1,6 +1,7 @@
 """HR schema/private-persistence tests, not service authorization evidence."""
 
 import importlib
+from contextlib import contextmanager
 from datetime import UTC, date, datetime, timedelta
 from types import SimpleNamespace
 from uuid import uuid4
@@ -10,9 +11,13 @@ from django.apps import apps
 from django.core.exceptions import ValidationError
 from django.db import DataError, IntegrityError, connection, models
 
+from businessos.core.access.models import UserCompanyAccess, UserRoleAssignment
+from businessos.core.common.context import BusinessContext
 from businessos.core.database import business_atomic_context
 from businessos.core.modules.models import BusinessModule
-from businessos.modules.hr import persistence
+from businessos.core.organization.models import Branch
+from businessos.modules.hr import persistence, services
+from businessos.modules.hr.admission import hr_operation
 from businessos.modules.hr.manifest import HR_PERMISSION_DECLARATIONS, MODULE
 from businessos.modules.hr.models import (
     MAX_ORDINAL,
@@ -25,28 +30,52 @@ from businessos.modules.hr.models import (
     LeaveType,
 )
 from businessos.modules.party.models import Party
+from tests import test_hr_services as _setup
+
+hr_context = _setup.hr_context
 
 HR_MODELS = (Department, Employee, Attendance, AttendanceRevision, LeaveType, LeaveRequest)
 
 
+@contextmanager
+def _owner(context, *rows, user_ids=(), attendance_id=None):
+    """Private tests use the same real prelocked owner boundary as services."""
+    selected = {
+        model: set()
+        for model in (Employee, Department, Branch, Party, LeaveType, Attendance, LeaveRequest)
+    }
+    for row in rows:
+        selected[type(row)].add(row.pk)
+        if isinstance(row, Employee):
+            selected[Party].add(row.party_id)
+            for model, key in ((Department, row.department_id), (Branch, row.branch_id)):
+                if key is not None:
+                    selected[model].add(key)
+    with hr_operation(context, [code for code, _ in HR_PERMISSION_DECLARATIONS]) as op:
+        for model, identities in selected.items():
+            if identities:
+                op.lock_rows(model, identities)
+        if attendance_id is not None:
+            op.reserve_attendance(attendance_id)
+        op.authorize(user_ids=user_ids)
+        yield op
+
+
 @pytest.fixture
-def hr_employee(company):
+def hr_employee(company, hr_context):
     party = Party.objects.create(
         company=company, party_type=Party.Type.PERSON, display_name="HR Person"
     )
-    with business_atomic_context():
-        return persistence._create_employee(
-            company_id=company.pk,
-            party_id=party.pk,
-            employee_number=" person-1 ",
-            joining_date=date(2020, 1, 1),
-        )
+    row = services.create_employee(
+        hr_context, party_id=party.pk, employee_number=" person-1 ", joining_date=date(2020, 1, 1)
+    )
+    return Employee.objects.get(pk=row.id)
 
 
 @pytest.fixture
-def hr_type(company):
-    with business_atomic_context():
-        return persistence._create_leave_type(company_id=company.pk, code=" annual ", name="Annual")
+def hr_type(company, hr_context):
+    row = services.create_leave_type(hr_context, code=" annual ", name="Annual")
+    return LeaveType.objects.get(pk=row.id)
 
 
 @pytest.mark.django_db
@@ -250,9 +279,9 @@ def test_manifest_reregistration_preserves_enablement_and_retirement():
     assert permission.is_active is False
 
 
-@pytest.mark.django_db
-def test_setup_normalization_revision_noop_and_retirement(company, hr_employee):
-    with business_atomic_context():
+@pytest.mark.django_db(transaction=True)
+def test_setup_normalization_revision_noop_and_retirement(company, hr_context, hr_employee):
+    with _owner(hr_context):
         department = persistence._create_department(
             company_id=company.pk, code=" eng-1 ", name=" Engineering "
         )
@@ -261,6 +290,7 @@ def test_setup_normalization_revision_noop_and_retirement(company, hr_employee):
             "Engineering",
             1,
         )
+    with _owner(hr_context, department):
         unchanged = persistence._update_department(
             company_id=company.pk,
             department_id=department.pk,
@@ -269,6 +299,7 @@ def test_setup_normalization_revision_noop_and_retirement(company, hr_employee):
             is_active=True,
         )
         assert unchanged.revision == 1
+    with _owner(hr_context, department):
         changed = persistence._update_department(
             company_id=company.pk,
             department_id=department.pk,
@@ -277,6 +308,7 @@ def test_setup_normalization_revision_noop_and_retirement(company, hr_employee):
             is_active=True,
         )
         assert changed.revision == 2
+    with _owner(hr_context, hr_employee, department):
         persistence._update_employee(
             company_id=company.pk,
             employee_id=hr_employee.pk,
@@ -286,37 +318,39 @@ def test_setup_normalization_revision_noop_and_retirement(company, hr_employee):
             department_id=department.pk,
             leaving_date=None,
         )
-        with pytest.raises(ValidationError, match="Reassign"):
-            persistence._update_department(
-                company_id=company.pk,
-                department_id=department.pk,
-                expected_revision=2,
-                name=changed.name,
-                is_active=False,
-            )
+    with pytest.raises(ValidationError, match="Reassign"), _owner(hr_context, department):
+        persistence._update_department(
+            company_id=company.pk,
+            department_id=department.pk,
+            expected_revision=2,
+            name=changed.name,
+            is_active=False,
+        )
 
 
-@pytest.mark.django_db
+@pytest.mark.django_db(transaction=True)
 @pytest.mark.parametrize("bad", [True, 1.0, "1", 0, MAX_ORDINAL + 1])
-def test_private_setup_rejects_coerced_or_out_of_range_revision(company, bad):
-    with business_atomic_context():
+def test_private_setup_rejects_coerced_or_out_of_range_revision(company, hr_context, bad):
+    with _owner(hr_context):
         department = persistence._create_department(company_id=company.pk, code="TEST", name="Test")
-        with pytest.raises(ValidationError):
-            persistence._update_department(
-                company_id=company.pk,
-                department_id=department.pk,
-                expected_revision=bad,
-                name="Other",
-                is_active=True,
-            )
+    with pytest.raises(ValidationError), _owner(hr_context, department):
+        persistence._update_department(
+            company_id=company.pk,
+            department_id=department.pk,
+            expected_revision=bad,
+            name="Other",
+            is_active=True,
+        )
     department.refresh_from_db()
     assert department.revision == 1
 
 
-@pytest.mark.django_db
-def test_employee_immutable_identity_end_and_stale_instance_guards(company, hr_employee):
+@pytest.mark.django_db(transaction=True)
+def test_employee_immutable_identity_end_and_stale_instance_guards(
+    company, hr_context, hr_employee
+):
     original = (hr_employee.company_id, hr_employee.party_id, hr_employee.employee_number)
-    with business_atomic_context():
+    with _owner(hr_context, hr_employee):
         ended = persistence._end_employee(
             company_id=company.pk,
             employee_id=hr_employee.pk,
@@ -326,13 +360,13 @@ def test_employee_immutable_identity_end_and_stale_instance_guards(company, hr_e
         assert ended.status == Employee.Status.ENDED
         assert ended.revision == 2
         assert (ended.company_id, ended.party_id, ended.employee_number) == original
-        with pytest.raises(ValidationError):
-            persistence._end_employee(
-                company_id=company.pk,
-                employee_id=ended.pk,
-                expected_revision=1,
-                leaving_date=date(2024, 1, 1),
-            )
+    with pytest.raises(ValidationError), _owner(hr_context, ended):
+        persistence._end_employee(
+            company_id=company.pk,
+            employee_id=ended.pk,
+            expected_revision=1,
+            leaving_date=date(2024, 1, 1),
+        )
     hr_employee.company_id = uuid4()
     hr_employee.party_id = uuid4()
     with pytest.raises(ValidationError):
@@ -342,11 +376,11 @@ def test_employee_immutable_identity_end_and_stale_instance_guards(company, hr_e
     assert Employee.objects.get(pk=hr_employee.pk).status == Employee.Status.ENDED
 
 
-@pytest.mark.django_db
-def test_employee_unchanged_user_not_in_update_columns(company, operator, hr_employee):
+@pytest.mark.django_db(transaction=True)
+def test_employee_unchanged_user_not_in_update_columns(company, operator, hr_context, hr_employee):
     from django.test.utils import CaptureQueriesContext
 
-    with business_atomic_context():
+    with _owner(hr_context, hr_employee, user_ids=[operator.pk]):
         linked = persistence._update_employee(
             company_id=company.pk,
             employee_id=hr_employee.pk,
@@ -356,27 +390,30 @@ def test_employee_unchanged_user_not_in_update_columns(company, operator, hr_emp
             department_id=None,
             leaving_date=None,
         )
-        with CaptureQueriesContext(connection) as queries:
-            persistence._update_employee(
-                company_id=company.pk,
-                employee_id=linked.pk,
-                expected_revision=2,
-                joining_date=date(2019, 1, 1),
-                user_id=operator.pk,
-                department_id=None,
-                leaving_date=None,
-            )
+    with _owner(hr_context, linked), CaptureQueriesContext(connection) as queries:
+        persistence._update_employee(
+            company_id=company.pk,
+            employee_id=linked.pk,
+            expected_revision=2,
+            joining_date=date(2019, 1, 1),
+            user_id=operator.pk,
+            department_id=None,
+            leaving_date=None,
+        )
     updates = [entry["sql"] for entry in queries if entry["sql"].startswith("UPDATE ")]
     assert len(updates) == 1
     assert '"user_id" =' not in updates[0]
     assert '"party_id" =' not in updates[0]
 
 
-@pytest.mark.django_db
-def test_attendance_initial_revision_has_no_duration_ceiling(company, operator, hr_employee):
+@pytest.mark.django_db(transaction=True)
+def test_attendance_initial_revision_has_no_duration_ceiling(
+    company, operator, hr_context, hr_employee
+):
     start = datetime(2023, 1, 1, 10, 0, 45, 123456, tzinfo=UTC)
     end = start + timedelta(hours=73)
-    with business_atomic_context():
+    attendance_id = uuid4()
+    with _owner(hr_context, hr_employee, attendance_id=attendance_id):
         attendance = persistence._create_attendance(
             company_id=company.pk,
             employee_id=hr_employee.pk,
@@ -384,6 +421,7 @@ def test_attendance_initial_revision_has_no_duration_ceiling(company, operator, 
             timezone_name=company.timezone,
             record_request_key=uuid4(),
             recorded_by_id=operator.pk,
+            attendance_id=attendance_id,
         )
         revision = persistence._append_attendance_revision(
             company_id=company.pk,
@@ -404,12 +442,18 @@ def test_attendance_initial_revision_has_no_duration_ceiling(company, operator, 
     assert revision.effect == "ACTIVE_INTERVAL"
 
 
-@pytest.mark.django_db
-def test_leave_private_transitions_retain_receipts(company, operator, hr_employee, hr_type):
+@pytest.mark.django_db(transaction=True)
+def test_leave_private_transitions_retain_receipts(
+    company, operator, hr_context, hr_employee, hr_type
+):
     from django.contrib.auth import get_user_model
 
     decider = get_user_model().objects.create_user("hr-decider@example.com", "password")
-    with business_atomic_context():
+    UserCompanyAccess.objects.create(company=company, user=decider)
+    assignment = UserRoleAssignment.objects.get(user=operator, company=company)
+    UserRoleAssignment.objects.create(company=company, user=decider, role_id=assignment.role_id)
+    decider_context = BusinessContext(actor_id=decider.pk, company_id=company.pk)
+    with _owner(hr_context, hr_employee, hr_type):
         leave = persistence._create_leave(
             company_id=company.pk,
             employee_id=hr_employee.pk,
@@ -423,6 +467,7 @@ def test_leave_private_transitions_retain_receipts(company, operator, hr_employe
             window_start_at=datetime(2023, 1, 1, tzinfo=UTC),
             window_end_at=datetime(2024, 1, 3, tzinfo=UTC),
         )
+    with _owner(hr_context, hr_employee, hr_type, leave):
         submitted = persistence._submit_leave(
             company_id=company.pk,
             leave_id=leave.pk,
@@ -430,15 +475,16 @@ def test_leave_private_transitions_retain_receipts(company, operator, hr_employe
             request_key=uuid4(),
             actor_id=operator.pk,
         )
-        with pytest.raises(ValidationError):
-            persistence._decide_leave(
-                company_id=company.pk,
-                leave_id=leave.pk,
-                expected_revision=2,
-                request_key=uuid4(),
-                actor_id=operator.pk,
-                decision="APPROVED",
-            )
+    with pytest.raises(ValidationError), _owner(hr_context, hr_employee, hr_type, submitted):
+        persistence._decide_leave(
+            company_id=company.pk,
+            leave_id=leave.pk,
+            expected_revision=2,
+            request_key=uuid4(),
+            actor_id=operator.pk,
+            decision="APPROVED",
+        )
+    with _owner(decider_context, hr_employee, hr_type, submitted):
         approved = persistence._decide_leave(
             company_id=company.pk,
             leave_id=leave.pk,
@@ -447,6 +493,7 @@ def test_leave_private_transitions_retain_receipts(company, operator, hr_employe
             actor_id=decider.pk,
             decision="APPROVED",
         )
+    with _owner(hr_context, hr_employee, hr_type, approved):
         cancelled = persistence._cancel_leave(
             company_id=company.pk,
             leave_id=leave.pk,
@@ -464,9 +511,14 @@ def test_leave_private_transitions_retain_receipts(company, operator, hr_employe
     assert (cancelled.end_date - cancelled.start_date).days + 1 > 366
 
 
-@pytest.mark.django_db
-def test_private_leave_rejects_forged_derived_window(company, operator, hr_employee, hr_type):
-    with pytest.raises(ValidationError, match="exact frozen-zone"), business_atomic_context():
+@pytest.mark.django_db(transaction=True)
+def test_private_leave_rejects_forged_derived_window(
+    company, operator, hr_context, hr_employee, hr_type
+):
+    with (
+        pytest.raises(ValidationError, match="exact frozen-zone"),
+        _owner(hr_context, hr_employee, hr_type),
+    ):
         persistence._create_leave(
             company_id=company.pk,
             employee_id=hr_employee.pk,
@@ -483,11 +535,13 @@ def test_private_leave_rejects_forged_derived_window(company, operator, hr_emplo
     assert not LeaveRequest.objects.exists()
 
 
-@pytest.mark.django_db
-def test_private_leave_rejects_interior_skipped_midnight(company, operator, hr_employee, hr_type):
+@pytest.mark.django_db(transaction=True)
+def test_private_leave_rejects_interior_skipped_midnight(
+    company, operator, hr_context, hr_employee, hr_type
+):
     company.timezone = "Pacific/Apia"
     company.save()
-    with pytest.raises(ValidationError, match="midnight"), business_atomic_context():
+    with pytest.raises(ValidationError, match="midnight"), _owner(hr_context, hr_employee, hr_type):
         persistence._create_leave(
             company_id=company.pk,
             employee_id=hr_employee.pk,
@@ -504,9 +558,13 @@ def test_private_leave_rejects_interior_skipped_midnight(company, operator, hr_e
     assert not LeaveRequest.objects.exists()
 
 
-@pytest.mark.django_db
-def test_private_attendance_rejects_false_cached_dates(company, operator, hr_employee):
-    with business_atomic_context():
+@pytest.mark.django_db(transaction=True)
+def test_private_attendance_rejects_false_cached_dates(company, operator, hr_context, hr_employee):
+    attendance_id = uuid4()
+    with (
+        pytest.raises(ValidationError, match="search dates"),
+        _owner(hr_context, hr_employee, attendance_id=attendance_id),
+    ):
         attendance = persistence._create_attendance(
             company_id=company.pk,
             employee_id=hr_employee.pk,
@@ -514,28 +572,30 @@ def test_private_attendance_rejects_false_cached_dates(company, operator, hr_emp
             timezone_name=company.timezone,
             record_request_key=uuid4(),
             recorded_by_id=operator.pk,
+            attendance_id=attendance_id,
         )
-        with pytest.raises(ValidationError, match="search dates"):
-            persistence._append_attendance_revision(
-                company_id=company.pk,
-                attendance_id=attendance.pk,
-                expected_revision=0,
-                operation="RECORD",
-                start_at=datetime(2023, 1, 1, tzinfo=UTC),
-                end_at=datetime(2023, 1, 2, tzinfo=UTC),
-                local_start_date=date(2023, 1, 1),
-                local_end_date=date(2023, 1, 2),
-                reason="",
-                actor_id=operator.pk,
-                request_key=attendance.record_request_key,
-            )
+        persistence._append_attendance_revision(
+            company_id=company.pk,
+            attendance_id=attendance.pk,
+            expected_revision=0,
+            operation="RECORD",
+            start_at=datetime(2023, 1, 1, tzinfo=UTC),
+            end_at=datetime(2023, 1, 2, tzinfo=UTC),
+            local_start_date=date(2023, 1, 1),
+            local_end_date=date(2023, 1, 2),
+            reason="",
+            actor_id=operator.pk,
+            request_key=attendance.record_request_key,
+        )
     assert not AttendanceRevision.objects.exists()
+    assert not Attendance.objects.exists()
 
 
-@pytest.mark.django_db
-def test_ordinal_exhaustion_has_no_partial_change(company):
-    with business_atomic_context():
+@pytest.mark.django_db(transaction=True)
+def test_ordinal_exhaustion_has_no_partial_change(company, hr_context):
+    with _owner(hr_context):
         department = persistence._create_department(company_id=company.pk, code="MAX", name="Max")
+    with business_atomic_context():
         with connection.cursor() as cursor:
             cursor.execute(
                 'UPDATE "hr_department" SET "revision" = %s WHERE "id" = %s',
@@ -544,14 +604,14 @@ def test_ordinal_exhaustion_has_no_partial_change(company):
                     department.pk.hex if connection.vendor == "sqlite" else department.pk,
                 ],
             )
-        with pytest.raises(ValidationError):
-            persistence._update_department(
-                company_id=company.pk,
-                department_id=department.pk,
-                expected_revision=MAX_ORDINAL,
-                name="Changed",
-                is_active=True,
-            )
+    with pytest.raises(ValidationError), _owner(hr_context, department):
+        persistence._update_department(
+            company_id=company.pk,
+            department_id=department.pk,
+            expected_revision=MAX_ORDINAL,
+            name="Changed",
+            is_active=True,
+        )
     department.refresh_from_db()
     assert (department.name, department.revision) == ("Max", MAX_ORDINAL)
 

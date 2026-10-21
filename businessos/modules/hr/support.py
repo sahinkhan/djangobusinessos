@@ -15,7 +15,7 @@ from businessos.core.organization.models import Branch
 from businessos.modules.party.models import Party
 
 from . import domain
-from .admission import require_domain_anchors
+from .admission import _CURRENT, AdmissionError
 from .models import Department, Employee, LeaveType
 
 
@@ -60,16 +60,16 @@ def fact(row, *, related=None, department_visible=False):
 
 def locked(model, context, raw_id):
     row_id = identity("id", raw_id)
-    require_domain_anchors([(model._meta.label_lower, row_id)])
-    row = (
-        model.objects.using(current_database_alias())
-        .select_for_update(of=("self",))
-        .filter(pk=row_id, company_id=context.company_id)
-        .first()
-    )
-    if row is None:
+    operation = _CURRENT.get()
+    if operation is None or operation.context.company_id != context.company_id:
+        raise AdmissionError("HR domain locks require the current owning operation.")
+    try:
+        rows = operation.lock_rows(model, [row_id])
+    except ValidationError as exc:
+        raise PermissionDenied("The HR record is unavailable in this scope.") from exc
+    if not rows:
         raise PermissionDenied("The HR record is unavailable in this scope.")
-    return row
+    return rows[0]
 
 
 def scope(context, branch_id):
@@ -101,16 +101,7 @@ def references(operation, *, department_ids=(), branch_ids=(), party_ids=(), lea
         (LeaveType, leave_type_ids),
     ):
         ids = sorted({identity("reference", key) for key in identities if key is not None})
-        require_domain_anchors((model._meta.label_lower, key) for key in ids)
-        query = (
-            model.objects.using(operation.alias)
-            .select_for_update(of=("self",))
-            .filter(pk__in=ids, company_id=operation.context.company_id)
-            .order_by("pk")
-        )
-        if model is Party:
-            query = query.only("id", "company_id", "party_type", "display_name", "is_active")
-        rows = list(query)
+        rows = operation.lock_rows(model, ids)
         if {row.pk for row in rows} != set(ids):
             raise ValidationError("A related identity is outside the selected Company.")
         operation.declare_anchors((model._meta.label_lower, key) for key in ids)

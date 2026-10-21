@@ -46,12 +46,12 @@ def _receipt(parent, matched, current, *, retry):
 
 
 def record_attendance(context, *, employee_id, request_key, start_at, end_at, reason=""):
-    employee_id = identity("employee_id", employee_id)
-    request_key = identity("request_key", request_key)
-    start_at = value("start_at", normalize_instant, start_at)
-    end_at = value("end_at", normalize_instant, end_at)
-    reason = value("reason", domain.text, reason)
     with hr_operation(context, (RECORD_ATTENDANCE, VIEW_ATTENDANCE, VIEW_EMPLOYEES)) as op:
+        employee_id = identity("employee_id", employee_id)
+        request_key = identity("request_key", request_key)
+        start_at = value("start_at", normalize_instant, start_at)
+        end_at = value("end_at", normalize_instant, end_at)
+        reason = value("reason", domain.text, reason)
         old = (
             Attendance.objects.using(op.alias)
             .filter(company_id=context.company_id, record_request_key=request_key)
@@ -101,7 +101,7 @@ def record_attendance(context, *, employee_id, request_key, start_at, end_at, re
         leaves = leave_candidates(op, employee, start_at, end_at, approved_only=True)
         reject_leave_overlap(leaves, start_at, end_at, approved_only=True)
         new_id = uuid4()
-        op.declare_anchors([("hr.attendance", new_id)])
+        op.reserve_attendance(new_id)
         op.authorize()
         parent = persistence._create_attendance(
             attendance_id=new_id,
@@ -140,17 +140,17 @@ def revise_attendance(
     end_at=None,
     reason,
 ):
-    request_key = identity("request_key", request_key)
-    expected_revision = value("expected_revision", domain.revision, expected_revision)
-    reason = value("reason", domain.text, reason, required=True)
-    if operation not in {"CORRECT", "VOID", "REINSTATE"}:
-        raise ValidationError({"operation": "Use CORRECT, VOID or REINSTATE."})
-    if operation == "VOID" and (start_at is not None or end_at is not None):
-        raise ValidationError("VOID does not accept replacement interval inputs.")
-    if operation != "VOID":
-        start_at = value("start_at", normalize_instant, start_at)
-        end_at = value("end_at", normalize_instant, end_at)
     with hr_operation(context, (CORRECT_ATTENDANCE, VIEW_ATTENDANCE, VIEW_EMPLOYEES)) as op:
+        request_key = identity("request_key", request_key)
+        expected_revision = value("expected_revision", domain.revision, expected_revision)
+        reason = value("reason", domain.text, reason, required=True)
+        if operation not in {"CORRECT", "VOID", "REINSTATE"}:
+            raise ValidationError({"operation": "Use CORRECT, VOID or REINSTATE."})
+        if operation == "VOID" and (start_at is not None or end_at is not None):
+            raise ValidationError("VOID does not accept replacement interval inputs.")
+        if operation != "VOID":
+            start_at = value("start_at", normalize_instant, start_at)
+            end_at = value("end_at", normalize_instant, end_at)
         discovered = (
             Attendance.objects.using(op.alias)
             .filter(pk=identity("attendance_id", attendance_id), company_id=context.company_id)

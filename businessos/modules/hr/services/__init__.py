@@ -199,12 +199,7 @@ def _eligibility_history(op, employee, joining_date, leaving_date):
     if len(candidate_ids) > domain.MATERIALIZATION_LIMIT:
         raise ResourceBudgetExceeded("Employment eligibility evidence exceeds the work budget.")
     op.declare_anchors(("hr.attendance", key) for key in set(candidate_ids))
-    parents = list(
-        Attendance.objects.using(op.alias)
-        .select_for_update()
-        .filter(pk__in=candidate_ids)
-        .order_by("pk")
-    )
+    parents = op.lock_rows(Attendance, candidate_ids)
     op.declare_anchors(("hr.attendance", row.pk) for row in parents)
     for parent in parents:
         current = certify_attendance(parent)
@@ -233,17 +228,17 @@ def _eligibility_history(op, employee, joining_date, leaving_date):
     if len(leave_ids) > domain.MATERIALIZATION_LIMIT:
         raise ResourceBudgetExceeded("Employment Leave evidence exceeds the work budget.")
     op.declare_anchors(("hr.leaverequest", key) for key in leave_ids)
-    leaves = list(leave_query.filter(pk__in=leave_ids).select_for_update())
+    leaves = op.lock_rows(LeaveRequest, leave_ids)
     op.declare_anchors(("hr.leaverequest", row.pk) for row in leaves)
     if leaves:
         raise ValidationError("Existing Leave conflicts with the proposed employment dates.")
 
 
 def update_employee(context, *, employee_id, expected_revision, **changes):
-    allowed = {"joining_date", "user_id", "department_id", "leaving_date"}
-    if changes.keys() - allowed:
-        raise ValidationError("Unsupported Employee fields.")
     with hr_operation(context, (MANAGE_EMPLOYEES, VIEW_EMPLOYEES)) as op:
+        allowed = {"joining_date", "user_id", "department_id", "leaving_date"}
+        if changes.keys() - allowed:
+            raise ValidationError("Unsupported Employee fields.")
         row = locked(Employee, context, employee_id)
         op.declare_anchors([("hr.employee", row.pk)])
         scope(context, row.branch_id)

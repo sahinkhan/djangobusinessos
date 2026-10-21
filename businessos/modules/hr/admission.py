@@ -60,6 +60,20 @@ _EXPECTED_SOURCE_RELATIONS = (
     ("hr.leavetype", "hr_leavetype"),
     ("hr.leaverequest", "hr_leaverequest"),
 )
+_DOMAIN_ORDER = {
+    label: index
+    for index, label in enumerate(
+        (
+            "hr.employee",
+            "hr.department",
+            "organization.branch",
+            "party.party",
+            "hr.leavetype",
+            "hr.attendance",
+            "hr.leaverequest",
+        )
+    )
+}
 
 
 class AdmissionError(RuntimeError):
@@ -178,10 +192,15 @@ class HRAdmission:
     permission_ids: frozenset = field(default_factory=frozenset)
     superuser: bool = False
     relations: tuple = ()
+    acquired_anchors: frozenset = field(default_factory=frozenset)
+    reserved_attendance_ids: frozenset = field(default_factory=frozenset)
+    pending_attendance_ids: set = field(default_factory=set)
+    finished: bool = False
 
     def _check_transaction(self):
         if (
-            current_database_alias() != self.alias
+            self.finished
+            or current_database_alias() != self.alias
             or connections[self.alias] is not self.connection
             or self.connection.connection is not self.raw_connection
             or not self.connection.in_atomic_block
@@ -217,6 +236,105 @@ class HRAdmission:
                 self._refuse("Domain anchors cannot expand after authority admission.")
             return
         self.anchors = self.anchors | requested
+
+    def _check_domain_boundary(self):
+        self.checkpoint()
+        if tuple(self.connection.savepoint_ids) != self.savepoints:
+            self._refuse("HR acquired-lock evidence cannot cross an unadmitted savepoint.")
+
+    def lock_rows(self, model, identities):
+        """Acquire actual scoped locks, never infer protection from declarations.
+
+        Every supported HR domain lock goes through this private adapter. The
+        acquired set is populated only AFTER successful selected-transaction SQL.
+        After authority starts, rereads use already-held locks and cannot issue
+        a new blocking FOR UPDATE. New inserts are recorded separately.
+        """
+        self._check_domain_boundary()
+        label = model._meta.label_lower
+        if label not in _DOMAIN_ORDER:
+            self._refuse("Unsupported HR domain lock owner.")
+        ids = _uuid_set(identities)
+        requested = frozenset((label, key) for key in ids)
+        self.declare_anchors(requested)
+        missing = requested - self.acquired_anchors
+        if self.admitted or self.authority_started_at is not None:
+            if missing:
+                self._refuse("Nested domain anchors are unacquired before authority admission.")
+        elif missing:
+            # Existing protected identities may be reread after later classes;
+            # a newly discovered earlier class cannot be locked in reverse order.
+            held_classes = [_DOMAIN_ORDER[name] for name, _ in self.acquired_anchors]
+            if held_classes and _DOMAIN_ORDER[label] < max(held_classes):
+                self._refuse("HR domain locks cannot acquire an earlier class after later locks.")
+        query = (
+            model.objects.using(self.alias)
+            .filter(company_id=self.context.company_id, pk__in=ids)
+            .order_by("pk")
+        )
+        if label == "party.party":
+            query = query.only("id", "company_id", "party_type", "display_name", "is_active")
+        if missing:
+            query = query.select_for_update(of=("self",))
+        rows = list(query)
+        if {row.pk for row in rows} != set(ids):
+            error = ValidationError("The HR domain lock identity coverage is incomplete.")
+            _poison(self, error)
+            raise error
+        self.acquired_anchors |= requested
+        return rows
+
+    def reserve_attendance(self, identity):
+        """Reserve a genuinely new identity before authority under the Company mutex."""
+        self._check_domain_boundary()
+        if self.admitted or self.authority_started_at is not None:
+            self._refuse("New Attendance reservation must precede authority admission.")
+        identity = next(iter(_uuid_set([identity])))
+        if apps.get_model("hr.attendance").objects.using(self.alias).filter(pk=identity).exists():
+            self._refuse("A new Attendance reservation cannot name an existing record.")
+        self.declare_anchors([("hr.attendance", identity)])
+        self.reserved_attendance_ids |= frozenset([identity])
+
+    def register_created_row(self, row):
+        self._check_domain_boundary()
+        from .persistence import _owns_insert
+
+        if (
+            not self.admitted
+            or not _owns_insert(self, row=row)
+            or row._state.adding
+            or row._state.db != self.alias
+            or row.company_id != self.context.company_id
+            or row._meta.label_lower not in {*_DOMAIN_ORDER, "hr.attendancerevision"}
+        ):
+            self._refuse(
+                "New HR row protection requires this admitted transaction's scoped insert."
+            )
+        if row._meta.label_lower != "hr.attendancerevision":
+            anchor = (row._meta.label_lower, row.pk)
+            # An insertion owns its row lock. It cannot pretend an existing
+            # declared-but-unheld row was acquired.
+            self.anchors |= frozenset([anchor])
+            self.acquired_anchors |= frozenset([anchor])
+
+    def register_attendance_creation(self, parent):
+        self.checkpoint()
+        from .persistence import _owns_insert
+
+        if not _owns_insert(self, row=parent) or parent.pk not in self.reserved_attendance_ids:
+            self._refuse("Attendance insertion requires a verified new identity reservation.")
+        self.pending_attendance_ids.add(parent.pk)
+
+    def complete_attendance_creation(self, parent_id):
+        self.checkpoint()
+        from .persistence import _owns_insert
+
+        if (
+            not _owns_insert(self, parent_id=parent_id)
+            or parent_id not in self.pending_attendance_ids
+        ):
+            self._refuse("Attendance initial revision has no pending parent insertion.")
+        self.pending_attendance_ids.remove(parent_id)
 
     def declare_permissions(self, permissions):
         """Add a compound discovered from locked state, never after admission."""
@@ -391,8 +509,21 @@ class HRAdmission:
             raise PermissionDenied("The HR actor changed or is inactive.")
 
     def authorize(self, *, user_ids=()):
+        """Any failed admission poisons the outer unit, even if caller catches it."""
+        try:
+            return self._authorize(user_ids=user_ids)
+        except Exception as exc:
+            _poison(self, exc)
+            raise
+
+    def _authorize(self, *, user_ids):
         """Freeze the complete discovered union, then run every native final guard."""
-        self.checkpoint()
+        self._check_domain_boundary()
+        protected = self.acquired_anchors | frozenset(
+            ("hr.attendance", key) for key in self.reserved_attendance_ids
+        )
+        if not self.anchors <= protected:
+            self._refuse("Declared HR domain anchors remain unacquired before authority admission.")
         users = _uuid_set((*user_ids, *self.declared_users, self.context.actor_id))
         self.checkpoint()
         if self.admitted:
@@ -402,7 +533,6 @@ class HRAdmission:
             return
         self.authority_started_at = monotonic()
         self.acquiring_authority = True
-        self.user_ids = users
         try:
             if self.connection.vendor == "postgresql":
                 self.relations = self._verified_relations()
@@ -415,6 +545,7 @@ class HRAdmission:
                 if self._verified_relations() != self.relations:
                     raise AdmissionError("Authority identities changed during relation admission.")
             self._share_rows(get_user_model(), users)
+            self.user_ids = users
             actor = (
                 get_user_model().objects.using(self.alias).filter(pk=self.context.actor_id).first()
             )
@@ -430,13 +561,15 @@ class HRAdmission:
                             "IN SHARE MODE NOWAIT"
                         )
             else:
-                self.role_ids = self._roles()
-                self._share_rows(Role, self.role_ids)
-            self.permission_ids = self._permissions()
-            total = len(users) + len(self.role_ids) + len(self.permission_ids)
+                roles = self._roles()
+                self._share_rows(Role, roles)
+                self.role_ids = roles
+            permissions = self._permissions()
+            total = len(users) + len(self.role_ids) + len(permissions)
             if total > AUTHORITY_TOTAL_LIMIT:
                 raise ResourceBudgetExceeded("HR aggregate authority resource budget exceeded.")
-            self._share_rows(Permission, self.permission_ids)
+            self._share_rows(Permission, permissions)
+            self.permission_ids = permissions
             self._recheck_sets()
         finally:
             self.acquiring_authority = False
@@ -481,7 +614,7 @@ def hr_operation(context, permissions, *, anchors=(), user_ids=()):
                 or parent.context.actor_id != context.actor_id
                 or context.warehouse_id is not None
                 or not set(permissions) <= set(parent.permissions)
-                or not anchors <= parent.anchors
+                or not anchors <= parent.acquired_anchors
                 or not users <= parent.user_ids
                 or tuple(connection.savepoint_ids) != parent.savepoints
             ):
@@ -529,9 +662,18 @@ def hr_operation(context, permissions, *, anchors=(), user_ids=()):
                     yield state
                     if not state.admitted:
                         raise AdmissionError("HR cannot succeed without complete final admission.")
+                    if state.pending_attendance_ids:
+                        state._refuse("An Attendance insertion has no complete initial revision.")
                     state.checkpoint()
             finally:
                 _CURRENT.reset(token)
+                state.finished = True
+                state.acquired_anchors = frozenset()
+                state.reserved_attendance_ids = frozenset()
+                state.pending_attendance_ids.clear()
+                state.user_ids = frozenset()
+                state.role_ids = frozenset()
+                state.permission_ids = frozenset()
     except DatabaseError as exc:
         if state.authority_conflict and _sqlstate(exc) == "55P03":
             _record_failure(state, "AuthorityBusy", sqlstate="55P03")
@@ -558,4 +700,31 @@ def require_domain_anchors(anchors):
     state = _CURRENT.get()
     if state is None:
         raise AdmissionError("HR domain locking requires an admitted operation boundary.")
+    anchors = _anchor_set(anchors)
     state.declare_anchors(anchors)
+    if (
+        state.admitted or state.authority_started_at is not None
+    ) and not anchors <= state.acquired_anchors:
+        state._refuse("Nested domain anchors are unacquired before authority admission.")
+
+
+def require_persistence_scope(company_id, permissions, *, anchors=(), user_ids=()):
+    """Named owner primitives require current authority and actual scoped locks."""
+    state = _CURRENT.get()
+    if state is None:
+        raise AdmissionError("HR persistence requires an admitted owning operation.")
+    try:
+        state._check_domain_boundary()
+        if (
+            not state.admitted
+            or company_id != state.context.company_id
+            or permissions
+            and not set(_permission_set(permissions)) <= set(state.permissions)
+            or not _anchor_set(anchors) <= state.acquired_anchors
+            or not _uuid_set(user_ids) <= state.user_ids
+        ):
+            state._refuse("HR persistence is outside its protected owner operation scope.")
+        return state
+    except Exception as exc:
+        _poison(state, exc)
+        raise

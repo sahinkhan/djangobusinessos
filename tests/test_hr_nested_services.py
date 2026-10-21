@@ -35,11 +35,7 @@ def nested_world(company, operator):
 
 
 def _prelock(operation, target):
-    return (
-        Department.objects.using(operation.alias)
-        .select_for_update()
-        .get(pk=target.id, company_id=operation.context.company_id)
-    )
+    return operation.lock_rows(Department, [target.id])[0]
 
 
 @pytest.mark.parametrize("public_call", ["mutation", "selector"])

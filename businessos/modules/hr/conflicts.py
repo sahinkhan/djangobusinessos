@@ -27,13 +27,8 @@ def attendance_candidates(op, employee, start, end, *, target_id=None):
     if target_id is not None:
         targets.add(target_id)
     op.declare_anchors(("hr.attendance", key) for key in targets)
-    parents = list(
-        Attendance.objects.using(op.alias)
-        .select_for_update()
-        .filter(pk__in=targets, company_id=employee.company_id, employee_id=employee.pk)
-        .order_by("pk")
-    )
-    if {row.pk for row in parents} != targets:
+    parents = op.lock_rows(Attendance, targets)
+    if any(row.employee_id != employee.pk for row in parents):
         raise ValidationError("The Attendance parent evidence is incomplete.")
     op.declare_anchors(("hr.attendance", row.pk) for row in parents)
     return {parent.pk: (parent, certify_attendance(parent)) for parent in parents}
@@ -94,13 +89,8 @@ def leave_candidates(
     if target_id is not None:
         all_ids.add(target_id)
     op.declare_anchors(("hr.leaverequest", key) for key in all_ids)
-    rows = list(
-        LeaveRequest.objects.using(op.alias)
-        .select_for_update()
-        .filter(pk__in=all_ids, company_id=employee.company_id, employee_id=employee.pk)
-        .order_by("pk")
-    )
-    if {row.pk for row in rows} != all_ids:
+    rows = op.lock_rows(LeaveRequest, all_ids)
+    if any(row.employee_id != employee.pk for row in rows):
         raise ValidationError("The Leave parent evidence is incomplete.")
     op.declare_anchors(("hr.leaverequest", row.pk) for row in rows)
     return [certify_leave(row) for row in rows]

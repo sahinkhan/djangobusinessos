@@ -65,6 +65,7 @@ class CalendarBasis:
     tzif_sha256: str
     segments: tuple[OffsetSegment, ...]
     invalid_wall_intervals: tuple[InvalidWallInterval, ...]
+    boundary_segments: tuple[OffsetSegment, ...] = ()
 
 
 def normalize_instant(value, field="datetime"):
@@ -503,16 +504,23 @@ def calendar_basis(start, end, zone):
     """Compile SQL proof parameters: exact segments plus a civil-boundary halo.
 
     A selected interval can start *after* its first date's invalid midnight.
-    Therefore invalid wall intervals must include the proven two-day halo,
-    even though segment coverage itself remains exactly [start,end).
+    Therefore boundary proof needs a halo, even though instant-conversion
+    segment coverage itself remains exactly [start,end). The first occupied
+    wall midnight is within two UTC days of its instant. The exclusive final
+    wall midnight is less than two days after its endpoint; subtracting any
+    supported offset (strictly less than one day) gives a UTC candidate within
+    three days. Retain those same-source segments so SQL can count ALL exact
+    midnight candidates, including a second candidate outside the input range.
     """
     rules = _load_rules(zone)
     first, last = instant_us(start), instant_us(end)
     exact = _compile(rules, first, last)
     halo = _compile(
-        rules, max(MIN_US, first - 2 * DAY_US), min(MAX_US, last + 2 * DAY_US), boundary_halo=True
+        rules, max(MIN_US, first - 3 * DAY_US), min(MAX_US, last + 3 * DAY_US), boundary_halo=True
     )
-    return CalendarBasis(zone, rules.digest, exact.segments, halo.invalid_wall_intervals)
+    return CalendarBasis(
+        zone, rules.digest, exact.segments, halo.invalid_wall_intervals, halo.segments
+    )
 
 
 def offset_segments(start, end, zone):

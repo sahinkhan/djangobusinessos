@@ -119,12 +119,7 @@ def _employee_facts(op, rows, department_visible):
     # Query page rows, then lock the complete Employee UUID set in fixed order.
     rows = list(rows)
     op.declare_anchors(("hr.employee", row.pk) for row in rows)
-    employees = list(
-        Employee.objects.using(op.alias)
-        .select_for_update()
-        .filter(pk__in=[row.pk for row in rows], company_id=op.context.company_id)
-        .order_by("pk")
-    )
+    employees = op.lock_rows(Employee, [row.pk for row in rows])
     op.declare_anchors(("hr.employee", row.pk) for row in employees)
     refs = references(
         op,
@@ -190,12 +185,7 @@ def _history_detail(op, context, model, row_id):
 def _history_facts(op, context, model, rows):
     rows = list(rows)
     op.declare_anchors(("hr.employee", row.employee_id) for row in rows)
-    employees = list(
-        Employee.objects.using(op.alias)
-        .select_for_update()
-        .filter(pk__in={row.employee_id for row in rows}, company_id=context.company_id)
-        .order_by("pk")
-    )
+    employees = op.lock_rows(Employee, {row.employee_id for row in rows})
     by_employee = {row.pk: row for row in employees}
     if set(by_employee) != {row.employee_id for row in rows}:
         raise ValidationError("The historical Employee ownership is incomplete.")
@@ -207,12 +197,7 @@ def _history_facts(op, context, model, rows):
         leave_type_ids=[row.leave_type_id for row in rows] if model is LeaveRequest else [],
     )
     op.declare_anchors((model._meta.label_lower, row.pk) for row in rows)
-    parents = list(
-        model.objects.using(op.alias)
-        .select_for_update()
-        .filter(company_id=context.company_id, pk__in=[row.pk for row in rows])
-        .order_by("pk")
-    )
+    parents = op.lock_rows(model, [row.pk for row in rows])
     if len(parents) != len(rows):
         raise ValidationError("The historical parent evidence is incomplete.")
     op.declare_anchors((model._meta.label_lower, row.pk) for row in parents)
@@ -509,12 +494,7 @@ def action_admission(
             )
             employee_ids.update(key for key, _ in employee_choices)
         op.declare_anchors(("hr.employee", key) for key in employee_ids)
-        employees = list(
-            Employee.objects.using(op.alias)
-            .select_for_update()
-            .filter(company_id=context.company_id, pk__in=employee_ids)
-            .order_by("pk")
-        )
+        employees = op.lock_rows(Employee, employee_ids)
         if {row.pk for row in employees} != employee_ids:
             raise ValidationError("The Employee reference evidence is incomplete.")
         op.declare_anchors(("hr.employee", key) for key in employee_ids)

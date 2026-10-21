@@ -178,6 +178,40 @@ def certify_attendance(attendance):
             )
             parameters.extend((high, low))
     geometry = " OR ".join(bad_geometry) or "FALSE"
+
+    def midnight_candidates(column, *, exclusive=False):
+        # Invert each exact same-TZif offset segment at the row's wall midnight.
+        # A candidate is representable only when it belongs to that segment's
+        # clipped UTC domain; two matching segments mean an ambiguous midnight.
+        # The rule halo covers every candidate, not just endpoint offsets.
+        wall = f"(({ordinal(column)}+{int(exclusive)}-{EPOCH_ORDINAL})*{DAY_US})"
+        values = []
+        for segment in basis.boundary_segments:
+            values.append("(%s,%s,%s)")
+            parameters.extend(
+                (
+                    segment.utc_start_us,
+                    segment.utc_end_us,
+                    segment.offset_seconds * 1_000_000,
+                )
+            )
+        return (
+            "(SELECT COUNT(*) FROM (VALUES "
+            + ",".join(values)
+            + ") AS boundary WHERE "
+            + f"({wall}-boundary.column3)>=boundary.column1 "
+            + f"AND ({wall}-boundary.column3)<boundary.column2)"
+        )
+
+    first_midnight = midnight_candidates("r.local_start_date")
+    exclusive_midnight = midnight_candidates("r.local_end_date", exclusive=True)
+    # Python's inclusive-date helper must first construct end_date+1 as a Date;
+    # date.max is invalid even where an offset could put its UTC instant in range.
+    boundary_geometry = (
+        f"{ordinal('r.local_start_date')}<{date.min.toordinal()} "
+        f"OR {ordinal('r.local_end_date')}>={date.max.toordinal()} "
+        f"OR {first_midnight}<>1 OR {exclusive_midnight}<>1"
+    )
     # IS DISTINCT FROM is deliberately null-safe on PostgreSQL and supported SQLite.
     invalid = f"""
         r.company_id IS DISTINCT FROM a.company_id
@@ -238,7 +272,7 @@ def certify_attendance(attendance):
         WHERE r.attendance_id=%s AND (
             {ordinal("r.local_start_date")} IS DISTINCT FROM {start_date}
             OR {ordinal("r.local_end_date")} IS DISTINCT FROM {end_date}
-            OR {geometry} OR {invalid}
+            OR {geometry} OR {boundary_geometry} OR {invalid}
         ) LIMIT 1
     """
     query_parameters = [pk, *parameters, *scope_parameters, _STRIP_WHITESPACE]

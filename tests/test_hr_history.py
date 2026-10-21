@@ -13,8 +13,7 @@ from businessos.core.database import business_atomic_context
 from businessos.core.organization.models import Company
 from businessos.modules.hr.civil_time import occupied_dates
 from businessos.modules.hr.history import certify_attendance
-from businessos.modules.hr.models import AttendanceRevision
-from businessos.modules.hr.persistence import _create_attendance, _create_employee
+from businessos.modules.hr.models import Attendance, AttendanceRevision, Employee
 from businessos.modules.party.models import Party
 
 pytestmark = pytest.mark.django_db
@@ -27,21 +26,25 @@ def history_parent(company, operator):
     party = Party.objects.create(
         company=company, party_type=Party.Type.PERSON, display_name="Synthetic HR"
     )
-    with business_atomic_context():
-        employee = _create_employee(
-            company_id=company.pk,
-            party_id=party.pk,
-            employee_number="HISTORY-1",
-            joining_date=date(1, 1, 1),
-        )
-        parent = _create_attendance(
-            company_id=company.pk,
-            employee_id=employee.pk,
-            branch_id=None,
-            timezone_name="UTC",
-            record_request_key=uuid4(),
-            recorded_by_id=operator.pk,
-        )
+    # These SQL-certifier tests deliberately construct historical/corrupt
+    # fixtures, not supported HR operations. Do not rely on the now-admitted
+    # private persistence seam to seed evidence outside owner authorization.
+    employee = Employee(
+        company_id=company.pk,
+        party_id=party.pk,
+        employee_number="HISTORY-1",
+        joining_date=date(1, 1, 1),
+    )
+    models.Model.save_base(employee, using=connection.alias, force_insert=True)
+    parent = Attendance(
+        company_id=company.pk,
+        employee_id=employee.pk,
+        branch_id=None,
+        timezone="UTC",
+        record_request_key=uuid4(),
+        recorded_by_id=operator.pk,
+    )
+    models.Model.save_base(parent, using=connection.alias, force_insert=True)
     return parent
 
 

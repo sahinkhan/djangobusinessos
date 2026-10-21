@@ -29,6 +29,7 @@ from businessos.modules.hr.admission import (
     ResourceBudgetExceeded,
     hr_operation,
 )
+from businessos.modules.hr.models import Department
 
 pytestmark = pytest.mark.django_db(transaction=True)
 VIEW = "hr.employee.view"
@@ -46,6 +47,14 @@ def admission_world(company, operator):
         RolePermission.objects.create(role=role, permission=permission)
     UserRoleAssignment.objects.create(user=operator, company=company, role=role)
     return BusinessContext(actor_id=operator.id, company_id=company.id), role, permissions
+
+
+@pytest.fixture
+def admission_department(admission_world):
+    from businessos.modules.hr.services import create_department
+
+    context, _, _ = admission_world
+    return create_department(context, code="ADMISSION-LOCK", name="Protected admission target")
 
 
 def _postgresql():
@@ -109,14 +118,15 @@ def test_complete_inactive_authority_and_compound_native_guards(admission_world)
 
 @pytest.mark.parametrize("expansion", ["anchor", "permission"])
 def test_dynamic_compound_and_anchor_declaration_freezes_at_authorization(
-    admission_world, expansion
+    admission_world, admission_department, expansion
 ):
     context, _, _ = admission_world
-    anchor = ("hr.employee", uuid4())
+    anchor = ("hr.department", admission_department.id)
     with pytest.raises(AdmissionError, match="cannot expand"):
         with hr_operation(context, [VIEW]) as operation:
             operation.declare_anchors([anchor])
             operation.declare_permissions([MANAGE])
+            operation.lock_rows(Department, [admission_department.id])
             operation.authorize()
             assert operation.anchors == frozenset([anchor])
             assert operation.permissions == (MANAGE, VIEW)
@@ -129,11 +139,14 @@ def test_dynamic_compound_and_anchor_declaration_freezes_at_authorization(
                     operation.declare_permissions(["hr.department.view"])
 
 
-def test_admitted_nested_subset_reuses_outer_and_rechecks_guards(admission_world):
+def test_admitted_nested_subset_reuses_outer_and_rechecks_guards(
+    admission_world, admission_department
+):
     context, _, _ = admission_world
-    anchor = ("hr.employee", uuid4())
+    anchor = ("hr.department", admission_department.id)
     connection = connections[current_database_alias()]
     with hr_operation(context, [VIEW, MANAGE], anchors=[anchor]) as outer:
+        outer.lock_rows(Department, [admission_department.id])
         outer.authorize()
         block = connection.atomic_blocks[0]
         with hr_operation(context, [VIEW], anchors=[anchor]) as nested:
@@ -328,6 +341,11 @@ def test_postgresql_relation_modes_and_complete_final_sql(admission_world, super
         assert not any(mode in {"ExclusiveLock", "AccessExclusiveLock"} for _, mode in held)
         assert operation.role_ids == (frozenset() if superuser else frozenset([role.id]))
         assert {value.id for value in permissions} <= operation.permission_ids
+        coverage = {
+            "identity_user": operation.user_ids,
+            "access_role": operation.role_ids,
+            "access_permission": operation.permission_ids,
+        }
     qualified = [sql for sql, _ in statements if "FOR SHARE NOWAIT" in sql]
     assert any('"public"."identity_user"' in sql for sql in qualified)
     if not superuser:
@@ -335,11 +353,6 @@ def test_postgresql_relation_modes_and_complete_final_sql(admission_world, super
     assert any('"public"."access_permission"' in sql for sql in qualified)
     native = [(sql, params) for sql, params in statements if sql.rstrip().endswith("FOR SHARE")]
     assert len(native) >= (4 if superuser else 6)
-    coverage = {
-        "identity_user": operation.user_ids,
-        "access_role": operation.role_ids,
-        "access_permission": operation.permission_ids,
-    }
     observed = {name: set() for name in coverage}
     for sql, params in native:
         matches = [name for name in coverage if f'FROM "{name}" ' in sql]
