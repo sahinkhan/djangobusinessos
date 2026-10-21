@@ -745,3 +745,31 @@ success is claimed before observation. Failure or unexpected state stops without
 HR-0 and ECOM-0 become eligible for separate authorization after canonical acceptance but remain
 NOT STARTED in this task. HR-1/ECOM-1/runtime, Phase 4 and deployment are NOT AUTHORIZED.
 Phase 3 is not complete and no production readiness is claimed.
+
+## Current HR-1 acceptance checkpoint — 2026-10-21
+
+This later implementation checkpoint supersedes historical HR-1 NOT STARTED/NOT AUTHORIZED
+status above without changing the accepted Phase 3 owner decisions, module boundaries or prior
+chronology. HR-0/ADR 0018 remain accepted. HR-1 runtime implementation is **FORMALLY ACCEPTED FOR
+CANONICAL ADOPTION at this documentation checkpoint** for HR Foundation v1 only: Employee,
+Department, Attendance, AttendanceRevision, LeaveType and LeaveRequest.
+
+The original HR-1 audit was REVISE / Readiness B with four P2 findings. Independent corrective
+re-audit and independent CI-delta audit are both FINAL PASS / Readiness A; all four findings are
+independently RESOLVED, with no new blocking P0/P1/P2. Hosted CI #138 passed 4,326 PostgreSQL
+tests but did not execute JavaScript tests. Hosted CI #139 passed 4,326 PostgreSQL and 21
+JavaScript tests on the CI-complete candidate. Exact SHAs, audit fingerprints, retained
+limitations and actual results are in the
+[formal acceptance evidence](HR_1_IMPLEMENTATION_EVIDENCE.md#formal-acceptance-checkpoint--2026-10-21).
+
+Canonical adoption remains **PENDING** under the
+[HR-1 completion rule](PHASE_3A_HR_FOUNDATION.md#hr-1-formal-implementation-acceptance--2026-10-21):
+this acceptance commit must pass new exact-head branch CI, a normal unchanged-main fast-forward,
+and separate exact-head main CI. No future run, count or success is claimed here. No automatic
+repair, extra commit, PR, tag, force push or next milestone follows from acceptance.
+
+Phase 3 remains **NOT COMPLETE**; ECOM-0 remains separately governed and NOT STARTED BY THIS TASK,
+ECOM-1 is NOT STARTED, and the final combined Phase 3 audit/closure remain future gates. This is
+not Full Enterprise HR, production readiness, SaaS/tenant activation or deployment approval.
+Phase 4 Education/Healthcare remains **ON HOLD**, with the proposal branch frozen at
+`735e1bea13bc58fa71d430163422139d5c0f2363` and ADRs 0019–0021 PROPOSED and unchanged.

@@ -1432,3 +1432,77 @@ After success HR-1 is ELIGIBLE FOR SEPARATE AUTHORIZATION, NOT STARTED; ECOM-0 r
 eligible and NOT STARTED BY THIS TASK. HR-1/ECOM-1, Phase 4 and production deployment remain
 unauthorized. Phase 3 is NOT COMPLETE; production readiness is NOT CLAIMED. No PR, tag, force-push,
 rebase, squash, merge commit, branch deletion, runtime change or automatic next milestone.
+
+## HR-1 formal implementation acceptance — 2026-10-21
+
+This later acceptance section supersedes historical HR-1 authorization/status statements only.
+All earlier text, including the accepted HR-0 technical contract and original failures, remains
+unchanged. HR-0/ADR 0018 are ACCEPTED at canonical base
+`b36cdba91654e6a583735d67f7f6cf27a835003e`; ADR 0017 and the accepted Phase 3 owner decisions
+are unchanged. This is implementation acceptance, not a new architecture decision.
+
+The exact accepted linear candidate history is:
+
+- HR-0 canonical base: `b36cdba91654e6a583735d67f7f6cf27a835003e`.
+- Original HR-1: `e6b72896e10471463b8b6b280fbccfc524d7cc42`.
+- Independently approved corrective implementation: `c49a1291ce979093f1219dea41d5fdcd743239b7`.
+- Independently approved CI-only coverage delta: `a867a8c240627f4161ec4ef23564a320d4cf6b49`.
+- This documentation-only acceptance commit has that CI-only SHA as its immediate parent.
+
+The original independent HR-1 audit was REVISE / Readiness B / four P2. HR1-AUD-001,
+HR1-AUD-002, HR1-AUD-003 and HR1-AUD-004 are independently RESOLVED. The fresh corrective
+re-audit and separate CI-delta audit both returned FINAL PASS / Readiness A, with no new
+blocking P0/P1/P2. [CI #138](https://github.com/sahinkhan/djangobusinessos/actions/runs/39543423762)
+succeeded on the corrective SHA with 4,326 PostgreSQL tests but lacked hosted JavaScript tests.
+[CI #139](https://github.com/sahinkhan/djangobusinessos/actions/runs/39567787163) succeeded on
+the CI-only SHA with 4,326 PostgreSQL and 21 JavaScript tests. The
+[evidence checkpoint](HR_1_IMPLEMENTATION_EVIDENCE.md#formal-acceptance-checkpoint--2026-10-21)
+records the actual logs, audit identities and limitations; local evidence is not represented as
+hosted execution.
+
+HR-1 runtime implementation is **FORMALLY ACCEPTED FOR CANONICAL ADOPTION at this documentation
+checkpoint**. Accepted scope is HR Foundation v1: Employee, Department, Attendance,
+AttendanceRevision, LeaveType and LeaveRequest. It is not Full Enterprise HR, Payroll,
+recruitment, shifts or biometric attendance. No production readiness, SaaS/tenant activation or
+deployment approval is claimed.
+
+This acceptance does not change the six model ownership rules, twelve permission identities,
+Employee/Department lifecycle, Attendance revision/history authority, frozen timezone semantics,
+Leave lifecycle, ROW SHARE NOWAIT admission, complete User/Role/Permission locking, existing
+Core final guards, selected execution-alias rules, nested transaction/whole-outer rollback policy,
+historical retry/immutable receipt semantics, or H01–H18 and T01–T26. All preexisting contract
+sections remain byte-for-byte unchanged in the committed document.
+
+### Conditional canonical completion rule
+
+Canonical HR-1 adoption is **PENDING** at this documentation checkpoint. The owner authorizes
+only this sequence, with no amendment or further acceptance commit:
+
+1. Publish this exact acceptance commit normally to the existing HR-1 branch and require a NEW
+   successful exact-head `Phase 0 checks` push run, including actual PostgreSQL terminal results,
+   21 JavaScript passes/zero failures/zero skips, migrations, Ruff, Django checks, migration
+   drift, Node/npm and Tailwind/generated-CSS checks.
+2. Reverify remote main is still `b36cdba91654e6a583735d67f7f6cf27a835003e`, HR-1 equals this
+   acceptance commit, exact linear ancestry and preserved user edits; only then normally
+   fast-forward that same acceptance SHA to main. If a security reviewer requires direct owner
+   approval of the concrete SHA, stop and request it. No force, merge commit, PR or tag.
+3. Require a SEPARATE successful exact-head `Phase 0 checks` push run on main, with all configured
+   gates and actual fresh PostgreSQL/JavaScript results. Branch CI alone does not prove main CI.
+4. Only after those gates succeed does this acceptance commit become the **CANONICAL HR-1
+   FREEZE**, and HR-1 implementation become CANONICALLY ACCEPTED. Record the actual SHA, run
+   IDs/numbers/attempts/counts and fulfillment externally without another commit. Safe local-main
+   synchronization follows only where no user worktree/index can be disturbed; otherwise report
+   it deferred. Preserve the original dirty worktree and local acceptance branch.
+
+No future run ID, count, main update or main CI success is asserted here. Failure, rejection,
+drift or incomplete CI stops progression without automatic repair, retry, revert or new commit.
+The historical unexpected native SQLSTATE 57014 cause and unexpected ResourceBudgetExceeded
+cause remain separately NOT PROVEN; the interrupted run and bounded infrastructure diagnosis
+are retained, not recast as pytest success/failure. Eight inherited npm advisories (two moderate,
+six high) remain disclosed and unfixed by this task.
+
+Phase 3 is **NOT COMPLETE**. ECOM-0 is separately governed and NOT STARTED BY THIS TASK; ECOM-1
+is NOT STARTED. Ecommerce work and the final combined Phase 3 audit/closure remain future gates.
+Phase 4 Education/Healthcare stays **ON HOLD** at
+`735e1bea13bc58fa71d430163422139d5c0f2363`; ADRs 0019–0021 remain PROPOSED. No next phase,
+dependency remediation or owner-decision resolution is authorized.

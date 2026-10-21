@@ -3988,3 +3988,130 @@ NONE
 
 STOP.
 ```
+
+## Formal acceptance checkpoint — 2026-10-21
+
+This is a later current-status checkpoint, not a rewrite of the preceding execution record.
+Earlier INCOMPLETE, audit-pending, commit-pending and PUSH NONE statements describe their own
+historical checkpoints. The original failures, diagnostic measurements, partial executions and
+their limitations remain preserved. The owner now authorizes one documentation-only acceptance
+commit and conditional canonical adoption; no runtime/test/contract change is part of this task.
+
+### Accepted candidate and independent review
+
+HR-0/ADR 0018 remain canonically ACCEPTED at
+`b36cdba91654e6a583735d67f7f6cf27a835003e`. Exact linear ancestry for this record is:
+
+1. Original HR-1 implementation: `e6b72896e10471463b8b6b280fbccfc524d7cc42`.
+2. Corrective implementation: `c49a1291ce979093f1219dea41d5fdcd743239b7`.
+3. CI-only JavaScript coverage delta: `a867a8c240627f4161ec4ef23564a320d4cf6b49`.
+4. This documentation-only acceptance commit, immediately above the CI-only SHA.
+
+The original independent audit was **REVISE / Readiness B / four P2**. The separate fresh
+implementation re-auditor returned **FINAL PASS / Readiness A**, independently resolving
+HR1-AUD-001, HR1-AUD-002, HR1-AUD-003 and HR1-AUD-004. No new blocking P0/P1/P2 was reported.
+Authority is the separate chat `01a15c72-5238-71e2-9852-28d968f49a8d`, titled
+`Audit HR-1 corrective implementation`, not this implementation chat. Full report:
+`HR1-AUD-1-corrective-re-audit-report.txt`, SHA-256
+`018a3411d0f455239bd6dba4da909c7085d2bbada6c6d96b0aaddfc11d198821`.
+
+The CI-only delta received a second separate **FINAL PASS / Readiness A**, with no P0–P3,
+from chat `01a15d4d-5591-7190-a7c2-14c7858ab69f`, titled `Audit CI corrective commit`.
+It independently executed Linux Node 22.23.3 JavaScript tests: 21 passed, zero failed/skipped;
+strict YAML validation also passed. Full retained final report:
+`hr1-ci-publication-independent-delta-audit.txt`, SHA-256
+`260e2b5968f46704423053594b2595aa1f611b1e6e151b0074bf1e811ce4113e`.
+Both report fingerprints were reverified for this acceptance checkpoint. The CI delta changes
+only `.github/workflows/ci.yml`, adding two lines after npm ci and before the CSS build; it
+does not alter HR implementation or tests.
+
+### Actual hosted evidence reviewed before acceptance
+
+[CI #138](https://github.com/sahinkhan/djangobusinessos/actions/runs/39543423762), run
+`39543423762`, succeeded on `c49a1291ce979093f1219dea41d5fdcd743239b7`: 4,326 PostgreSQL
+tests passed. It did **not** execute JavaScript unit tests. That coverage gap and the historical
+publication/monitoring blocker remain recorded, not silently converted into JavaScript success.
+
+[CI #139](https://github.com/sahinkhan/djangobusinessos/actions/runs/39567787163), workflow
+`Phase 0 checks` (`357068273`), run `39567787163`, attempt 1, event `push`, branch
+`phase3a-hr1-implementation`, exact head `a867a8c240627f4161ec4ef23564a320d4cf6b49`,
+is **completed / SUCCESS**. Actual decoded checkout logs match that full SHA. Job `test`
+(`119114168145`) completed at `2026-10-21T09:27:05Z`; the run update is
+`2026-10-21T09:27:06Z` (15:27:06 Asia/Dhaka). All 20 recorded job steps succeeded.
+
+- PostgreSQL 17.11, development PostgreSQL settings and all three optional commercial install
+  flags enabled; Python 3.13.16, Django 5.2.17, pytest 8.4.2, Ruff 0.16.7.
+- Fresh migrations succeeded; actual pytest collection 4,326 and terminal result **4,326 passed
+  in 4305.60s (1:11:45)**, with no failures, errors or skips.
+- Ruff: all checks passed. Django: zero issues. Migration drift: no changes detected.
+- Node 22.23.3 / npm 10.9.9; locked npm ci succeeded. The named JavaScript unit-test step ran
+  `node --test tests/js/*.cjs`: **21 tests, 21 passed, zero failed/cancelled/skipped/todo**,
+  duration 97.484671ms, successful step conclusion.
+- Tailwind build succeeded (690ms); `git diff --exit-code -- static/css/tailwind.css`
+  succeeded. This is one hosted build/diff check, not two hosted reproducibility builds.
+- npm reported **eight advisories: two moderate, six high**. No dependency fix was attempted.
+  Other runtime/deprecation/Browserslist warnings remain in the complete logs. Neither warning
+  disclosure nor a green workflow is a production-readiness claim.
+
+GitHub access was restored and these actual metadata/logs were recovered and verified for this
+checkpoint. The earlier access-blocked report is retained as history, not used as terminal CI
+evidence. New external artifacts under the task artifact root are:
+
+- `hr1-acceptance-ci139-run.json`, SHA-256
+  `d17d84152edc264e8be4c43799f4fa3ec8e733694d3eb72c6a4accbba5a26a7b`.
+- `hr1-acceptance-ci139-jobs.json`, SHA-256
+  `698c4145c1b578602d599251bcd4f0b864b0d7ffd66d0463970d1a8af02558a4`.
+- `hr1-acceptance-ci139-job.log`, complete decoded log, SHA-256
+  `ac9f9380ee5b798350b459a975192b41fb3a5c9e03d8c9fd4e541054f80a79ec`.
+
+No fresh hosted SQLite/browser execution is claimed by #139. Earlier successful local
+PostgreSQL/SQLite/frontend/browser evidence retains its recorded profile and limitations;
+unchanged implementation/test/build Git objects permit reuse rather than unnecessary full-suite
+repetition. H01–H18 and T01–T26 retain the accepted technical requirements and their recorded
+local/oracle results; the independent implementation report supplies the separate re-audit
+disposition. Hosted evidence is now specifically #139, not inherited local JavaScript results.
+This docs-only checkpoint does not invent new oracle runs, counts or an additional self-audit.
+
+### Formal acceptance, scope and conditional adoption
+
+HR-1 runtime implementation is **FORMALLY ACCEPTED FOR CANONICAL ADOPTION at this documentation
+checkpoint**. Scope is HR Foundation v1: Employee, Department, Attendance, AttendanceRevision,
+LeaveType and LeaveRequest. HR-0/ADR 0018 remain the accepted technical contract. Six ownership
+rules, twelve permission identities, lifecycle/history/timezone semantics, ROW SHARE NOWAIT,
+complete User/Role/Permission locks, Core final guards, selected alias, whole-outer nested
+rollback, immutable receipts/historical retries and H01–H18/T01–T26 are unchanged.
+
+Canonical adoption remains **PENDING** until the
+[conditional completion rule](PHASE_3A_HR_FOUNDATION.md#conditional-canonical-completion-rule)
+is actually fulfilled: new exact-head acceptance-branch CI succeeds; unchanged main is normally
+fast-forwarded to that exact acceptance SHA; separate exact-head main CI succeeds. The actual
+acceptance SHA and future observed run metadata/results must be recorded externally without
+another commit. This section asserts no future main push, CI count/success or canonical closure.
+
+Historical unexpected native SQLSTATE 57014 causal attribution remains **NOT PROVEN**;
+historical unexpected ResourceBudgetExceeded causal attribution remains separately **NOT
+PROVEN**. The older partial full run (4,326 collected / 4,313 PASS tokens / no terminal summary)
+remains INTERRUPTED, not PASS and not 13 presumed test failures. Retained host evidence proves
+an infrastructure interruption and component-level Docker monitor memory failure; the exact
+allocation/termination chain and container OOM remain NOT PROVEN. These are not correctness
+waivers and do not change the independently RESOLVED four P2 dispositions.
+
+The original worktree remains on local HR-1 at `c49a1291ce979093f1219dea41d5fdcd743239b7`,
+with its four uncommitted policy files and index preserved. Acceptance work uses the new clean
+isolated `hr1-formal-acceptance` checkout at the exact CI-only base; no uncommitted policy is
+copied into this release. The four permitted documents are append-only. Source, tests,
+migrations, manifests, frontend, packages, CI and accepted ADR Git identities must remain exact.
+Non-mutating docs-only quality checks use the pinned QA image
+`sha256:a7a3476a1883cddc11d7c9bcf7d7674c5c9396211f2b654337a58a1c9936637f`, read-only source,
+network none, in-memory SQLite test settings and all three install flags: Django check reports
+zero issues; makemigrations `--check --dry-run` reports no changes; `ruff check . --no-cache`
+passes (Python 3.13.16 / Django 5.2.17 / Ruff 0.16.7, exit 0). No local full suite was rerun
+for prose-only acceptance. Prefix, link/anchor, fence, whitespace and exact-object checks are
+mandatory before committing; their actual results and publication sequence are external records.
+
+Phase 3 remains **NOT COMPLETE**. ECOM-0 is separately governed and NOT STARTED BY THIS TASK;
+ECOM-1 is NOT STARTED. Ecommerce and the final combined Phase 3 audit/closure remain future
+gates. This is not Full Enterprise HR, Payroll, recruitment, shifts, biometrics, SaaS/tenant
+activation or production readiness. Phase 4 Education/Healthcare remains **ON HOLD** at
+`735e1bea13bc58fa71d430163422139d5c0f2363`; ADRs 0019–0021 remain PROPOSED and untouched.
+No automatic remediation, new phase, PR, tag or force push is authorized.

@@ -798,3 +798,29 @@ Do not schedule a rewrite merely because a custom framework is technically possi
 ## Permanent rule
 
 **Build capabilities late; reserve boundaries early.**
+
+## Current HR-1 formal acceptance checkpoint — 2026-10-21
+
+This later checkpoint supersedes only the historical HR-1 status statements above; it does not
+erase or backdate earlier authorizations, failures or accepted owner decisions.
+
+HR-0 and ADR 0018 remain canonically accepted at
+`b36cdba91654e6a583735d67f7f6cf27a835003e`. HR-1 runtime implementation is **FORMALLY ACCEPTED FOR
+CANONICAL ADOPTION at this documentation checkpoint**, following the independently approved
+corrective implementation and JavaScript CI-coverage delta. The accepted scope is HR Foundation
+v1: Employee, Department, Attendance, AttendanceRevision, LeaveType and LeaveRequest, not a Full
+Enterprise HR Suite.
+
+Canonical adoption is **PENDING** until this acceptance commit receives successful exact-head
+branch CI, is normally fast-forwarded to unchanged canonical main, and receives separate
+successful exact-head main CI. Only verified fulfillment of all three gates makes this acceptance
+commit the canonical HR-1 freeze; this record does not claim those future results. See the
+[acceptance record and completion rule](exec-plans/active/PHASE_3A_HR_FOUNDATION.md#hr-1-formal-implementation-acceptance--2026-10-21)
+and [implementation evidence](exec-plans/active/HR_1_IMPLEMENTATION_EVIDENCE.md#formal-acceptance-checkpoint--2026-10-21).
+
+Phase 3 is **NOT COMPLETE**. ECOM-0 remains separately governed and is NOT STARTED BY THIS TASK;
+ECOM-1 is NOT STARTED. The final combined Phase 3 audit and closure remain future gates. Payroll,
+recruitment, shifts, biometric attendance, SaaS/tenant activation and production deployment are
+outside this acceptance; production readiness is NOT CLAIMED. Phase 4 Education/Healthcare and
+the unchanged local proposal at `735e1bea13bc58fa71d430163422139d5c0f2363` remain **ON HOLD**;
+ADRs 0019–0021 remain PROPOSED. No next milestone is authorized by this checkpoint.
