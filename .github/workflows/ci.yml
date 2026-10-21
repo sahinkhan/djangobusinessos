@@ -51,5 +51,7 @@ jobs:
           node-version: "22"
           cache: npm
       - run: npm ci
+      - name: JavaScript unit tests
+        run: node --test tests/js/*.cjs
       - run: npm run build:css
       - run: git diff --exit-code -- static/css/tailwind.css
